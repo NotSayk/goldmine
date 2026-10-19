@@ -426,9 +426,16 @@
 .track__lamp {
   position: absolute;
   z-index: 1;
+  left: 0;
+  top: 0;
   width: calc(100% / 9 * 2.4);
   aspect-ratio: 1;
-  transform: translate(-50%, -50%);
+  /* Placée par une translation (en largeurs de lampe, soit 2,4 cartes) : elle
+     suit le nain sans déplacer la mise en page, animée par la carte graphique. */
+  transform: translate(
+    calc(var(--x) * 9% / 2.4 - 50%),
+    calc(var(--y) * var(--track-h) * 1% / 2.4 - 50%)
+  );
   border-radius: 50%;
   pointer-events: none;
   background: radial-gradient(
@@ -437,9 +444,7 @@
     rgba(255, 200, 110, 0.12) 35%,
     transparent 68%
   );
-  transition:
-    left 600ms var(--ease-in-out),
-    top 600ms var(--ease-in-out);
+  transition: transform 600ms var(--ease-in-out);
   animation: lamp-flicker 2.4s ease-in-out infinite;
 }
 

@@ -8,6 +8,9 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Place de la barre de défilement toujours réservée : quand la page devient
+     assez haute pour défiler, le contenu ne glisse pas sur le côté. */
+  scrollbar-gutter: stable;
   background: var(--bg);
 }
 

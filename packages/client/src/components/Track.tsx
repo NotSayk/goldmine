@@ -262,7 +262,13 @@ export function Track({
         </div>
       ))}
 
-      {lamp && <span className="track__lamp" style={spotStyle(lamp)} aria-hidden />}
+      {lamp && (
+        <span
+          className="track__lamp"
+          style={{ '--x': lamp.x, '--y': lamp.y } as CSSProperties}
+          aria-hidden
+        />
+      )}
 
       {view.dwarves.map((_, slot) => (
         <span

@@ -34,7 +34,19 @@ function TurnBanner({
   room: RoomView;
   turnTimer: TurnTimer | null;
 }) {
-  if (view.phase !== 'playing') return null;
+  // Le bandeau reste en place entre les manches (même hauteur) : rien ne saute.
+  if (view.phase !== 'playing') {
+    return (
+      <div className="turn-banner">
+        <span className="turn-banner__text" role="status" aria-live="polite">
+          {view.phase === 'finished'
+            ? 'Partie terminée'
+            : `Manche ${Math.min(view.round, view.totalRounds)} terminée`}
+        </span>
+        <span className="turn-banner__timer" aria-hidden />
+      </div>
+    );
+  }
   const dwarf = view.currentDwarfId === null ? undefined : view.dwarves[view.currentDwarfId];
   const yours = view.legal.yourTurn;
   const pending = view.pending;
@@ -68,7 +80,10 @@ function TurnBanner({
         {BRANDING.dragonName} :{' '}
         {view.dragonPosition === 8 ? 'au fond' : `carte ${view.dragonPosition}`}
       </span>
-      <TurnCountdown timer={turnTimer} />
+      {/* Place réservée au compte à rebours, présent ou non : le texte ne bouge pas. */}
+      <span className="turn-banner__timer">
+        <TurnCountdown timer={turnTimer} />
+      </span>
     </div>
   );
 }
@@ -280,16 +295,20 @@ export function GameScreen({
               }
             />
           </Scene>
-          <RoundEndPanel key={boardView.round} view={boardView} isHost={isHost} idle={idle} />
+          {/* Zone sous le plateau de hauteur minimale fixe : consignes, choix et
+              fin de manche s'y relaient sans décaler le reste de la page. */}
+          <div className="game__actions">
+            <RoundEndPanel key={boardView.round} view={boardView} isHost={isHost} idle={idle} />
+            {view.phase === 'playing' &&
+              (view.pending?.playerId === view.viewerId ? (
+                <ChoicePanel view={view} waiting={waiting} turnTimer={turnTimer} />
+              ) : (
+                <ActionBar view={view} turnTimer={turnTimer} />
+              ))}
+          </div>
           {boardView.phase === 'finished' && (
             <FinalPanel view={boardView} isHost={isHost} history={goldHistory} />
           )}
-          {view.phase === 'playing' &&
-            (view.pending?.playerId === view.viewerId ? (
-              <ChoicePanel view={view} waiting={waiting} turnTimer={turnTimer} />
-            ) : (
-              <ActionBar view={view} turnTimer={turnTimer} />
-            ))}
         </div>
         <aside className="game__side stack">
           <Players view={boardView} room={room} emotes={emotes} />

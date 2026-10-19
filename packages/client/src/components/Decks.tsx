@@ -99,11 +99,14 @@ export function Decks({
           )}
         </DeckSlot>
         <div className="deck__count">{plural(count, 'carte')}</div>
-        {lastDrawn && (
-          <div className="deck__hint">
-            Dernière : {EXTRACTION_LABELS[lastDrawn.card].name} ({lastDrawn.by})
-          </div>
-        )}
+        {/* Ligne toujours présente (vide au début) : le plateau ne grandit pas à la première pioche. */}
+        <div className="deck__hint">
+          {lastDrawn && (
+            <>
+              Dernière : {EXTRACTION_LABELS[lastDrawn.card].name} ({lastDrawn.by})
+            </>
+          )}
+        </div>
       </div>
       <div className="deck">
         <div className="deck__label">Exit</div>
@@ -122,6 +125,7 @@ export function Decks({
           )}
         </DeckSlot>
         <div className="deck__count">{plural(exitCount, 'carte')}</div>
+        <div className="deck__hint" />
       </div>
       <div className="deck">
         <div className="deck__label">Défausse Exit</div>
@@ -145,9 +149,9 @@ export function Decks({
           )}
         </div>
         <div className="deck__count">{plural(view.exit.discard.length, 'carte')}</div>
-        {discardTop && (
-          <div className="deck__hint">{discardTop.map((a) => EXIT_LABELS[a].name).join(' / ')}</div>
-        )}
+        <div className="deck__hint">
+          {discardTop && discardTop.map((a) => EXIT_LABELS[a].name).join(' / ')}
+        </div>
       </div>
     </section>
   );

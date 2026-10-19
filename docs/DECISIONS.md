@@ -244,6 +244,17 @@ Comparaison avant / après sur le même protocole (`STATIC_DIR` pointé sur l'an
 
 Reste incompressible : React écoute tous les types d'événements à la racine, donc Chrome émet `animationiteration` à chaque tour de chaque animation infinie (une dizaine par seconde), ce qui demande une petite image du fil principal ; et le compte à rebours (`stroke-dashoffset`) ne peut pas être confié à la carte graphique.
 
+### Mise en page stable pendant la partie
+
+Mesuré avec l'API Layout Instability (`layout-shift`) pendant 70 s de partie : le score cumulé de décalage passe de 0,50 à 0,03 sur ordinateur et de 0,67 à 0,03 sur téléphone (au-dessous de 0,1, un écran est jugé stable). Corrections :
+
+- la place de la barre de défilement est toujours réservée (`scrollbar-gutter: stable`) : quand la page devient assez haute pour défiler, rien ne glisse sur le côté ;
+- le bandeau du tour a une hauteur fixe (texte sur deux lignes au plus, titre plus grand à votre tour compris), garde une place pour le compte à rebours même absent, et reste affiché entre les manches ;
+- la zone sous le plateau (consignes, choix, fin de manche) a une hauteur minimale et reste collée en bas de l'écran sur téléphone ;
+- la ligne « Dernière : … » sous les pioches est réservée dès le début (deux lignes) ;
+- le statut de chaque joueur a sa propre ligne, les compteurs ne sautent plus de côté ;
+- la carte du dragon et la lueur du nain actif se déplacent par translation (animée par la carte graphique) au lieu de modifier leur position dans la page.
+
 ### Vérifications
 
 - `npm run smoke` : parties complètes à 2, 4 (dont deux humains) et 6 joueurs ; les bots jouent sans attendre, les animations s'accumulent et les humains simulés les passent à leur tour (« À vous : passer »), comme un joueur pressé ; un échange se fait en touchant le nain sur le plateau. Aucune erreur console. (Sans ce passage, une partie à 4 durait 330 à 480 s, à la limite du délai de 8 min.)

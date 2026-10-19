@@ -60,6 +60,9 @@
   background: var(--surface-raised);
   border: 1px solid var(--border);
   font-weight: 700;
+  line-height: 1.3;
+  /* Hauteur fixe, que ce soit votre tour (titre plus grand) ou non. */
+  min-height: 72px;
   box-shadow: var(--shadow-sm), var(--bevel);
   transition:
     border-color var(--t-med) ease,
@@ -69,6 +72,23 @@
 .turn-banner__text {
   flex: 1;
   min-width: 0;
+  /* Deux lignes au plus : le bandeau garde la même hauteur à chaque tour. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.turn-banner > .small.muted {
+  min-width: 8.5em;
+  text-align: right;
+}
+
+.turn-banner__timer {
+  flex: none;
+  width: 42px;
+  height: 42px;
 }
 
 .turn-banner__dragon {
@@ -147,6 +167,8 @@
 /* ---------- Piste : 9 cartes positionnées en absolu ---------- */
 
 .track {
+  /* Hauteur de la piste en largeurs de carte (sert aussi à placer la lampe). */
+  --track-h: 2;
   position: relative;
   width: 100%;
   aspect-ratio: 9 / 2;
@@ -156,6 +178,7 @@
 
 @media (min-width: 640px) {
   .track {
+    --track-h: 1.55;
     aspect-ratio: 9 / 1.55;
   }
 }
@@ -164,10 +187,13 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  left: calc(var(--i) * 100% / 9);
+  left: 0;
   width: calc(100% / 9);
   padding: 0 2px;
-  transition: left 900ms var(--ease-in-out);
+  /* Place par une translation (une largeur de carte par rang) : le dragon glisse
+     sans déplacer la mise en page, animé par la carte graphique. */
+  transform: translateX(calc(var(--i) * 100%));
+  transition: transform 900ms var(--ease-in-out);
 }
 
 .track-card__face {
@@ -667,6 +693,13 @@ button.disc--target:focus-visible {
   font-size: 0.78rem;
   color: var(--text-muted);
   line-height: 1.3;
+  /* Deux lignes réservées, jamais plus : la hauteur des pioches ne varie pas. */
+  min-height: 2.6em;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 
 .card-empty {
@@ -762,6 +795,12 @@ button.disc--target:focus-visible {
   gap: 4px 10px;
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+/* Le statut (« sur le Wagon », « carte 3 », « sorti ») change de longueur : il a
+   sa propre ligne, les compteurs suivants ne sautent pas de côté. */
+.stat:first-child {
+  flex-basis: 100%;
 }
 
 .stat {
@@ -2199,5 +2238,24 @@ button.disc--target:focus-visible {
   }
   50% {
     opacity: 1;
+  }
+}
+
+/* Zone sous le plateau : hauteur minimale de la consigne la plus longue. Elle
+   reste collée en bas de l'écran sur téléphone (la barre ne le pourrait plus
+   seule, enfermée dans cette zone). */
+.game__actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-height: 92px;
+}
+
+@media (min-width: 720px) {
+  .game__actions {
+    min-height: 70px;
   }
 }
