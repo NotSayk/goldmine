@@ -1,0 +1,6 @@
+node_modules
+dist
+coverage
+package-lock.json
+docs/REGLES.md
+docs/PROMPT_OPUS.md

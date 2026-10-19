@@ -1,0 +1,13 @@
+{
+  "name": "@pepite/engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Moteur de règles pur et déterministe (aucune dépendance réseau ni DOM).",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}
