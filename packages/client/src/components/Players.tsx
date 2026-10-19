@@ -1,10 +1,11 @@
 import type { DwarfView, PlayerView } from '@pepite/engine';
 import type { RoomView } from '@pepite/shared';
-import { DwarfDisc } from '../assets/DwarfDisc';
+import { DwarfToken } from '../assets/DwarfToken';
 import { IconChest, IconLock } from '../assets/Icons';
 import { BigNugget } from '../assets/Nugget';
 import { dwarfLook, plural } from '../i18n/fr';
-import { client } from '../store';
+import { client, type EmoteBubble } from '../store';
+import { EmoteBubbleView } from './Emotes';
 import { GoldPile } from './GoldPile';
 
 function dwarfStatus(dwarf: DwarfView): string {
@@ -24,7 +25,15 @@ const CONNECTION_LABELS = {
   away: 'absent',
 } as const;
 
-export function Players({ view, room }: { view: PlayerView; room: RoomView }) {
+export function Players({
+  view,
+  room,
+  emotes = [],
+}: {
+  view: PlayerView;
+  room: RoomView;
+  emotes?: readonly EmoteBubble[];
+}) {
   const isHost = room.hostId === view.viewerId;
   return (
     <section className="panel" aria-label="Joueurs">
@@ -51,10 +60,12 @@ export function Players({ view, room }: { view: PlayerView; room: RoomView }) {
             >
               <span className="player-card__discs">
                 {dwarves.map((d) => (
-                  <DwarfDisc
+                  <DwarfToken
                     key={d.id}
                     color={d.color}
-                    size={28}
+                    look={roomPlayer?.look}
+                    mood={d.status === 'eliminated' ? 'dead' : d.status === 'exit' ? 'joy' : 'idle'}
+                    size={32}
                     label={`Nain ${dwarfLook(d.color).name}`}
                   />
                 ))}
@@ -65,6 +76,10 @@ export function Players({ view, room }: { view: PlayerView; room: RoomView }) {
                 {active && <span className="sr-only"> — joue en ce moment</span>}
               </span>
               <GoldPile playerId={player.id} cards={player.pile.cardCount} gold={gold} />
+              <EmoteBubbleView
+                bubble={emotes.find((e) => e.playerId === player.id)}
+                name={player.name}
+              />
               <span className="player-card__stats">
                 {!roomPlayer?.isBot && (
                   <span

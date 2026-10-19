@@ -50,6 +50,12 @@ export default tseslint.config(
               message: 'Le client ne contient pas de règles.',
               allowTypeImports: true,
             },
+            {
+              name: '@pepite/shared',
+              message:
+                'Importez les constantes depuis @pepite/shared/branding ou /cosmetics : la racine embarque zod.',
+              allowTypeImports: true,
+            },
           ],
         },
       ],

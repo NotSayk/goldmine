@@ -14,9 +14,14 @@ import {
   type Rng,
 } from '@pepite/engine';
 import {
+  EMOTE_BURST,
+  EMOTE_PER_SECOND,
+  LOOK_VARIANTS,
   ROOM_CODE_ALPHABET,
   ROOM_CODE_LENGTH,
   parseClientMessage,
+  type DwarfLook,
+  type Emote,
   type AutoPlay,
   type ClientMessage,
   type ClientPlayerAction,
@@ -78,6 +83,11 @@ function fail(code: ServerErrorCode, message: string): never {
   throw new RequestError(code, message);
 }
 
+/** Apparence par défaut selon la place dans le salon : chacun a une silhouette différente. */
+function defaultLook(seat: number): DwarfLook {
+  return { hat: seat % LOOK_VARIANTS, beard: (seat + 1) % LOOK_VARIANTS };
+}
+
 function randomId(prefix: string): string {
   return `${prefix}${randomBytes(6).toString('base64url')}`;
 }
@@ -98,6 +108,8 @@ export class RoomManager {
     { key: string; deadline: number; timer: ReturnType<typeof setTimeout> }
   >();
   private readonly lastStatuses = new Map<string, string>();
+  /** Débit des réactions, par joueur. */
+  private readonly emoteBuckets = new WeakMap<RoomPlayer, TokenBucket>();
   private readonly botRng: Rng = createSeededRng(randomBytes(16).toString('hex'));
   private readonly now: () => number;
 
@@ -207,6 +219,10 @@ export class RoomManager {
         return this.skipPlayer(session, message.playerId);
       case 'backToLobby':
         return this.backToLobby(session);
+      case 'setLook':
+        return this.setLook(session, { hat: message.hat, beard: message.beard });
+      case 'emote':
+        return this.emote(session, message.emote);
     }
   }
 
@@ -285,7 +301,7 @@ export class RoomManager {
     if (room.status !== 'lobby') fail('GAME_IN_PROGRESS', 'La partie a déjà commencé.');
     if (room.players.length >= MAX_PLAYERS) fail('ROOM_FULL', 'Le salon est complet (6 joueurs).');
     this.leaveCurrentRoom(session);
-    room.players.push(this.humanPlayer(session, this.uniqueName(room, name)));
+    room.players.push(this.humanPlayer(session, this.uniqueName(room, name), room.players.length));
     session.roomCode = room.code;
     this.touch(room);
     this.broadcastRoom(room);
@@ -371,9 +387,43 @@ export class RoomManager {
       disconnectedAt: null,
       botControlled: true,
       left: false,
+      look: defaultLook(room.players.length),
     });
     this.touch(room);
     this.broadcastRoom(room);
+  }
+
+  // -------------------------------------------------------------------------
+  // Apparence et réactions (cosmétique, sans effet sur la partie)
+  // -------------------------------------------------------------------------
+
+  private setLook(session: Session, look: DwarfLook): void {
+    const room = this.requireRoom(session);
+    if (room.status !== 'lobby') fail('GAME_IN_PROGRESS', 'L’apparence se choisit dans le salon.');
+    const player = room.players.find((p) => p.id === session.playerId);
+    if (!player) fail('NOT_IN_ROOM', 'Vous n’êtes dans aucun salon.');
+    player.look = look;
+    this.touch(room);
+    this.broadcastRoom(room);
+  }
+
+  private emote(session: Session, emote: Emote): void {
+    const room = this.requireRoom(session);
+    const player = room.players.find((p) => p.id === session.playerId);
+    if (!player) fail('NOT_IN_ROOM', 'Vous n’êtes dans aucun salon.');
+    let bucket = this.emoteBuckets.get(player);
+    if (!bucket) {
+      bucket = new TokenBucket(EMOTE_BURST, EMOTE_PER_SECOND, this.now);
+      this.emoteBuckets.set(player, bucket);
+    }
+    if (!bucket.take()) fail('RATE_LIMITED', 'Une réaction à la fois !');
+    for (const member of room.players) {
+      if (!member.sessionToken) continue;
+      const target = this.sessions.get(member.sessionToken);
+      if (target?.roomCode === room.code) {
+        this.sendTo(target, { type: 'emote', playerId: player.id, emote });
+      }
+    }
   }
 
   private removePlayer(session: Session, playerId: string): void {
@@ -637,7 +687,7 @@ export class RoomManager {
     this.store.delete(room.code);
   }
 
-  private humanPlayer(session: Session, name: string): RoomPlayer {
+  private humanPlayer(session: Session, name: string, seat = 0): RoomPlayer {
     return {
       id: session.playerId,
       name,
@@ -647,6 +697,7 @@ export class RoomManager {
       disconnectedAt: null,
       botControlled: false,
       left: false,
+      look: defaultLook(seat),
     };
   }
 
@@ -717,6 +768,7 @@ export class RoomManager {
         isHost: p.id === room.hostId,
         connection: this.connectionStatus(p),
         botControlled: !p.isBot && p.botControlled,
+        look: p.look,
       })),
       settings: room.settings,
       minPlayers: MIN_PLAYERS,

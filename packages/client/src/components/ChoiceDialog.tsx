@@ -1,6 +1,7 @@
 import type { PlayerView } from '@pepite/engine';
 import { ExitActionIcon } from '../assets/Cards';
-import { DwarfDisc } from '../assets/DwarfDisc';
+import { DwarfToken } from '../assets/DwarfToken';
+import { useLooks } from '../looks';
 import { EXIT_LABELS, dwarfLabel } from '../i18n/fr';
 import { client } from '../store';
 import { Modal } from './Modal';
@@ -16,6 +17,7 @@ export function ChoiceDialog({
   waiting: boolean;
   turnTimer: TurnTimer | null;
 }) {
+  const looks = useLooks();
   const pending = view.pending;
   const mine = pending !== null && pending.playerId === view.viewerId;
   return (
@@ -79,7 +81,7 @@ export function ChoiceDialog({
                 }
               >
                 <span className="choice__icon">
-                  <DwarfDisc color={dwarf.color} size={36} />
+                  <DwarfToken color={dwarf.color} look={looks.get(dwarf.ownerId)} size={40} />
                 </span>
                 <span className="choice__title">{dwarfLabel(view, id)}</span>
                 <span className="choice__text">

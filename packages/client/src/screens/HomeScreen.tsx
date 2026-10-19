@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { BRANDING } from '@pepite/shared/branding';
-import { DwarfDisc } from '../assets/DwarfDisc';
+import { DwarfToken } from '../assets/DwarfToken';
 import { DragonHead } from '../assets/Dragon';
 import { BigNugget, Nugget } from '../assets/Nugget';
 import { TopBar } from '../components/TopBar';
@@ -50,11 +50,11 @@ export function HomeScreen({ connected }: { connected: boolean }) {
       <main>
         <section className="hero">
           <div className="hero__art" aria-hidden>
-            <DwarfDisc color={0} size={44} />
-            <DwarfDisc color={1} size={44} />
+            <DwarfToken color={0} size={52} mood="joy" />
+            <DwarfToken color={1} size={52} />
             <Nugget size={30} />
             <BigNugget size={36} />
-            <DwarfDisc color={2} size={44} />
+            <DwarfToken color={2} size={52} mood="panic" />
             <DragonHead size={72} />
           </div>
           <h1>{BRANDING.gameName}</h1>

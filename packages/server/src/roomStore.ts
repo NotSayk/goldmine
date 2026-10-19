@@ -1,5 +1,5 @@
 import type { GameState, PlayerId } from '@pepite/engine';
-import type { RoomSettings, RoomStatus } from '@pepite/shared';
+import type { DwarfLook, RoomSettings, RoomStatus } from '@pepite/shared';
 import type { SecureRng } from './secureRng';
 
 export interface RoomPlayer {
@@ -14,6 +14,8 @@ export interface RoomPlayer {
   botControlled: boolean;
   /** Humain parti définitivement pendant la partie. */
   left: boolean;
+  /** Chapeau et barbe choisis pour ses nains (cosmétique). */
+  look: DwarfLook;
 }
 
 export interface Room {

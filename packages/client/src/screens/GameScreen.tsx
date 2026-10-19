@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import type { PlayerView } from '@pepite/engine';
 import type { RoomView } from '@pepite/shared';
 import { BRANDING } from '@pepite/shared/branding';
-import { DwarfDisc } from '../assets/DwarfDisc';
+import { DwarfToken } from '../assets/DwarfToken';
 import { ActionBar } from '../components/ActionBar';
 import { CardMemo } from '../components/CardMemo';
 import { ChoiceDialog } from '../components/ChoiceDialog';
 import { Decks } from '../components/Decks';
+import { EmoteBar } from '../components/Emotes';
 import { FxLayer } from '../components/FxLayer';
 import { GameLog } from '../components/GameLog';
 import { Modal } from '../components/Modal';
@@ -21,7 +22,8 @@ import { startFpsMonitor } from '../fx/fps';
 import { heatOf } from '../fx/heat';
 import { dwarfLook, dwarfName } from '../i18n/fr';
 import type { Sequence } from '../director/sequences';
-import { client, type LastDrawn, type LogEntry } from '../store';
+import type { GoldSample } from '../fx/gold';
+import { client, type EmoteBubble, type LastDrawn, type LogEntry } from '../store';
 
 function TurnBanner({
   view,
@@ -49,7 +51,13 @@ function TurnBanner({
   if (current?.botControlled || current?.isBot) text += ' — joue automatiquement';
   return (
     <div className={`turn-banner${yours ? ' turn-banner--you' : ''}`}>
-      {dwarf && <DwarfDisc color={dwarf.color} size={30} />}
+      {dwarf && (
+        <DwarfToken
+          color={dwarf.color}
+          look={room.players.find((p) => p.id === dwarf.ownerId)?.look}
+          size={36}
+        />
+      )}
       {/* Seul le texte est annoncé : le compte à rebours changerait chaque seconde. */}
       <span className="turn-banner__text" role="status" aria-live="polite">
         {text}
@@ -108,11 +116,19 @@ function RoundEndPanel({
   );
 }
 
-function FinalPanel({ view, isHost }: { view: PlayerView; isHost: boolean }) {
+function FinalPanel({
+  view,
+  isHost,
+  history,
+}: {
+  view: PlayerView;
+  isHost: boolean;
+  history: readonly GoldSample[];
+}) {
   const last = view.roundResults[view.roundResults.length - 1];
   return (
     <section className="panel stack" aria-label="Fin de la partie">
-      <FinalStandings view={view} />
+      <FinalStandings view={view} history={history} />
       {last && (
         <details className="collapsible">
           <summary>Détail de la manche 3</summary>
@@ -153,6 +169,8 @@ export function GameScreen({
   queued,
   lastDrawn,
   turnTimer,
+  goldHistory,
+  emotes,
 }: {
   /** Dernière vue reçue : actions et choix, jamais retardés par les animations. */
   view: PlayerView;
@@ -167,6 +185,8 @@ export function GameScreen({
   queued: number;
   lastDrawn: LastDrawn | null;
   turnTimer: TurnTimer | null;
+  goldHistory: readonly GoldSample[];
+  emotes: readonly EmoteBubble[];
 }) {
   const [confirmLeave, setConfirmLeave] = useState(false);
   const isHost = room.hostId === view.viewerId;
@@ -218,13 +238,16 @@ export function GameScreen({
             <Decks view={boardView} lastDrawn={lastDrawn} />
           </Scene>
           <RoundEndPanel key={boardView.round} view={boardView} isHost={isHost} idle={idle} />
-          {boardView.phase === 'finished' && <FinalPanel view={boardView} isHost={isHost} />}
+          {boardView.phase === 'finished' && (
+            <FinalPanel view={boardView} isHost={isHost} history={goldHistory} />
+          )}
           {view.phase === 'playing' && (
             <ActionBar view={view} waiting={waiting} turnTimer={turnTimer} />
           )}
         </div>
         <aside className="game__side stack">
-          <Players view={boardView} room={room} />
+          <Players view={boardView} room={room} emotes={emotes} />
+          <EmoteBar />
           <GameLog entries={log} />
         </aside>
       </main>

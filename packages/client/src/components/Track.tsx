@@ -1,21 +1,32 @@
-import type { CSSProperties } from 'react';
+import { useLayoutEffect, useRef, type CSSProperties, type RefObject } from 'react';
 import type { DwarfView, PlayerView, TrackCard } from '@pepite/engine';
 import { BRANDING } from '@pepite/shared/branding';
-import { DwarfDisc } from '../assets/DwarfDisc';
+import { Flame } from '../assets/Dragon';
+import { DwarfToken, type DwarfMood } from '../assets/DwarfToken';
 import { TrackCardArt } from '../assets/Cards';
 import { dwarfLook, dwarfName } from '../i18n/fr';
+import { useLooks } from '../looks';
+import { reducedMotion } from '../preferences';
 import { Card3D } from './Card3D';
 
 const COLUMNS = 9;
+const HOP_MS = 320;
 
-/** Centre d'un disque : 2 colonnes × 3 rangées par carte. */
-function slotCenter(position: number, slot: number): { left: string; top: string } {
+interface Spot {
+  /** En pourcentage de la piste. */
+  readonly x: number;
+  readonly y: number;
+}
+
+/** Centre d'un nain : 2 colonnes × 3 rangées par carte. */
+function slotCenter(position: number, slot: number): Spot {
   const column = slot % 2;
   const row = Math.floor(slot / 2) % 3;
-  return {
-    left: `${((position + 0.28 + 0.44 * column) / COLUMNS) * 100}%`,
-    top: `${20 + row * 28}%`,
-  };
+  return { x: ((position + 0.28 + 0.44 * column) / COLUMNS) * 100, y: 20 + row * 28 };
+}
+
+function spotStyle(spot: Spot): CSSProperties {
+  return { left: `${spot.x}%`, top: `${spot.y}%` };
 }
 
 function cardLabel(card: TrackCard, index: number): string {
@@ -29,6 +40,122 @@ function cardLabel(card: TrackCard, index: number): string {
     case 'mine':
       return card.burned ? `Galerie brûlée (carte ${index})` : `Galerie (carte ${index})`;
   }
+}
+
+function moodOf(dwarf: DwarfView, dragonPosition: number): DwarfMood {
+  if (dwarf.status === 'eliminated') return 'dead';
+  if (dwarf.status === 'exit') return 'joy';
+  return dragonPosition - dwarf.position <= 1 ? 'panic' : 'idle';
+}
+
+/**
+ * Déplacement par bonds, une carte par bond : le nain s'écrase au décollage,
+ * s'étire en l'air et s'écrase à l'atterrissage (FLIP : l'élément est déjà à
+ * sa place, l'animation part de l'ancienne position). Il regarde vers où il va.
+ */
+function useHops(ref: RefObject<HTMLElement | null>, spot: Spot, position: number): void {
+  const previous = useRef<{ spot: Spot; position: number } | null>(null);
+  const { x, y } = spot;
+  useLayoutEffect(() => {
+    const element = ref.current;
+    const track = element?.parentElement;
+    const before = previous.current;
+    const spot = { x, y };
+    previous.current = { spot, position };
+    if (!element || !track || !before) return;
+    if (before.spot.x === spot.x && before.spot.y === spot.y) return;
+    const dx = ((before.spot.x - spot.x) / 100) * track.clientWidth;
+    const dy = ((before.spot.y - spot.y) / 100) * track.clientHeight;
+    if (Math.abs(dx) > 1) element.dataset.facing = dx < 0 ? 'right' : 'left';
+    if (reducedMotion()) return;
+    const hops = Math.max(1, Math.min(4, Math.abs(before.position - position)));
+    const lift = Math.max(14, track.clientHeight * 0.32);
+    const at = (progress: number, rise: number, sx: number, sy: number): Keyframe => ({
+      transform: `translate(calc(-50% + ${(dx * (1 - progress)).toFixed(1)}px), calc(-50% + ${(dy * (1 - progress) - rise).toFixed(1)}px)) scale(${sx}, ${sy})`,
+    });
+    const frames: Keyframe[] = [];
+    for (let k = 0; k < hops; k++) {
+      frames.push({ ...at(k / hops, 0, 1.12, 0.86), offset: k / hops });
+      frames.push({ ...at((k + 0.5) / hops, lift, 0.9, 1.12), offset: (k + 0.5) / hops });
+    }
+    frames.push({ ...at(1, 0, 1.14, 0.84), offset: (hops - 0.12) / hops });
+    frames.push({ ...at(1, 0, 1, 1), offset: 1 });
+    const animation = element.animate(frames, { duration: hops * HOP_MS, easing: 'ease-in-out' });
+    return () => animation.cancel();
+  }, [ref, x, y, position]);
+}
+
+function TrackDwarf({
+  view,
+  dwarf,
+  spot,
+  target,
+  onSwap,
+}: {
+  view: PlayerView;
+  dwarf: DwarfView;
+  spot: Spot;
+  target: boolean;
+  onSwap: (dwarfId: number) => void;
+}) {
+  const ref = useRef<HTMLElement>(null);
+  const looks = useLooks();
+  const position = dwarf.status === 'exit' ? -1 - (dwarf.ladderSlot ?? 0) : dwarf.position;
+  useHops(ref, spot, position);
+  const mood = moodOf(dwarf, view.dragonPosition);
+  const look = dwarfLook(dwarf.color);
+  const name = dwarfName(view, dwarf.id);
+  const where =
+    dwarf.status === 'exit'
+      ? `sorti, place ${(dwarf.ladderSlot ?? 0) + 1} sur l’échelle`
+      : dwarf.status === 'eliminated'
+        ? `éliminé sur la carte ${dwarf.position}`
+        : dwarf.position === 4
+          ? 'sur le Wagon'
+          : `sur la carte ${dwarf.position}`;
+  const label = `${name} — nain ${look.name}, ${where}`;
+  const className = [
+    'disc',
+    `disc--${mood}`,
+    dwarf.id === view.currentDwarfId && view.phase === 'playing' ? 'disc--active' : '',
+    dwarf.ownerId === view.viewerId ? 'disc--mine' : '',
+    target ? 'disc--target' : '',
+  ].join(' ');
+  const token = (
+    <>
+      <DwarfToken
+        color={dwarf.color}
+        look={looks.get(dwarf.ownerId)}
+        mood={mood}
+        label={target ? undefined : label}
+      />
+      {mood === 'dead' && (
+        <span className="disc__burn" aria-hidden>
+          <Flame />
+        </span>
+      )}
+    </>
+  );
+  if (target) {
+    return (
+      <button
+        ref={ref as RefObject<HTMLButtonElement>}
+        type="button"
+        className={className}
+        style={spotStyle(spot)}
+        onClick={() => onSwap(dwarf.id)}
+        aria-label={`Échanger avec ${label}`}
+        title={`Échanger avec ${name}`}
+      >
+        {token}
+      </button>
+    );
+  }
+  return (
+    <span ref={ref} className={className} style={spotStyle(spot)} title={label}>
+      {token}
+    </span>
+  );
 }
 
 export function Track({
@@ -51,12 +178,13 @@ export function Track({
     byPosition.set(dwarf.position, list);
   }
   for (const list of byPosition.values()) list.forEach((dwarf, i) => slots.set(dwarf.id, i));
+  const spotOf = (dwarf: DwarfView): Spot =>
+    dwarf.status === 'exit'
+      ? slotCenter(0, dwarf.ladderSlot ?? 0)
+      : slotCenter(dwarf.position, slots.get(dwarf.id) ?? 0);
   // La lampe frontale éclaire le nain dont c'est le tour.
   const active = view.currentDwarfId === null ? undefined : view.dwarves[view.currentDwarfId];
-  const lamp =
-    view.phase === 'playing' && active?.status === 'mine'
-      ? slotCenter(active.position, slots.get(active.id) ?? 0)
-      : null;
+  const lamp = view.phase === 'playing' && active?.status === 'mine' ? spotOf(active) : null;
 
   return (
     <div
@@ -88,57 +216,30 @@ export function Track({
         </div>
       ))}
 
-      {lamp && <span className="track__lamp" style={lamp} aria-hidden />}
+      {lamp && <span className="track__lamp" style={spotStyle(lamp)} aria-hidden />}
 
       {view.dwarves.map((_, slot) => (
-        <span key={`slot-${slot}`} className="ladder-slot" style={slotCenter(0, slot)} aria-hidden>
+        <span
+          key={`slot-${slot}`}
+          className="ladder-slot"
+          style={spotStyle(slotCenter(0, slot))}
+          aria-hidden
+        >
           {slot + 1}
         </span>
       ))}
 
-      {view.dwarves.map((dwarf) => {
-        const onExit = dwarf.status === 'exit';
-        const dead = dwarf.status === 'eliminated';
-        const style = onExit
-          ? slotCenter(0, dwarf.ladderSlot ?? 0)
-          : slotCenter(dwarf.position, slots.get(dwarf.id) ?? 0);
-        const look = dwarfLook(dwarf.color);
-        const name = dwarfName(view, dwarf.id);
-        const where = onExit
-          ? `sorti, place ${(dwarf.ladderSlot ?? 0) + 1} sur l’échelle`
-          : dead
-            ? `éliminé sur la carte ${dwarf.position}`
-            : dwarf.position === 4
-              ? 'sur le Wagon'
-              : `sur la carte ${dwarf.position}`;
-        const label = `${name} — nain ${look.name}, ${where}`;
-        const className = [
-          'disc',
-          dwarf.id === view.currentDwarfId ? 'disc--active' : '',
-          dwarf.ownerId === view.viewerId ? 'disc--mine' : '',
-          dead ? 'disc--dead' : '',
-        ].join(' ');
-        if (swapTargets.includes(dwarf.id)) {
-          return (
-            <button
-              key={dwarf.id}
-              type="button"
-              className={`${className} disc--target`}
-              style={style}
-              onClick={() => onSwap(dwarf.id)}
-              aria-label={`Échanger avec ${label}`}
-              title={`Échanger avec ${name}`}
-            >
-              <DwarfDisc color={dwarf.color} />
-            </button>
-          );
-        }
-        return (
-          <span key={dwarf.id} className={className} style={style} title={label}>
-            <DwarfDisc color={dwarf.color} label={label} />
-          </span>
-        );
-      })}
+      {view.dwarves.map((dwarf) => (
+        <TrackDwarf
+          // Nouvelle manche : les nains repartent du Wagon sans bondir depuis la Sortie.
+          key={`${view.round}-${dwarf.id}`}
+          view={view}
+          dwarf={dwarf}
+          spot={spotOf(dwarf)}
+          target={swapTargets.includes(dwarf.id)}
+          onSwap={onSwap}
+        />
+      ))}
     </div>
   );
 }

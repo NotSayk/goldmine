@@ -244,12 +244,9 @@
 
 .disc {
   position: absolute;
-  width: calc(100% / 9 * 0.44);
+  width: calc(100% / 9 * 0.48);
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
-  transition:
-    left 600ms var(--ease-in-out),
-    top 600ms var(--ease-in-out);
   z-index: 2;
   padding: 0;
   border: 0;
@@ -257,25 +254,35 @@
   border-radius: 50%;
 }
 
-.disc svg {
+.disc .token {
+  display: block;
   width: 100%;
   height: 100%;
-  display: block;
+  overflow: visible;
+}
+
+/* Il regarde vers où il va (tous les symboles sont symétriques). */
+.disc[data-facing='right'] .token {
+  transform: scaleX(-1);
 }
 
 .disc--active {
   z-index: 3;
-  filter: drop-shadow(0 0 5px var(--gold)) drop-shadow(0 0 2px var(--gold));
-  animation: pulse 1.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px var(--gold)) drop-shadow(0 0 1px var(--gold));
 }
 
+/* Ses propres nains : un anneau doré au sol. */
 .disc--mine::after {
   content: '';
   position: absolute;
-  inset: -3px;
+  left: 14%;
+  right: 14%;
+  bottom: -7%;
+  height: 16%;
   border-radius: 50%;
   border: 2px solid var(--gold-light);
-  box-shadow: 0 0 0 1px #14161c;
+  box-shadow: 0 0 6px var(--gold);
+  z-index: -1;
 }
 
 button.disc {
@@ -285,7 +292,7 @@ button.disc {
 button.disc--target {
   z-index: 4;
   outline: 3px solid var(--focus);
-  outline-offset: 1px;
+  outline-offset: 2px;
   animation: pulse 1s ease-in-out infinite;
 }
 
@@ -295,25 +302,181 @@ button.disc--target {
   }
 }
 
-/* Le nain tombé reste sur la galerie où il a été rattrapé. */
+/* Repos : respiration, clignement des yeux, lampe qui vacille. */
+.token__figure {
+  transform-box: view-box;
+  transform-origin: 20px 39px;
+  animation: breathe 2.8s ease-in-out infinite;
+}
+
+.token__eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: blink 4.6s ease-in-out infinite;
+}
+
+.token__lamp {
+  animation: lamp-blink 2.4s ease-in-out infinite;
+}
+
+.disc:nth-of-type(2n) .token__figure {
+  animation-delay: -1.3s;
+}
+
+/* Panique près du dragon : il tremble et transpire. */
+.disc--panic .token {
+  animation: tremble 0.22s linear infinite;
+}
+
+.token__sweat {
+  animation: sweat 1s ease-in infinite;
+}
+
+/* Joie à la sortie : un saut. */
+.disc--joy .token {
+  animation: joy-jump 900ms var(--ease-spring) 1;
+}
+
+/* Éliminé : englouti par les flammes, noirci de cendre, renversé. Il reste sur la galerie. */
 .disc--dead {
   z-index: 1;
 }
 
-.disc--dead svg {
-  filter: grayscale(1) brightness(0.55) sepia(0.3);
-  transition: filter 900ms ease 400ms;
+.disc--dead .token {
+  filter: grayscale(1) brightness(0.4) sepia(0.45);
+  transform: rotate(-24deg) translateY(6%);
+  transition:
+    filter 900ms ease 450ms,
+    transform 600ms var(--ease-spring) 450ms;
 }
 
-.disc--dead::before {
+.disc__burn {
+  position: absolute;
+  left: -15%;
+  right: -15%;
+  bottom: 0;
+  height: 130%;
+  pointer-events: none;
+  animation: engulf 1.3s ease-out both;
+}
+
+.disc__burn svg {
+  width: 100%;
+  height: 100%;
+}
+
+:root[data-quality='high'] .disc--dead::before {
   content: '';
   position: absolute;
-  inset: 18%;
-  z-index: 1;
-  background:
-    linear-gradient(45deg, transparent 42%, #ff5a3c 42% 58%, transparent 58%),
-    linear-gradient(-45deg, transparent 42%, #ff5a3c 42% 58%, transparent 58%);
-  filter: drop-shadow(0 0 2px #000);
+  left: 30%;
+  bottom: 70%;
+  width: 40%;
+  height: 60%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(140, 135, 145, 0.45), transparent 70%);
+  animation: smoke 3.2s ease-out infinite;
+  pointer-events: none;
+}
+
+:root[data-quality='low'] .token__figure,
+:root[data-quality='low'] .token__eye,
+:root[data-quality='low'] .token__lamp {
+  animation: none;
+}
+
+@keyframes breathe {
+  50% {
+    scale: 1.025 0.975;
+  }
+}
+
+@keyframes blink {
+  0%,
+  94%,
+  100% {
+    scale: 1 1;
+  }
+  97% {
+    scale: 1 0.1;
+  }
+}
+
+@keyframes lamp-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}
+
+@keyframes tremble {
+  25% {
+    translate: -0.8px 0;
+  }
+  75% {
+    translate: 0.8px 0;
+  }
+}
+
+@keyframes sweat {
+  from {
+    opacity: 1;
+    translate: 0 0;
+  }
+  to {
+    opacity: 0;
+    translate: 0 3px;
+  }
+}
+
+@keyframes joy-jump {
+  0% {
+    translate: 0 0;
+  }
+  35% {
+    translate: 0 -38%;
+    scale: 0.9 1.1;
+  }
+  70% {
+    translate: 0 0;
+    scale: 1.1 0.9;
+  }
+  100% {
+    translate: 0 0;
+    scale: 1 1;
+  }
+}
+
+@keyframes engulf {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+  70% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.7) translateY(-20%);
+  }
+}
+
+@keyframes smoke {
+  from {
+    opacity: 0.8;
+    transform: translateY(0) scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-60%) scale(1.4);
+  }
 }
 
 /* ---------- Pioches ---------- */
@@ -1237,5 +1400,250 @@ button.disc--target {
 @keyframes settle-b {
   40% {
     transform: scaleY(0.86) scaleX(1.06);
+  }
+}
+
+/* ---------- Choix de l'apparence (salon) ---------- */
+
+.look-picker {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.look-picker__preview {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, rgba(255, 220, 140, 0.25), transparent 70%);
+}
+
+@media (max-width: 480px) {
+  .look-picker {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+}
+
+/* ---------- Cérémonies de fin de manche et de partie ---------- */
+
+.ceremony__row {
+  animation: row-reveal 520ms var(--ease-out) var(--delay, 0ms) both;
+}
+
+/* Le premier est révélé au ralenti, avec un éclat doré. */
+.ceremony__row--first {
+  animation: row-reveal-first 1100ms var(--ease-spring) var(--delay, 0ms) both;
+}
+
+.ceremony__who {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  vertical-align: middle;
+}
+
+.awards {
+  display: inline-flex;
+  gap: 2px;
+}
+
+/* Les Grosses pépites volent depuis la réserve jusqu'au nain récompensé. */
+.award {
+  display: inline-block;
+  animation: award-fly 760ms var(--ease-out) var(--award-delay, 0ms) both;
+}
+
+.ceremony__crown {
+  color: var(--gold);
+  filter: drop-shadow(0 0 6px var(--gold-glow));
+}
+
+.final-hero {
+  animation: hero-in 700ms var(--ease-spring) var(--crown-delay, 0ms) both;
+}
+
+.final-hero__crown {
+  color: var(--gold);
+  filter: drop-shadow(0 0 10px var(--gold-glow));
+  animation: crown-drop 900ms var(--ease-spring) var(--crown-delay, 0ms) both;
+}
+
+.ceremony__skip {
+  justify-self: start;
+}
+
+.ceremony--done .ceremony__row,
+.ceremony--done .award,
+.ceremony--done .final-hero,
+.ceremony--done .final-hero__crown,
+.ceremony--done.final-hero {
+  animation: none;
+}
+
+@keyframes row-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes row-reveal-first {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+    filter: brightness(2.2);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+  100% {
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes award-fly {
+  0% {
+    opacity: 0;
+    transform: translate(-90px, -110px) scale(0.4) rotate(-140deg);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1.35) rotate(0deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+
+@keyframes crown-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-40px) rotate(-25deg) scale(1.6);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(4px) rotate(6deg) scale(1);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* ---------- Réactions rapides ---------- */
+
+.emote-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  padding: 8px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+
+.game__side .emote-bar {
+  margin-top: 12px;
+}
+
+.emote-bar__button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    transform var(--t-fast) var(--ease-spring),
+    border-color var(--t-fast) ease;
+}
+
+.emote-bar__button:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.08);
+  border-color: var(--gold);
+}
+
+.emote-bar__button:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.emote-bar__button:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+
+.player-card,
+.player-item {
+  position: relative;
+}
+
+.emote-bubble {
+  position: absolute;
+  z-index: 5;
+  right: 12px;
+  top: -16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 6px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--gold);
+  color: var(--text);
+  font-weight: 800;
+  font-size: 0.85rem;
+  box-shadow:
+    var(--shadow),
+    0 0 14px var(--gold-glow);
+  pointer-events: none;
+  animation: bubble-life 2600ms var(--ease-spring) both;
+}
+
+.emote-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  right: 22px;
+  width: 10px;
+  height: 10px;
+  background: var(--surface);
+  border-right: 1px solid var(--gold);
+  border-bottom: 1px solid var(--gold);
+  transform: rotate(45deg);
+}
+
+@keyframes bubble-life {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.6);
+  }
+  12% {
+    opacity: 1;
+    transform: translateY(0) scale(1.08);
+  }
+  20% {
+    transform: none;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
   }
 }

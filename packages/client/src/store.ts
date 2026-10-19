@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { flushSync } from 'react-dom';
 import type { ExtractionKind, GameEvent, PlayerView } from '@pepite/engine';
-import type { AutoPlay, ClientMessage, RoomView, ServerMessage } from '@pepite/shared';
+import type { AutoPlay, ClientMessage, Emote, RoomView, ServerMessage } from '@pepite/shared';
 import { runCues } from './director/cues';
 import { Director, browserClock } from './director/director';
 import {
@@ -11,6 +11,7 @@ import {
   type Sequence,
 } from './director/sequences';
 import { emitFx } from './fx/bus';
+import { viewerGold, type GoldSample } from './fx/gold';
 import { ERROR_MESSAGES, describeEvent, dwarfName } from './i18n/fr';
 import { getPreferences, reducedMotion, subscribePreferences } from './preferences';
 
@@ -33,6 +34,13 @@ export interface LastDrawn {
 export interface Notice {
   readonly id: number;
   readonly text: string;
+}
+
+/** Réaction rapide affichée quelques secondes près du joueur qui l'a envoyée. */
+export interface EmoteBubble {
+  readonly id: number;
+  readonly playerId: string;
+  readonly emote: Emote;
 }
 
 export interface AppState {
@@ -61,6 +69,9 @@ export interface AppState {
   readonly lastDrawn: LastDrawn | null;
   /** Chrono du tour en cours, en heure locale (`null` si pas de chrono). */
   readonly turnTimer: { readonly deadline: number; readonly totalMs: number } | null;
+  /** Or du joueur coup après coup (récapitulatif de fin de partie). */
+  readonly goldHistory: readonly GoldSample[];
+  readonly emotes: readonly EmoteBubble[];
 }
 
 /**
@@ -84,6 +95,7 @@ const LOG_LIMIT = 60;
 /** Retard maximal de la table sur le serveur, quoi qu'il arrive aux animations. */
 const MAX_BOARD_LAG_MS = 9000;
 const FAST_SPEED = 1.6;
+const EMOTE_MS = 2600;
 
 function readStorage(key: string): string | null {
   try {
@@ -168,6 +180,8 @@ class GameClient {
     queued: 0,
     lastDrawn: null,
     turnTimer: null,
+    goldHistory: [],
+    emotes: [],
   };
   private readonly listeners = new Set<() => void>();
   private socket: WebSocket | null = null;
@@ -320,7 +334,14 @@ class GameClient {
           room: message.room,
           playerId: message.you,
           ...(leftGame
-            ? { view: null, boardView: null, log: [], lastDrawn: null, turnTimer: null }
+            ? {
+                view: null,
+                boardView: null,
+                log: [],
+                lastDrawn: null,
+                turnTimer: null,
+                goldHistory: [],
+              }
             : {}),
         });
         // Un lien d'invitation (?salon=CODE) reste dans l'adresse tant qu'on n'a pas rejoint.
@@ -346,9 +367,22 @@ class GameClient {
         }, 6000);
         break;
       }
+      case 'emote':
+        this.showEmote(message.playerId, message.emote);
+        break;
       case 'pong':
         break;
     }
+  }
+
+  private showEmote(playerId: string, emote: Emote): void {
+    // Réactions des autres masquées si le joueur les a désactivées.
+    if (!getPreferences().emotes && playerId !== this.state.playerId) return;
+    const bubble = { id: nextId++, playerId, emote };
+    this.set({ emotes: [...this.state.emotes.filter((e) => e.playerId !== playerId), bubble] });
+    setTimeout(() => {
+      this.set({ emotes: this.state.emotes.filter((e) => e.id !== bubble.id) });
+    }, EMOTE_MS);
   }
 
   private applyGame(view: PlayerView, events: readonly GameEvent[], autoPlay?: AutoPlay): void {
@@ -416,7 +450,15 @@ class GameClient {
       if (frame.entries.length > 0) log = [...log, ...frame.entries].slice(-LOG_LIMIT);
       if (frame.lastDrawn !== undefined) lastDrawn = frame.lastDrawn;
     }
-    if (applied) this.set({ boardView: applied.view, log, lastDrawn });
+    if (!applied) return;
+    // Courbe d'or du joueur, pour le récapitulatif.
+    let goldHistory = this.state.goldHistory;
+    const gold = viewerGold(applied.view);
+    const last = goldHistory[goldHistory.length - 1];
+    if (gold !== null && (!last || last.gold !== gold || last.round !== applied.view.round)) {
+      goldHistory = [...goldHistory, { round: applied.view.round, gold }];
+    }
+    this.set({ boardView: applied.view, log, lastDrawn, goldHistory });
   }
 
   /** Garde-fou : la table ne reste jamais longtemps en retard sur le serveur. */

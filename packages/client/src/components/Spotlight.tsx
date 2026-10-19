@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import type { PlayerView } from '@pepite/engine';
+import type { DwarfLook } from '@pepite/shared';
 import { CardBack, ExitActionIcon, ExtractionCardArt } from '../assets/Cards';
 import { DragonHead, Flame } from '../assets/Dragon';
-import { DwarfDisc } from '../assets/DwarfDisc';
+import { DwarfToken } from '../assets/DwarfToken';
 import { IconSkip, IconSkull, IconSparkle } from '../assets/Icons';
 import {
   FLIP_AT,
@@ -12,6 +13,7 @@ import {
   type SequenceVisual,
 } from '../director/sequences';
 import { EXIT_LABELS } from '../i18n/fr';
+import { useLooks } from '../looks';
 import { reducedMotion } from '../preferences';
 import { client } from '../store';
 import { Card3D, type CardFinish } from './Card3D';
@@ -335,7 +337,15 @@ function CardVisual({
   }
 }
 
-function BannerIcon({ visual, color }: { visual: SequenceVisual; color: number | null }) {
+function BannerIcon({
+  visual,
+  color,
+  look,
+}: {
+  visual: SequenceVisual;
+  color: number | null;
+  look: DwarfLook | undefined;
+}) {
   switch (visual.kind) {
     case 'dragon':
       return (
@@ -347,7 +357,7 @@ function BannerIcon({ visual, color }: { visual: SequenceVisual; color: number |
     case 'exited':
       return (
         <span className="banner-icon banner-icon--exit">
-          <DwarfDisc color={color ?? 0} size={52} />
+          <DwarfToken color={color ?? 0} look={look} mood="joy" size={56} />
           <IconSparkle className="banner-icon__sparkle" size={22} />
         </span>
       );
@@ -448,9 +458,12 @@ export function Spotlight({
   view: PlayerView;
 }) {
   useSkipKey(sequence !== null);
+  const looks = useLooks();
   if (!sequence) return null;
   const layout = layoutOf(sequence.visual);
-  const color = sequence.dwarfId === null ? null : (view.dwarves[sequence.dwarfId]?.color ?? null);
+  const dwarf = sequence.dwarfId === null ? undefined : view.dwarves[sequence.dwarfId];
+  const color = dwarf?.color ?? null;
+  const look = dwarf ? looks.get(dwarf.ownerId) : undefined;
   // Le nom et l'effet de la carte n'apparaissent qu'une fois la carte retournée.
   const revealDelay = sequence.flight && layout === 'card' ? REVEAL_AT / speed : 0;
   const style = {
@@ -462,7 +475,7 @@ export function Spotlight({
     <div className="spotlight__text" aria-hidden>
       <p className="spotlight__title">
         {sequence.dwarfId !== null && color !== null && layout !== 'dramatic' && (
-          <DwarfDisc color={color} size={26} />
+          <DwarfToken color={color} look={look} size={30} />
         )}
         <span>{sequence.title}</span>
       </p>
@@ -494,7 +507,12 @@ export function Spotlight({
             </span>
             <span className="spot-dead-discs">
               {colors.map((dwarfColor, i) => (
-                <DwarfDisc key={i} color={dwarfColor} size={colors.length > 1 ? 54 : 76} />
+                <DwarfToken
+                  key={i}
+                  color={dwarfColor}
+                  mood="dead"
+                  size={colors.length > 1 ? 58 : 80}
+                />
               ))}
             </span>
             <IconSkull className="spot-skull" size={44} />
@@ -516,7 +534,7 @@ export function Spotlight({
           onClick={() => client.skipSequence()}
         >
           <div aria-hidden>
-            <BannerIcon visual={sequence.visual} color={color} />
+            <BannerIcon visual={sequence.visual} color={color} look={look} />
           </div>
           {text}
           <Controls queued={queued} />

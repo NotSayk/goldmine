@@ -199,6 +199,40 @@ describe('salons', () => {
   });
 });
 
+describe('apparence et réactions', () => {
+  it('chacun choisit chapeau et barbe dans le salon, visibles de tous', async () => {
+    const [host, guest] = await lobby(2);
+    expect(host!.room!.players.map((p) => p.look)).toEqual([
+      { hat: 0, beard: 1 },
+      { hat: 1, beard: 2 },
+    ]);
+    guest!.send({ type: 'setLook', hat: 2, beard: 0 });
+    await waitUntil(() => host!.room?.players[1]?.look.hat === 2);
+    expect(host!.room!.players[1]!.look).toEqual({ hat: 2, beard: 0 });
+    guest!.send({ type: 'setLook', hat: 3, beard: 0 });
+    await guest!.expectError('INVALID_MESSAGE');
+    host!.send({ type: 'startGame' });
+    await waitUntil(() => guest!.room?.status === 'playing');
+    guest!.send({ type: 'setLook', hat: 0, beard: 0 });
+    await guest!.expectError('GAME_IN_PROGRESS');
+  });
+
+  it('relaie les réactions à tout le salon, avec une limite de débit', async () => {
+    const [host, guest] = await lobby(2);
+    guest!.send({ type: 'emote', emote: 'cheer' });
+    const relayed = await host!.waitFor((m) => m.type === 'emote');
+    expect(relayed).toEqual({ type: 'emote', playerId: guest!.playerId, emote: 'cheer' });
+    guest!.sendRaw(JSON.stringify({ type: 'emote', emote: 'dance' }));
+    await guest!.expectError('INVALID_MESSAGE');
+    for (let i = 0; i < 4; i++) guest!.send({ type: 'emote', emote: 'laugh' });
+    await guest!.expectError('RATE_LIMITED');
+    await waitUntil(() => host!.received.filter((m) => m.type === 'emote').length === 3);
+    const outsider = await client();
+    outsider.send({ type: 'emote', emote: 'wave' });
+    await outsider.expectError('NOT_IN_ROOM');
+  });
+});
+
 describe('triche', () => {
   it('refuse une action hors de son tour, sans rien changer', async () => {
     const [host, guest] = await lobby(2);

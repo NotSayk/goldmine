@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { ErrorCode, ExitActionKind, GameEvent, PlayerId, PlayerView } from '@pepite/engine';
+import { EMOTES, LOOK_VARIANTS, type DwarfLook, type Emote } from './cosmetics';
 
 export const ROOM_CODE_LENGTH = 5;
 /** Alphabet des codes de salon, sans caractères ambigus (0/O, 1/I). */
@@ -18,6 +19,12 @@ const roomCode = z
   .pipe(z.string().regex(/^[A-Z0-9]{4,5}$/));
 const sessionToken = z.string().regex(/^[A-Za-z0-9_-]{16,64}$/);
 const playerId = z.string().regex(/^[A-Za-z0-9_-]{1,40}$/);
+
+const lookIndex = z
+  .number()
+  .int()
+  .min(0)
+  .max(LOOK_VARIANTS - 1);
 
 /** Intentions de jeu (le joueur est déduit de la session, jamais du message). */
 export const playerActionSchema = z.discriminatedUnion('type', [
@@ -45,6 +52,8 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('replaceWithBot'), playerId }),
   z.strictObject({ type: z.literal('skipPlayer'), playerId }),
   z.strictObject({ type: z.literal('backToLobby') }),
+  z.strictObject({ type: z.literal('setLook'), hat: lookIndex, beard: lookIndex }),
+  z.strictObject({ type: z.literal('emote'), emote: z.enum(EMOTES) }),
   z.strictObject({ type: z.literal('ping') }),
 ]);
 
@@ -84,6 +93,7 @@ export interface RoomPlayerView {
   readonly connection: ConnectionStatus;
   /** Joueur humain temporairement remplacé par un bot. */
   readonly botControlled: boolean;
+  readonly look: DwarfLook;
 }
 
 export interface RoomSettings {
@@ -170,4 +180,6 @@ export type ServerMessage =
       readonly autoPlay?: AutoPlay;
     }
   | { readonly type: 'error'; readonly code: ServerErrorCode; readonly message: string }
+  /** Réaction d'un joueur, relayée à tout le salon. */
+  | { readonly type: 'emote'; readonly playerId: PlayerId; readonly emote: Emote }
   | { readonly type: 'pong' };

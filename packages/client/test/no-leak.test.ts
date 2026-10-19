@@ -13,6 +13,8 @@ import {
 } from '@pepite/engine';
 import type * as HouseRules from '../../engine/src/rules/houseRules';
 import { buildSequences } from '../src/director/sequences';
+import { viewerGold } from '../src/fx/gold';
+import { buildRecap } from '../src/fx/recap';
 import { EXIT_LABELS } from '../src/i18n/fr';
 
 // Piles cachées (règle du livret) : le réalisateur ne doit jamais trahir l'or des autres.
@@ -79,6 +81,25 @@ describe('aucune fuite dans les animations', () => {
       expect(final.phase).toBe('finished');
     }
     expect(checked).toBeGreaterThan(200);
+  });
+
+  it('le récapitulatif ne contient que sa propre courbe et les scores finaux publics', () => {
+    const history: { round: number; gold: number }[] = [];
+    const final = play('recap', (_events, state) => {
+      const gold = viewerGold(viewFor(state, 'b'));
+      if (gold !== null) history.push({ round: state.round, gold });
+    });
+    const view = viewFor(final, 'b');
+    const recap = buildRecap(view, history, new Date(2026, 9, 19));
+    expect(recap).not.toBeNull();
+    expect(recap!.curve).toEqual(history);
+    expect(recap!.standings).toHaveLength(PLAYERS.length);
+    for (const standing of recap!.standings) {
+      expect(Object.keys(standing).sort()).toEqual(['name', 'rank', 'total', 'you']);
+      const public_ = view.finalResult!.standings.find((s) => s.rank === standing.rank);
+      expect(public_).toBeDefined();
+    }
+    expect(recap!.date).toBe('19 octobre 2026');
   });
 
   it('ne s’appuie que sur les types du moteur, jamais sur son code', () => {
