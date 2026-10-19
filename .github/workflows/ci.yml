@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint, types et tests
+        run: npm run check
+      - name: Couverture du moteur (seuil 90 %)
+        run: npm run coverage
+      - name: Construction
+        run: npm run build
