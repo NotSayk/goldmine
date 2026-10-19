@@ -24,7 +24,10 @@
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
     "simulate": "tsx packages/engine/scripts/simulate.ts",
-    "check": "npm run lint && npm run typecheck && npm run test"
+    "check": "npm run lint && npm run typecheck && npm run test",
+    "smoke": "node scripts/browser/smoke.mjs",
+    "screenshots": "node scripts/browser/screenshots.mjs",
+    "perf": "node scripts/browser/perf.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
@@ -35,6 +38,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "fast-check": "^4.10.2",
     "globals": "^16.5.0",
+    "playwright-core": "1.56.1",
     "prettier": "^3.6.2",
     "tsx": "^4.20.6",
     "typescript": "~5.9.3",

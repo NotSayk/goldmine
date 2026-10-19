@@ -47,7 +47,7 @@ Chaque cas est isolé dans une fonction nommée et documentée de [`packages/eng
 
 - **L'or de chaque joueur est visible de tous** (demande du commanditaire, écart assumé par rapport au livret où les cartes sont posées face cachée et où il faut s'en souvenir). Réglage en une ligne : `pileValuesArePublic` dans `houseRules.ts` ; s'il renvoie `false`, le serveur n'envoie plus que le nombre de cartes des piles adverses.
 - **La pioche Extraction est face cachée** (demande du commanditaire, écart assumé : le livret la pose face visible, on voit la carte avant de la prendre). On découvre la carte en la piochant et elle est montrée à tous à ce moment-là. Le mécanisme du dragon est inchangé : après chaque carte creusée, si la carte suivante est un dragon, elle est retournée devant tout le monde et le dragon avance. Seul le nombre total de cartes restantes est envoyé, jamais le détail par type. Réglage en une ligne : `extractionTopIsPublic` dans `houseRules.ts`.
-- **Nain éliminé** : son disque reste sur la galerie où il est tombé (celle que le dragon vient de brûler et de faire passer à sa droite), pour que chacun voie où il est mort. L'événement `DwarfEliminated` indique cette carte et l'or perdu (`goldLost`, masqué pour les autres joueurs si les piles sont cachées).
+- **Nain éliminé** : son disque reste sur la carte Mine où il est tombé (celle que le dragon vient de retourner sur sa face rouge et de faire passer à sa droite), pour que chacun voie où il est mort. L'événement `DwarfEliminated` indique cette carte et l'or perdu (`goldLost`, masqué pour les autres joueurs si les piles sont cachées).
 - Le nombre de cartes Bonus d'or gardées par chaque joueur est public (on voit qu'il garde la carte, et sa valeur est fixe).
 - Une carte Exit à deux actions en attente de choix n'est visible que de son auteur ; elle devient publique quand l'action est jouée.
 - Les résultats de manche (or de chaque nain sorti) sont révélés au décompte.
@@ -58,7 +58,7 @@ Chaque cas est isolé dans une fonction nommée et documentée de [`packages/eng
 - Chaque joueur humain a **45 secondes** par tour (`TURN_TIME_MS`, `0` pour désactiver). Le chrono est tenu par le serveur ; les clients affichent un compte à rebours.
 - Temps écoulé : le serveur lance une pièce. Pile, il creuse ; face, il fuit. Si une seule action est possible (pioche Exit vide), elle est jouée sans tirage. Tous les écrans montrent la pièce, puis le coup joué.
 - Carte Exit à deux actions piochée en fin de chrono : le joueur garde au moins 15 secondes pour la lire ; ensuite, pile ou face entre les deux actions. Cible d'un échange non choisie : tirée au hasard.
-- Les bots (et les joueurs remplacés par un bot) ne sont pas chronométrés. Le chrono repart de zéro à chaque nouveau tour.
+- Les bots (et les joueurs remplacés par un bot) ne sont pas chronométrés. Le chrono repart de zéro à chaque nouveau tour, **après** les animations du coup précédent (le serveur connaît leur durée, voir section 6) : regarder une cinématique ne coûte pas de temps de jeu.
 
 **Salons et connexions** (choix hors règles)
 
@@ -138,3 +138,78 @@ Bots aléatoires (8 dragons) : 16 à 30 tours par manche, 4 à 6 % d'éliminatio
 - Branche : le prompt mentionne `claude/beautiful-brown-lly20m`, mais la session imposait `claude/modest-planck-m4h6hp` ; tout le travail y est poussé.
 - Déploiement : pas de Dockerfile, à la demande de l'utilisateur (pas de Docker disponible). Le déploiement se fait avec Node.js et npm (`npm ci`, `npm run build`, `npm start`), voir le README.
 - `npm install` utilise `legacy-peer-deps` (fichier `.npmrc`) : le résolveur de npm 10 plante sur des dépendances pair optionnelles de Vite ; les dépendances pair nécessaires sont déclarées explicitement.
+
+## 6. Refonte visuelle et animations
+
+Réalisée d'après [`PROMPT_DESIGN.md`](PROMPT_DESIGN.md), jalons 1 à 6 et réactions rapides. À la demande de l'utilisateur, **le son et la musique (jalon 7) et les scènes animées de l'accueil et du salon (jalon 8) ne sont pas faits** ; les réactions rapides (emotes) du jalon 8 le sont.
+
+### Direction artistique
+
+- « Fantasy sombre atmosphérique » : fonds nuit et pierre froide, or chaud pour les récompenses, braise pour le danger, cyan de cristal pour l'interface. Toutes les couleurs sont des jetons CSS ([`styles/tokens.css`](../packages/client/src/styles/tokens.css)) : thème « mine » et variante « contraste élevé » (aplats noirs, bordures blanches, sans voile décoratif), choisie automatiquement si le système demande plus de contraste. L'ancien thème clair est retiré.
+- Polices auto-hébergées (sous-ensemble latin, variables) : **Cinzel** pour les titres, scores et noms de cartes, **Inter** pour le reste. Aucune requête vers un CDN.
+- Matières par dégradés et bruit SVG (`feTurbulence` en image de fond statique) : grain de papier sur les cartes, roche du décor ; aucune image matricielle.
+- Les emojis sont remplacés par des pictogrammes SVG originaux ([`assets/Icons.tsx`](../packages/client/src/assets/Icons.tsx)).
+
+### Noms des cartes et illustrations
+
+- **Noms et descriptions des cartes : ceux du livret** (demande de l'utilisateur, livret fourni) : « Un dragon aux œufs d'or », « Il est l'or, monseignor ! », « D'l'or, j'adore ! », « Un dragon ! UN DRAGON ! », « Petit pas », « Double pas », « Tous ensemble ! », « Échange inter-nain-tional », « Bonus d'or », le dragon **Dragobert**, les cartes Mine, Wagon et Sortie de la mine. Ils sont regroupés dans [`i18n/fr.ts`](../packages/client/src/i18n/fr.ts) et [`branding.ts`](../packages/shared/src/branding.ts). Le nom du jeu reste un nom de travail.
+- **Illustrations : dessins originaux uniquement.** L'utilisateur a demandé de découper les illustrations du livret pour remplacer les SVG ; ce n'est pas fait, car ces dessins sont protégés (© Franckh-Kosmos / IELLO, tous droits réservés) et les copier dans le dépôt reviendrait à les redistribuer. Les SVG gardent la lecture des vraies cartes (porte rouge vers le dragon, porte bleue vers la Sortie, nombre de pépites, flèches des actions Exit).
+- Toute publication (nom, textes des cartes) reste soumise à l'accord de l'éditeur.
+
+### Dépendances : aucune ajoutée au client
+
+Le prompt suggérait GSAP, Framer Motion, PixiJS ou tsParticles, matter.js et Howler.js. Aucune n'est utilisée :
+
+| Besoin                        | Choix                                                                                          | Raison                                                                                                                        |
+| ----------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Timelines, FLIP, retournement | Web Animations API (`element.animate`) + CSS                                                   | Natif, annulable, accélérable ; 0 Ko (GSAP : ~25 Ko gzip, licence spécifique)                                                 |
+| Particules                    | Moteur canvas 2D maison ([`fx/particles.ts`](../packages/client/src/fx/particles.ts)), différé | 2,3 Ko gzip pour poussière, étincelles, cendres, braises, confettis (PixiJS : ~100 Ko gzip, WebGL superflu ici)               |
+| Physique des pépites          | Gravité, rebonds, chocs entre disques et attraction vers la pile, dans le même module          | Une vingtaine de corps au plus : quelques dizaines de lignes au lieu de matter.js (~25 Ko gzip)                               |
+| Son                           | Non fait (demande de l'utilisateur)                                                            | Le réalisateur garde des repères `sound` dans chaque séquence : un moteur Web Audio pourra s'y brancher sans autre changement |
+| Captures et mesures           | `playwright-core` **1.56.1** (développement seulement, version exacte)                         | Chromium est déjà installé ; `npm audit` : 0 vulnérabilité                                                                    |
+
+Sont chargés à la demande (`import()`) : les particules d'ambiance, le moteur de particules et le générateur du récapitulatif.
+
+### Architecture d'animation : le réalisateur
+
+- `src/director/` transforme les événements filtrés du serveur en **séquences** (titre, visuel, durée, repères datés : révélation, son, tremblement, gerbe de particules, travelling, souffle de flammes, vibration) jouées une par une. Une séquence est passable (clic, bouton « Passer », Échap ; Maj+Échap ou « Tout » vide la file).
+- **Deux vues** : la dernière vue du serveur pilote les actions et les fenêtres de choix (jamais retardées) ; la vue de la table la rattrape au repère `reveal` de la séquence. Passer une séquence joue sa révélation : la table finit toujours sur la vue du serveur. Si une nouvelle vue arrive au milieu d'une séquence, la table saute à l'état final de celle-ci ; un garde-fou empêche la table d'avoir plus de 14 s de retard. Jouer un coup vide la file.
+- Quand un coup réveille le dragon, déplacements, sortie et poussière sont rejoués au début de sa cinématique : nains, dragon et cartes retournées bougent avec les flammes.
+- **Suspense sans fuite** : la pause avant le retournement est la même pour toutes les cartes. Les séquences ne reçoivent que la vue et les événements filtrés du joueur ; un test joue des parties complètes avec les piles cachées et vérifie qu'aucune séquence ne montre l'or d'un autre joueur ni une carte Exit en attente, et que le client n'importe aucun code du moteur.
+
+### Rythme (retour de l'utilisateur : « trop rapide »)
+
+- Les durées sont communes au client et au serveur ([`shared/src/pacing.ts`](../packages/shared/src/pacing.ts)) : une pioche dure environ 3,7 s (vol 0,75 s, suspense 0,75 s, retournement 0,38 s, lecture 1,8 s), le dragon 2,8 s (+0,7 s par pas en chaîne, 4,8 s au plus), une élimination 3,8 s, un bond de nain 0,44 s par carte.
+- **Les coups des bots se jouent au même rythme que ceux des joueurs** : le serveur estime la durée des animations de chaque coup (`animationMs`) et un bot ne joue qu'une fois ce temps écoulé (plus 0,9 s de réflexion, et au moins `BOT_DELAY_MS`). La version courte pour les spectateurs prévue par le prompt et l'accélération quand c'est son tour sont retirées ; la file n'accélère plus que si elle déborde vraiment (×1,25 à partir de 3 séquences en attente, ×1,6 à partir de 5), par exemple après une reconnexion. `PACE_ANIMATIONS=0` désactive ce rythme côté serveur (tests, captures).
+- Réglage « Vitesse des cinématiques : rapide » (×1,5) pour qui préfère.
+
+### Accessibilité et réglages
+
+- `prefers-reduced-motion` (ou le réglage « Animations réduites ») : les animations se figent sur leur état final mais gardent leurs délais, la carte piochée est donc montrée au même moment, en fondu ; pas de tremblement, travelling, parallaxe ni particules.
+- Qualité **basse / moyenne / élevée / auto** : basse coupe particules, physique et animations de repos ; élevée ajoute la distorsion de chaleur et double la résolution des particules. « Auto » commence à « moyenne » sur écran tactile ou petite machine et baisse d'un cran si la partie passe sous 40 images/s.
+- Le journal de partie (`aria-live`) reste la source pour les lecteurs d'écran ; décors et effets sont `aria-hidden` ; les boutons « Passer » restent accessibles au clavier. Cibles tactiles d'au moins 44 px, focus visible doré.
+- Daltonisme : chaque nain garde sa couleur (palette Okabe-Ito) **et** son symbole, dessiné en grand sur le corps du personnage ; tous les symboles sont symétriques pour que le nain puisse regarder à droite.
+- Contrastes mesurés (WCAG) : texte 14,4:1, texte secondaire 8,8:1, texte discret 5,6:1, or 12,2:1, cyan 10,0:1, braise 6,8:1, vert 10,6:1, texte des boutons or 9,2:1 et « Fuir » 5,1:1 ou plus ; contraste élevé : 21:1.
+
+### Réactions rapides et apparence
+
+- Six réactions (bravo, rire, oh non, ça chauffe, de l'or, salut), envoyées comme intentions `emote`, validées par zod et **limitées par le serveur** (rafale de 3, puis une toutes les 2 s, par joueur), relayées à tout le salon. Masquables dans les réglages.
+- Apparence des nains : 3 chapeaux et 3 barbes, choisis dans le salon (intention `setLook`, refusée pendant la partie), visibles de tous.
+
+### Performance (mesurée avec `npm run perf`, Chromium 141 sans écran ni carte graphique)
+
+| Mesure                                                 | Résultat                                                                                |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| Chemin critique (HTML + JS + CSS, gzip)                | **115 Ko** (JS 102 Ko, CSS 13 Ko), budget 250 Ko ; + 73 Ko de polices woff2 préchargées |
+| Modules différés                                       | particules 2,3 Ko, ambiance 1,0 Ko, récapitulatif 1,7 Ko (gzip)                         |
+| Chargement, ordinateur (local)                         | DOM prêt en 60 ms, formulaire prêt en 110 ms                                            |
+| Chargement, téléphone simulé (processeur ×4, 4G lente) | premier affichage 1,3 s, formulaire prêt en 3,0 s                                       |
+| Partie de 30 s, qualité élevée, ordinateur             | 57 i/s en moyenne, 60 i/s au 5e centile, 2 % d'images sous 30 i/s                       |
+| Partie de 30 s, qualité élevée, téléphone simulé (×4)  | 50 i/s en moyenne, 30 i/s au 5e centile, 5 % d'images sous 30 i/s                       |
+
+Une première mesure donnait 36 et 28 i/s : les lueurs du décor étaient animées à l'intérieur des SVG (tout le décor redessiné à chaque image), la distorsion de chaleur recalculait son bruit à chaque image, le fond de page était en `background-attachment: fixed` et la barre d'actions floutait l'arrière-plan. Désormais seules `transform` et `opacity` sont animées sur des calques séparés. Le rendu logiciel de Chromium sans écran est plus lent qu'un vrai téléphone avec carte graphique : ces chiffres sont prudents.
+
+### Vérifications
+
+- `npm run smoke` : parties complètes à 2, 4 (dont deux humains) et 6 joueurs ; les humains simulés jouent dès que c'est possible, pendant les animations. Aucune erreur console.
+- `npm run screenshots` : accueil, salon, table, dragon, fin de manche, fin de partie, sur téléphone (390 px), tablette (820 px) et ordinateur (1440 px), avec et sans mouvement réduit, dans [`screenshots/`](screenshots/) (JPEG pour limiter le poids du dépôt).

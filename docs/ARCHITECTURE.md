@@ -29,18 +29,38 @@ flowchart LR
 1. Le client envoie une **intention** (`{"type":"action","action":{"type":"drawExit"}}`). Il n'indique jamais qui il est : le serveur déduit le joueur de la session WebSocket.
 2. Le serveur valide le message avec **zod** (`packages/shared`), applique une limitation de débit, puis appelle `reduce` du moteur avec l'identifiant du joueur.
 3. Le moteur vérifie la légalité (bon joueur, bonne phase, choix existant…). Une action illégale renvoie un code d'erreur (`NOT_YOUR_TURN`, `CHOICE_PENDING`…) **sans modifier l'état ni consommer le générateur**.
-4. En cas de succès, le serveur garde le nouvel état et envoie à **chaque** joueur `viewFor(état, joueur)` et les événements filtrés pour lui. Le client anime les événements (déplacements, flammes, éliminations) et affiche la vue.
+4. En cas de succès, le serveur garde le nouvel état et envoie à **chaque** joueur `viewFor(état, joueur)` et les événements filtrés pour lui. Le client met les événements en scène (voir « Client : le réalisateur ») et affiche la vue.
 
 ## Paquets
 
-| Paquet   | Rôle                                                                   | Dépendances                                           |
-| -------- | ---------------------------------------------------------------------- | ----------------------------------------------------- |
-| `engine` | Règles, état, événements, vues filtrées, bots, simulation              | aucune                                                |
-| `shared` | Schémas zod des messages entrants, types du protocole, noms de travail | `zod`, types du moteur                                |
-| `server` | Transport, salons, sessions, reconnexion, bots, générateur sécurisé    | `fastify`, `@fastify/static`, `ws`                    |
-| `client` | Interface React, illustrations SVG, préférences (thème, animations)    | `react` ; types seulement depuis `engine` et `shared` |
+| Paquet   | Rôle                                                                                              | Dépendances                                                                  |
+| -------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `engine` | Règles, état, événements, vues filtrées, bots, simulation                                         | aucune                                                                       |
+| `shared` | Schémas zod des messages, types du protocole, noms, rythme des animations, constantes cosmétiques | `zod`, types du moteur ; `branding`, `cosmetics` et `pacing` sans dépendance |
+| `server` | Transport, salons, sessions, reconnexion, bots, générateur sécurisé                               | `fastify`, `@fastify/static`, `ws`                                           |
+| `client` | Interface React, réalisateur d'animations, illustrations SVG, effets canvas, préférences          | `react` ; types seulement depuis `engine` (et la racine de `shared`)         |
 
 Le client n'importe **aucune valeur** du moteur (règle ESLint `no-restricted-imports` avec `allowTypeImports`) : il ne contient pas de logique de règles. Les raisons d'une action impossible (« Ce n'est pas votre tour », « Terminez d'abord votre choix »…) sont calculées par le moteur (`view.legal`) et seulement traduites par le client.
+
+## Client : le réalisateur
+
+```mermaid
+flowchart LR
+  MSG["message « game »<br/>vue + événements filtrés"] --> STORE["store<br/>vue la plus récente"]
+  STORE -- "buildSequences()" --> DIR["Director<br/>file de séquences"]
+  DIR -- "repères datés (runCues)" --> CUES{repère}
+  CUES -- reveal --> BOARD["vue de la table<br/>(Track, pioches, piles)"]
+  CUES -- "shake, camera, flameSweep, burst" --> FX["calque d'effets<br/>WAAPI + canvas différé"]
+  DIR --> SPOT["Spotlight<br/>carte mise en scène"]
+  STORE --> ACT["actions, choix, chrono<br/>(jamais retardés)"]
+```
+
+- **`director/sequences.ts`** : événements → séquences (visuel, durée, repères). Fonctions pures, testées sans navigateur.
+- **`director/director.ts`** : file jouée une séquence à la fois, passable, accélérée seulement quand elle déborde ; horloge injectable pour les tests.
+- **`director/cues.ts`** : programme les repères d'une séquence ; l'arrêt joue tout de suite une révélation encore à venir, pour finir sur la vue du serveur.
+- **`store.ts`** : garde la dernière vue (actions) et la vue de la table, appliquée au repère `reveal`, dans l'ordre d'arrivée des messages.
+- **`fx/`** : bus d'effets, particules et ambiance (canvas, chargés à la demande), jauge de chaleur (`--heat`, tirée de la seule position du dragon), mesure de fluidité pour la qualité « auto », récapitulatif de fin de partie.
+- Le rythme (`@pepite/shared/pacing`) est commun au client et au serveur : le serveur s'en sert pour faire attendre les bots et repousser le chrono pendant les animations.
 
 ## Moteur
 
