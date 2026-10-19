@@ -1,3 +1,4 @@
+import { IconClose } from './assets/Icons';
 import { GameScreen } from './screens/GameScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { LobbyScreen } from './screens/LobbyScreen';
@@ -24,7 +25,7 @@ export function App() {
             onClick={() => client.dismissNotice()}
             aria-label="Fermer le message"
           >
-            ✕
+            <IconClose />
           </button>
         </div>
       )}
@@ -33,12 +34,14 @@ export function App() {
       {room && room.status !== 'lobby' && view && (
         <GameScreen
           view={view}
+          boardView={state.boardView ?? view}
           room={room}
           log={state.log}
-          effects={state.effects}
           waiting={state.waiting}
-          highlights={state.highlights}
-          highlightMs={state.highlightMs}
+          sequence={state.sequence}
+          sequenceMs={state.sequenceMs}
+          sequenceSpeed={state.sequenceSpeed}
+          queued={state.queued}
           lastDrawn={state.lastDrawn}
           turnTimer={state.turnTimer}
         />

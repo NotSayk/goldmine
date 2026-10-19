@@ -16,8 +16,8 @@ import { TopBar } from '../components/TopBar';
 import { Track } from '../components/Track';
 import { TurnCountdown, type TurnTimer } from '../components/TurnCountdown';
 import { dwarfLook, dwarfName } from '../i18n/fr';
-import type { Highlight } from '../spotlight';
-import { client, type Effect, type LastDrawn, type LogEntry } from '../store';
+import type { Sequence } from '../director/sequences';
+import { client, type LastDrawn, type LogEntry } from '../store';
 
 function TurnBanner({
   view,
@@ -139,22 +139,28 @@ function FinalPanel({ view, isHost }: { view: PlayerView; isHost: boolean }) {
 
 export function GameScreen({
   view,
+  boardView,
   room,
   log,
-  effects,
   waiting,
-  highlights,
-  highlightMs,
+  sequence,
+  sequenceMs,
+  sequenceSpeed,
+  queued,
   lastDrawn,
   turnTimer,
 }: {
+  /** Dernière vue reçue : actions et choix, jamais retardés par les animations. */
   view: PlayerView;
+  /** Vue montrée sur la table, au rythme du réalisateur. */
+  boardView: PlayerView;
   room: RoomView;
   log: readonly LogEntry[];
-  effects: readonly Effect[];
   waiting: boolean;
-  highlights: readonly Highlight[];
-  highlightMs: number;
+  sequence: Sequence | null;
+  sequenceMs: number;
+  sequenceSpeed: number;
+  queued: number;
   lastDrawn: LastDrawn | null;
   turnTimer: TurnTimer | null;
 }) {
@@ -164,11 +170,7 @@ export function GameScreen({
     view.pending?.kind === 'chooseSwapTarget' && view.pending.playerId === view.viewerId
       ? view.pending.targets
       : [];
-  const highlight = highlights[0];
-  const highlightColor =
-    highlight?.dwarfId === null || highlight === undefined
-      ? null
-      : (view.dwarves[highlight.dwarfId]?.color ?? null);
+  const idle = sequence === null && queued === 0;
   return (
     <>
       <TopBar
@@ -190,32 +192,32 @@ export function GameScreen({
           <TurnBanner view={view} room={room} turnTimer={turnTimer} />
           <section className="board" aria-label="Table de jeu">
             <Track
-              view={view}
-              effects={effects}
+              view={boardView}
               swapTargets={swapTargets}
               onSwap={(dwarfId) =>
                 client.send({ type: 'action', action: { type: 'chooseSwapTarget', dwarfId } })
               }
             />
-            <Decks view={view} lastDrawn={lastDrawn} />
+            <Decks view={boardView} lastDrawn={lastDrawn} />
           </section>
-          <RoundEndPanel
-            key={view.round}
-            view={view}
-            isHost={isHost}
-            idle={highlights.length === 0}
-          />
-          {view.phase === 'finished' && <FinalPanel view={view} isHost={isHost} />}
+          <RoundEndPanel key={boardView.round} view={boardView} isHost={isHost} idle={idle} />
+          {boardView.phase === 'finished' && <FinalPanel view={boardView} isHost={isHost} />}
           {view.phase === 'playing' && (
             <ActionBar view={view} waiting={waiting} turnTimer={turnTimer} />
           )}
         </div>
         <aside className="game__side stack">
-          <Players view={view} room={room} />
+          <Players view={boardView} room={room} />
           <GameLog entries={log} />
         </aside>
       </main>
-      <Spotlight highlight={highlight} durationMs={highlightMs} color={highlightColor} />
+      <Spotlight
+        sequence={sequence}
+        durationMs={sequenceMs}
+        speed={sequenceSpeed}
+        queued={queued}
+        view={view}
+      />
       <ChoiceDialog view={view} waiting={waiting} turnTimer={turnTimer} />
       <Modal open={confirmLeave} title="Quitter la partie ?" onClose={() => setConfirmLeave(false)}>
         <p>Un bot jouera à votre place jusqu’à la fin de la partie. Vous ne pourrez pas revenir.</p>

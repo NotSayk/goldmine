@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { BRANDING } from '@pepite/shared/branding';
+import { IconBook, IconGear } from '../assets/Icons';
 import { Nugget } from '../assets/Nugget';
 import { RulesDialog } from './RulesDialog';
 import { SettingsDialog } from './SettingsDialog';
@@ -22,7 +23,7 @@ export function TopBar({ meta, children }: { meta?: ReactNode; children?: ReactN
         aria-label="Règles du jeu"
         title="Règles"
       >
-        ?
+        <IconBook />
       </button>
       <button
         type="button"
@@ -31,7 +32,7 @@ export function TopBar({ meta, children }: { meta?: ReactNode; children?: ReactN
         aria-label="Réglages"
         title="Réglages"
       >
-        ⚙
+        <IconGear />
       </button>
       <RulesDialog open={rules} onClose={() => setRules(false)} />
       <SettingsDialog open={settings} onClose={() => setSettings(false)} />

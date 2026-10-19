@@ -1,0 +1,47 @@
+/*
+ * Mouvement réduit : les animations se figent sur leur état final (leurs délais
+ * sont gardés, donc une carte est toujours montrée au bon moment) ; seuls des
+ * fondus courts subsistent. Aucun tremblement, parallaxe ni particule.
+ */
+:root[data-motion='reduced'] *,
+:root[data-motion='reduced'] *::before,
+:root[data-motion='reduced'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+:root[data-motion='reduced'] .spotlight__panel::before,
+:root[data-motion='reduced'] .spotlight__text,
+:root[data-motion='reduced'] .spotlight__controls {
+  animation: rm-life var(--dur) linear both !important;
+}
+
+:root[data-motion='reduced'] .spotlight__reveal {
+  animation: rm-fade 200ms ease var(--reveal-delay) both !important;
+}
+
+:root[data-motion='reduced'] dialog[open],
+:root[data-motion='reduced'] dialog[open]::backdrop {
+  animation: rm-fade 150ms ease both !important;
+}
+
+@keyframes rm-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rm-life {
+  0% {
+    opacity: 0;
+  }
+  6%,
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

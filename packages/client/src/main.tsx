@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { client } from './store';
 import './preferences';
-import './styles.css';
+import './styles/index.css';
 
 client.connect();
 

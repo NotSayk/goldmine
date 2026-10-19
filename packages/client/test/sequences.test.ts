@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { createGame, createSeededRng, viewFor, type GameEvent } from '@pepite/engine';
-import { buildAutoPlayHighlight, buildHighlights, highlightDuration } from '../src/spotlight';
+import {
+  FLIP_AT,
+  REVEAL_AT,
+  buildAutoPlaySequence as buildAutoPlayHighlight,
+  buildSequences as buildHighlights,
+  type Cue,
+} from '../src/director/sequences';
 
 const { state } = createGame(
   {
@@ -13,7 +19,7 @@ const { state } = createGame(
   createSeededRng(3),
 );
 
-describe('coups mis au premier plan', () => {
+describe('séquences du réalisateur', () => {
   it('montre la carte creusée avec ses conséquences', () => {
     const events: GameEvent[] = [
       { type: 'CardDrawn', deck: 'extraction', dwarfId: 0, card: 'blueDoor', gold: 1 },
@@ -88,10 +94,57 @@ describe('coups mis au premier plan', () => {
     expect(seenByBruno[0]).toMatchObject({ title: 'Alice fuit', visual: { kind: 'exitBack' } });
   });
 
-  it('accélère quand les coups s’accumulent, laisse plus de temps aux éliminations', () => {
-    expect(highlightDuration(1)).toBeGreaterThan(highlightDuration(3));
-    expect(highlightDuration(3)).toBeGreaterThan(highlightDuration(6));
-    expect(highlightDuration(1, true)).toBeGreaterThan(highlightDuration(1));
+  it('marque la même pause de suspense pour une bonne ou une mauvaise carte', () => {
+    const timing = (card: 'redDoor' | 'blueDoor' | 'noDoor' | 'dragon'): Cue[] => {
+      const [sequence] = buildHighlights(
+        [
+          {
+            type: 'CardDrawn',
+            deck: 'extraction',
+            dwarfId: 0,
+            card,
+            gold: card === 'dragon' ? 0 : 1,
+          },
+        ],
+        viewFor(state, 'b'),
+      );
+      return (sequence?.cues ?? []).filter((cue) => cue.type === 'reveal' || cue.type === 'sound');
+    };
+    const reveal = (cues: Cue[]): number | undefined => cues.find((c) => c.type === 'reveal')?.at;
+    for (const card of ['redDoor', 'blueDoor', 'noDoor', 'dragon'] as const) {
+      expect(reveal(timing(card))).toBe(REVEAL_AT);
+      expect(timing(card).find((c) => c.type === 'sound' && c.sound === 'flip')?.at).toBe(FLIP_AT);
+    }
+  });
+
+  it('fait monter une chaîne de dragons en intensité sans l’allonger sans fin', () => {
+    const events: GameEvent[] = [5, 4, 3, 2, 1].map((to) => ({
+      type: 'DragonMoved',
+      from: to + 1,
+      to,
+      burnedCardId: `mine-${to}`,
+    }));
+    const [dragon] = buildHighlights(events, viewFor(state, 'a'));
+    expect(dragon?.visual).toEqual({ kind: 'dragon', steps: 5 });
+    expect(dragon?.duration).toBeLessThanOrEqual(3200);
+    const shakes = (dragon?.cues ?? []).flatMap((c) => (c.type === 'shake' ? [c.strength] : []));
+    expect(shakes.length).toBe(5);
+    expect(Math.max(...shakes)).toBeLessThanOrEqual(3);
+    expect(shakes[1]! > shakes[0]!).toBe(true);
+    expect(Math.max(...(dragon?.cues ?? []).map((c) => c.at))).toBeLessThan(dragon?.duration ?? 0);
+  });
+
+  it('change le plateau au début de la cinématique du dragon', () => {
+    const events: GameEvent[] = [
+      { type: 'CardDrawn', deck: 'extraction', dwarfId: 0, card: 'redDoor', gold: 2 },
+      { type: 'DwarfMoved', dwarfId: 0, from: 1, to: 2, cause: 'extraction' },
+      { type: 'DragonMoved', from: 8, to: 7, burnedCardId: 'mine-6' },
+    ];
+    const [draw, dragon] = buildHighlights(events, viewFor(state, 'a'));
+    expect(draw?.cues.some((c) => c.type === 'reveal')).toBe(false);
+    expect(dragon?.cues.find((c) => c.type === 'reveal')?.at).toBe(0);
+    expect(dragon?.cues.some((c) => c.type === 'sound' && c.sound === 'step')).toBe(true);
+    expect(dragon?.important).toBe(true);
   });
 });
 
@@ -106,7 +159,6 @@ describe('temps écoulé : pile ou face', () => {
       name: 'Pile ou face… Fuir !',
       detail: 'Pile : Creuser · Face : Fuir',
       visual: { kind: 'coin', heads: 'Creuser', tails: 'Fuir', side: 'tails' },
-      slow: true,
     });
   });
 

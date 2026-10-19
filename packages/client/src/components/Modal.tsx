@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { IconClose } from '../assets/Icons';
 
 /** Fenêtre modale accessible (élément <dialog> natif : focus piégé, Échap). */
 export function Modal({
@@ -38,7 +39,7 @@ export function Modal({
         <h2 id={titleId}>{title}</h2>
         {onClose && (
           <button type="button" className="icon-btn" onClick={onClose} aria-label={closeLabel}>
-            ✕
+            <IconClose />
           </button>
         )}
       </div>

@@ -58,11 +58,11 @@ export function HomeScreen({ connected }: { connected: boolean }) {
             <DragonHead size={72} />
           </div>
           <h1>{BRANDING.gameName}</h1>
-          <p className="muted">{BRANDING.tagline}</p>
+          <p className="hero__tagline">{BRANDING.tagline}</p>
           <p className="small muted">De 2 à 6 joueurs · 3 manches · environ 20 minutes</p>
         </section>
 
-        <div className="field" style={{ maxWidth: 720, margin: '0 auto' }}>
+        <div className="field home-name">
           <label htmlFor="player-name">Votre pseudo</label>
           <input
             id="player-name"
@@ -104,7 +104,7 @@ export function HomeScreen({ connected }: { connected: boolean }) {
             </button>
           </form>
         </div>
-        <p className="small muted" style={{ textAlign: 'center', marginTop: 24 }}>
+        <p className="small muted home-footer">
           Projet de fan non officiel, nom de travail provisoire.
         </p>
       </main>

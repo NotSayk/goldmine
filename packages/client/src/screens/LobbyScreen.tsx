@@ -199,8 +199,7 @@ export function LobbyScreen({ room, playerId }: { room: RoomView; playerId: stri
         {isHost ? (
           <button
             type="button"
-            className="btn"
-            style={{ width: '100%', minHeight: 56, fontSize: '1.1rem' }}
+            className="btn btn--hero btn--block"
             disabled={count < room.minPlayers}
             onClick={() => client.send({ type: 'startGame' })}
           >

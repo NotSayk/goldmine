@@ -2,10 +2,8 @@ import type { CSSProperties } from 'react';
 import type { DwarfView, PlayerView, TrackCard } from '@pepite/engine';
 import { BRANDING } from '@pepite/shared/branding';
 import { DwarfDisc } from '../assets/DwarfDisc';
-import { Flame } from '../assets/Dragon';
 import { TrackCardArt } from '../assets/Cards';
 import { dwarfLook, dwarfName } from '../i18n/fr';
-import type { Effect } from '../store';
 
 const COLUMNS = 9;
 
@@ -34,12 +32,10 @@ function cardLabel(card: TrackCard, index: number): string {
 
 export function Track({
   view,
-  effects,
   swapTargets,
   onSwap,
 }: {
   view: PlayerView;
-  effects: readonly Effect[];
   swapTargets: readonly number[];
   onSwap: (dwarfId: number) => void;
 }) {
@@ -67,6 +63,7 @@ export function Track({
           className="track-card"
           data-kind={card.kind}
           data-burned={card.burned}
+          data-track-index={index}
           style={{ '--i': index } as CSSProperties}
           title={cardLabel(card, index)}
         >
@@ -129,39 +126,6 @@ export function Track({
             <DwarfDisc color={dwarf.color} label={label} />
           </span>
         );
-      })}
-
-      {effects.map((effect) => {
-        const left = `${((effect.position + 0.5) / COLUMNS) * 100}%`;
-        switch (effect.kind) {
-          case 'flame':
-            return (
-              <span key={effect.id} className="effect effect--flame" style={{ left }}>
-                <Flame />
-              </span>
-            );
-          case 'eliminated':
-            return (
-              <span key={effect.id} className="effect effect--eliminated" style={{ left }}>
-                <Flame />
-                <span className="effect__skull" aria-hidden>
-                  💀
-                </span>
-              </span>
-            );
-          case 'blocked':
-            return (
-              <span key={effect.id} className={`effect effect--${effect.kind}`} style={{ left }}>
-                <DwarfDisc color={effect.color ?? 0} />
-              </span>
-            );
-          case 'exited':
-            return (
-              <span key={effect.id} className="effect effect--exited" style={{ left }} aria-hidden>
-                ✨
-              </span>
-            );
-        }
       })}
     </div>
   );

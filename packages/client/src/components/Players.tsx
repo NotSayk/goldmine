@@ -1,6 +1,7 @@
 import type { DwarfView, PlayerView } from '@pepite/engine';
 import type { RoomView } from '@pepite/shared';
 import { DwarfDisc } from '../assets/DwarfDisc';
+import { IconChest, IconLock } from '../assets/Icons';
 import { BigNugget, Nugget } from '../assets/Nugget';
 import { dwarfLook, plural } from '../i18n/fr';
 import { client } from '../store';
@@ -64,6 +65,7 @@ export function Players({ view, room }: { view: PlayerView; room: RoomView }) {
               </span>
               <span
                 className="gold-chip"
+                data-gold-anchor={player.id}
                 title="Or en jeu : perdu si le dragon rattrape le nain"
                 aria-label={
                   gold === null
@@ -92,7 +94,7 @@ export function Players({ view, room }: { view: PlayerView; room: RoomView }) {
                 <span className="stat">{dwarves.map((d) => dwarfStatus(d)).join(' · ')}</span>
                 {securedCards > 0 && (
                   <span className="stat" title="Or à l'abri sur la carte Nain">
-                    🔒{' '}
+                    <IconLock size={16} />
                     {securedGold === null
                       ? plural(securedCards, 'carte')
                       : `${plural(securedGold, 'pépite')} à l’abri`}
@@ -100,7 +102,7 @@ export function Players({ view, room }: { view: PlayerView; room: RoomView }) {
                 )}
                 {player.pile.bonusCount > 0 && (
                   <span className="stat" title="Trésors cachés (+3 chacun à la sortie)">
-                    🎁 {player.pile.bonusCount}
+                    <IconChest size={16} /> {player.pile.bonusCount}
                   </span>
                 )}
                 <span className="stat" title="Grosses pépites">

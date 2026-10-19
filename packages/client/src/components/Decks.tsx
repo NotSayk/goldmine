@@ -20,6 +20,7 @@ export function Decks({
         <div className="deck__label">Extraction</div>
         <div
           className="deck__card deck__card--stacked"
+          data-deck="extraction"
           role="img"
           aria-label={
             top
@@ -51,6 +52,7 @@ export function Decks({
         <div className="deck__label">Exit</div>
         <div
           className="deck__card deck__card--stacked"
+          data-deck="exit"
           role="img"
           aria-label={`Pioche Exit, face cachée : ${plural(view.exit.deckCount, 'carte')}`}
           title="Cartes Exit : face cachée"
@@ -63,6 +65,7 @@ export function Decks({
         <div className="deck__label">Défausse Exit</div>
         <div
           className="deck__card"
+          data-deck="exit-discard"
           role="img"
           aria-label={
             discardTop

@@ -1,0 +1,155 @@
+/*
+ * Jetons de design : toutes les couleurs, ombres, rayons et durées passent par ici.
+ * Thème « mine » (fantasy sombre, par défaut) et variante « contraste élevé ».
+ * Ratios de contraste vérifiés (texte ≥ 4,5:1) : voir docs/DECISIONS.md.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Fonds : nuit et pierre froide */
+  --bg: #090d16;
+  --bg-2: #0f1522;
+  --surface: #141a28;
+  --surface-2: #1b2334;
+  --surface-3: #242e44;
+  --surface-raised: linear-gradient(180deg, #1a2132 0%, #121827 100%);
+  --border: #2f3a52;
+  --border-strong: #4a5774;
+  --line: rgba(236, 226, 205, 0.1);
+
+  /* Texte */
+  --text: #f0e9da;
+  --text-muted: #b2b9c9;
+  --text-faint: #8a93a8;
+
+  /* Accent d'interface : cyan de cristal */
+  --accent: #5fd4ec;
+  --accent-hover: #8fe6f6;
+  --accent-ink: #04212b;
+  --accent-soft: rgba(95, 212, 236, 0.14);
+  --accent-glow: rgba(95, 212, 236, 0.45);
+
+  /* Récompense : or chaud */
+  --gold: #f2b632;
+  --gold-bright: #ffd96e;
+  --gold-deep: #b57c0e;
+  --gold-ink: #5a3900;
+  --gold-light: #fff3c4;
+  --gold-text: #ffd36a;
+  --gold-soft: rgba(242, 182, 50, 0.16);
+  --gold-glow: rgba(255, 200, 80, 0.55);
+  --gold-metal: linear-gradient(180deg, #ffe08a 0%, #f2b632 45%, #c98a12 100%);
+  --sparkle: #fff3a6;
+
+  /* Danger : braise */
+  --danger: #ff7a52;
+  --danger-strong: #ff4d24;
+  --danger-soft: rgba(255, 90, 50, 0.15);
+  --danger-glow: rgba(255, 80, 30, 0.5);
+  --ember: #ffb347;
+
+  --success: #8fdc97;
+  --success-soft: rgba(127, 216, 138, 0.14);
+  --focus: #ffd96e;
+
+  /* Matières */
+  --stone-1: #10151f;
+  --stone-2: #18202e;
+  --stone-3: #232c3d;
+  --wood: #7a4e26;
+  --wood-dark: #3e2814;
+  --wood-light: #a8743c;
+  --leather: #4a2f1f;
+  --iron: #59627a;
+
+  /* Illustrations des cartes (lisibles quelle que soit l'ambiance) */
+  --mine-blue: #3d6fb5;
+  --mine-blue-deep: #142847;
+  --mine-red: #c2412b;
+  --mine-red-deep: #4d140c;
+  --crystal: #7ae3ff;
+  --exit-card: #d6ebc2;
+  --daylight: #cdeeff;
+  --sun: #ffd84d;
+  --exit-path: #8fbf5a;
+  --wagon: #7d8597;
+  --dragon: #7b4bb3;
+  --dragon-dark: #47286f;
+  --dragon-belly: #f2a65a;
+  --dragon-horn: #efe3c8;
+  --dragon-card: #2c1840;
+  --smoke: #b8b8c4;
+  --flame-outer: #e8551f;
+  --flame-inner: #ffb300;
+  --parchment: #f4e7c6;
+  --parchment-deep: #e2cf9f;
+  --door-red: #c8372d;
+  --door-blue: #2f6fd0;
+  --rock: #a39a8c;
+  --exit-back: #1c5a66;
+  --exit-back-stripe: #22707e;
+  --extraction-back: #6e4220;
+  --extraction-back-dot: #8a5a2c;
+  --card-ink: #14161c;
+
+  --gold-chip: #ffe08a;
+  --gold-chip-ink: #3d2700;
+
+  /* Formes et profondeur */
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 20px;
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 24px 70px rgba(0, 0, 0, 0.6), 0 6px 16px rgba(0, 0, 0, 0.4);
+  --bevel: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+
+  /* Typographie */
+  --font-display: 'Cinzel', 'Cinzel Fallback', Georgia, 'Times New Roman', serif;
+  --font:
+    'Inter', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+
+  /* Mouvement */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --t-fast: 140ms;
+  --t-med: 280ms;
+  --t-slow: 650ms;
+
+  /* Grain de papier (bruit SVG statique, mis en cache par le navigateur) */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.25 0 0 0 0 0.1 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* Texture de roche pour le décor */
+  --rock-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.035 0.06' numOctaves='4' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.62 0 0 0 0 0.68 0 0 0 0 0.8 0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23r)'/%3E%3C/svg%3E");
+}
+
+/* Contraste élevé : aplats francs, bordures marquées, aucun voile décoratif. */
+:root[data-theme='contrast'] {
+  --bg: #000000;
+  --bg-2: #000000;
+  --surface: #0b0b0b;
+  --surface-2: #161616;
+  --surface-3: #222222;
+  --surface-raised: #0b0b0b;
+  --border: #f5f5f5;
+  --border-strong: #ffffff;
+  --line: rgba(255, 255, 255, 0.5);
+  --text: #ffffff;
+  --text-muted: #e8e8e8;
+  --text-faint: #d0d0d0;
+  --accent: #00e5ff;
+  --accent-hover: #7ff2ff;
+  --accent-ink: #000000;
+  --accent-soft: #00323a;
+  --gold: #ffd000;
+  --gold-text: #ffd000;
+  --gold-soft: #3a3000;
+  --danger: #ff8a7a;
+  --danger-soft: #3d0d06;
+  --success: #9dff9d;
+  --success-soft: #0d330d;
+  --focus: #ffff00;
+  --shadow: none;
+  --shadow-lg: 0 0 0 2px #ffffff;
+  --bevel: none;
+}

@@ -1,0 +1,760 @@
+/* ---------- Mise en scène du réalisateur (coup au premier plan) ---------- */
+
+.spotlight {
+  --dur: 1900ms;
+  --reveal-delay: 0ms;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 16vh 16px 0;
+  pointer-events: none;
+}
+
+.spotlight__panel {
+  position: relative;
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: min(480px, 100%);
+  padding: 18px 20px 20px;
+  color: var(--text);
+}
+
+/* Fond du panneau : il s'efface seul, la carte peut encore voler vers sa destination. */
+.spotlight__panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(320px 160px at 25% 40%, rgba(242, 182, 50, 0.16), transparent 70%),
+    var(--surface);
+  border: 1px solid rgba(242, 182, 50, 0.65);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 4px rgba(242, 182, 50, 0.12),
+    0 0 40px rgba(242, 182, 50, 0.15);
+  animation: panel-life var(--dur) ease forwards;
+}
+
+.spotlight__panel--danger::before {
+  border-color: rgba(255, 90, 50, 0.8);
+  background:
+    radial-gradient(320px 160px at 25% 40%, rgba(255, 80, 30, 0.2), transparent 70%), var(--surface);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 4px rgba(255, 90, 50, 0.15),
+    0 0 50px rgba(255, 80, 30, 0.25);
+}
+
+.spotlight__panel--success::before {
+  border-color: rgba(143, 220, 151, 0.75);
+  background:
+    radial-gradient(320px 160px at 25% 40%, rgba(205, 238, 255, 0.18), transparent 70%),
+    var(--surface);
+}
+
+.spotlight__text {
+  position: relative;
+  min-width: 0;
+  flex: 1;
+  animation: text-life var(--dur) ease forwards;
+}
+
+.spotlight__text p {
+  margin: 0;
+}
+
+.spotlight__reveal {
+  animation: reveal-in 320ms var(--ease-out) var(--reveal-delay) both;
+}
+
+.spotlight__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.spotlight__name {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  margin: 2px 0 4px !important;
+  color: var(--gold-text);
+}
+
+.spotlight__panel--danger .spotlight__name {
+  color: var(--danger);
+}
+
+.spotlight__detail {
+  font-size: 0.95rem;
+}
+
+.spotlight__extra {
+  margin-top: 6px !important;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.spotlight__panel--danger .spotlight__extra {
+  color: var(--danger);
+}
+
+.spotlight__panel--success .spotlight__extra {
+  color: var(--success);
+}
+
+.spotlight__timer {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 6px;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--gold-deep), var(--gold-bright));
+  transform-origin: left;
+  animation: spot-timer var(--dur) linear forwards;
+  opacity: 0.8;
+}
+
+.spotlight__controls {
+  position: absolute;
+  top: -14px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+  animation: text-life var(--dur) ease forwards;
+}
+
+.spot-skip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 30px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: rgba(10, 14, 22, 0.92);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.spot-skip:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+/* Cible tactile élargie sans grossir le bouton. */
+.spot-skip::after {
+  content: '';
+  position: absolute;
+  inset: -8px -4px;
+}
+
+.spot-skip {
+  position: relative;
+}
+
+/* ---------- Carte mise en scène ---------- */
+
+.spotlight__card {
+  flex: none;
+  width: 118px;
+  perspective: 900px;
+}
+
+.staged-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 60 / 84;
+  transform-origin: 50% 60%;
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.55));
+  will-change: transform;
+}
+
+.staged-card__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.staged-card__face {
+  position: absolute;
+  inset: 0;
+  border-radius: 9px;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.staged-card__face .card-art {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.staged-card__back {
+  transform: rotateY(180deg);
+}
+
+/* Une carte sans recto reste face cachée, vers le joueur. */
+.staged-card__back:only-child {
+  transform: none;
+}
+
+/* Sans mouvement : pas de rotation, la face cachée s'efface en fondu. */
+.staged-card--flat .staged-card__face {
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+}
+
+.staged-card--flat .staged-card__back {
+  transform: none;
+  z-index: 1;
+}
+
+.staged-card--waiting .staged-card__inner {
+  animation: spot-wobble 1.1s ease-in-out infinite;
+}
+
+/* Reflet doré qui balaie la carte d'or une fois retournée. */
+.staged-card--gold .staged-card__front::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 240, 180, 0.55) 48%,
+    rgba(255, 255, 255, 0.1) 52%,
+    transparent 70%
+  );
+  transform: translateX(-130%);
+  animation: sheen 900ms ease-out calc(var(--reveal-delay) + 80ms) both;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.spot-exit {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+  padding: 6px;
+  border: 2px solid var(--card-ink);
+  border-radius: 9px;
+  background: var(--grain), linear-gradient(160deg, #24727f, var(--exit-back));
+  color: #f4f1e6;
+}
+
+.spot-action {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  width: 100%;
+  padding: 4px 2px;
+  border-radius: 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.spot-action--chosen {
+  background: var(--gold-metal);
+  color: #2a1a00;
+  box-shadow: 0 0 14px var(--gold-glow);
+  animation: spot-pop 500ms var(--ease-spring) calc(var(--reveal-delay) + 200ms) both;
+}
+
+.spot-action--dim {
+  opacity: 0.35;
+}
+
+/* ---------- Pile ou face ---------- */
+
+.spot-coin {
+  display: grid;
+  place-items: center;
+  width: 118px;
+  aspect-ratio: 1;
+  perspective: 600px;
+}
+
+.coin {
+  --coin-dur: 1700ms;
+  position: relative;
+  width: 112px;
+  height: 112px;
+  transform-style: preserve-3d;
+  /* Position finale (aussi celle affichée si les animations sont coupées). */
+  transform: rotateY(var(--coin-end, 1800deg));
+}
+
+.coin--flip {
+  animation: coin-flip var(--coin-dur) cubic-bezier(0.25, 0.7, 0.3, 1) both;
+}
+
+.coin__face {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: grid;
+  place-content: center;
+  gap: 2px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.92rem;
+  line-height: 1.1;
+  padding: 10px;
+  border: 4px solid #7a4f00;
+  box-shadow:
+    inset 0 0 0 4px rgba(255, 255, 255, 0.35),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.25),
+    0 10px 18px rgba(0, 0, 0, 0.45);
+}
+
+.coin__face small {
+  font-family: var(--font);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.85;
+}
+
+.coin__face--heads {
+  background: radial-gradient(circle at 35% 30%, #fff3c4, #f2b632 55%, #b07a12);
+  color: #3a2400;
+}
+
+.coin__face--tails {
+  transform: rotateY(180deg);
+  background: radial-gradient(circle at 35% 30%, #e6fbff, #4fb3c4 55%, #1a5562);
+  border-color: #0f3640;
+  color: #08222a;
+}
+
+/* ---------- Bandeau (dragon, sortie, manche) : la table reste visible ---------- */
+
+.spotlight--banner {
+  padding-top: max(10px, env(safe-area-inset-top));
+}
+
+.spotlight--banner .spotlight__panel {
+  width: min(560px, 100%);
+  padding: 12px 18px 16px;
+  gap: 14px;
+}
+
+.spotlight--banner .spotlight__panel::before {
+  animation: banner-life var(--dur) ease forwards;
+}
+
+.spotlight--banner .spotlight__name {
+  font-size: 1.25rem;
+}
+
+.banner-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 64px;
+  color: var(--text-muted);
+}
+
+.banner-icon--dragon svg {
+  filter: drop-shadow(0 0 10px rgba(255, 90, 30, 0.6));
+  animation: roar 600ms ease-in-out both;
+}
+
+.banner-icon__sparkle {
+  position: absolute;
+  top: 0;
+  right: 4px;
+  color: var(--sparkle);
+  animation: twinkle 900ms ease-in-out infinite alternate;
+}
+
+.spot-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--danger-strong);
+  color: #fff;
+  font-weight: 900;
+  border: 2px solid #14161c;
+  animation: spot-pop 400ms var(--ease-spring) both;
+}
+
+/* Mélange des deux pioches au début de chaque manche. */
+.banner-icon--shuffle {
+  width: 96px;
+}
+
+.shuffle-card {
+  position: absolute;
+  width: 30px;
+  aspect-ratio: 60 / 84;
+  top: 6px;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.5));
+}
+
+.shuffle-card svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.shuffle-card--left {
+  left: 14px;
+  animation: riffle-left 900ms var(--ease-in-out) calc(var(--n) * 90ms) 2 alternate both;
+}
+
+.shuffle-card--right {
+  right: 14px;
+  animation: riffle-right 900ms var(--ease-in-out) calc(var(--n) * 90ms) 2 alternate both;
+}
+
+/* ---------- Élimination : annonce en grand sur tous les écrans ---------- */
+
+.spotlight--dramatic {
+  align-items: center;
+  padding-top: 0;
+}
+
+.spotlight__veil {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(120, 0, 0, 0.2) 0%, rgba(40, 0, 0, 0.7) 100%);
+  animation: red-flash var(--dur) ease forwards;
+}
+
+.spotlight--dramatic .spotlight__panel {
+  flex-direction: column;
+  text-align: center;
+  width: min(580px, 100%);
+  padding: 24px 24px 28px;
+  animation: quake 500ms ease-in-out 150ms 2;
+}
+
+.spotlight--dramatic .spotlight__panel::before {
+  border-width: 2px;
+}
+
+.spotlight--dramatic .spotlight__title {
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 6vw, 2.5rem);
+  font-weight: 900;
+  color: var(--danger);
+  line-height: 1.1;
+  text-shadow: 0 0 24px rgba(255, 60, 20, 0.5);
+}
+
+.spotlight--dramatic .spotlight__name {
+  font-size: 1.15rem;
+  color: var(--text);
+}
+
+.spotlight--dramatic .spotlight__detail {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--gold-text);
+}
+
+.spot-eliminated {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 180px;
+  aspect-ratio: 1.3;
+  border-radius: 16px;
+  background: radial-gradient(circle at 50% 75%, #6a1d10 0%, #2a0d08 70%);
+  border: 1px solid #14161c;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7);
+}
+
+.spot-flames {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: flicker 300ms ease-in-out infinite alternate;
+}
+
+.spot-dead-discs {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  animation: char 1.4s ease forwards;
+}
+
+.spot-skull {
+  position: absolute;
+  top: -18px;
+  right: -14px;
+  color: #f2e6d0;
+  filter: drop-shadow(0 2px 4px #000);
+  animation: skull 900ms 300ms var(--ease-spring) both;
+}
+
+@media (max-width: 480px) {
+  .spotlight {
+    padding-top: 12vh;
+  }
+  .spotlight__panel {
+    gap: 12px;
+    padding: 14px 14px 18px;
+  }
+  .spotlight__card,
+  .spot-coin {
+    width: 92px;
+  }
+  .coin {
+    width: 92px;
+    height: 92px;
+  }
+  .spotlight__name {
+    font-size: 1.2rem;
+  }
+  .banner-icon {
+    width: 56px;
+  }
+}
+
+/* ---------- Images clés ---------- */
+
+@keyframes panel-life {
+  0% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  10% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  86% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes banner-life {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  12% {
+    opacity: 1;
+    transform: none;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes text-life {
+  0% {
+    opacity: 0;
+  }
+  10%,
+  84% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes spot-timer {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes spot-wobble {
+  50% {
+    transform: rotate(-4deg) translateY(-4px);
+  }
+}
+
+@keyframes spot-pop {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes sheen {
+  to {
+    transform: translateX(130%);
+  }
+}
+
+@keyframes roar {
+  0%,
+  100% {
+    transform: none;
+  }
+  30% {
+    transform: scale(1.18) rotate(-6deg);
+  }
+  60% {
+    transform: scale(1.1) rotate(4deg);
+  }
+}
+
+@keyframes twinkle {
+  from {
+    transform: scale(0.7) rotate(0deg);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(1.15) rotate(45deg);
+    opacity: 1;
+  }
+}
+
+@keyframes riffle-left {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(-14px, -6px) rotate(-14deg);
+  }
+  100% {
+    transform: translate(18px, 2px) rotate(6deg);
+  }
+}
+
+@keyframes riffle-right {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(14px, -6px) rotate(14deg);
+  }
+  100% {
+    transform: translate(-18px, 2px) rotate(-6deg);
+  }
+}
+
+@keyframes coin-flip {
+  0% {
+    transform: translateY(0) rotateY(0deg) scale(0.8);
+  }
+  45% {
+    transform: translateY(-46px) rotateY(calc(var(--coin-end, 1800deg) * 0.6)) scale(1.1);
+  }
+  100% {
+    transform: translateY(0) rotateY(var(--coin-end, 1800deg)) scale(1);
+  }
+}
+
+@keyframes red-flash {
+  0% {
+    background-color: rgba(255, 40, 0, 0.45);
+    opacity: 1;
+  }
+  15% {
+    background-color: rgba(255, 40, 0, 0);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes quake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-10px) rotate(-1deg);
+  }
+  75% {
+    transform: translateX(10px) rotate(1deg);
+  }
+}
+
+@keyframes flicker {
+  from {
+    transform: translateX(-50%) scaleY(0.95);
+    opacity: 0.85;
+  }
+  to {
+    transform: translateX(-50%) scaleY(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes char {
+  0% {
+    filter: none;
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.15);
+  }
+  100% {
+    filter: grayscale(1) brightness(0.45) sepia(0.4);
+    transform: scale(1) rotate(-12deg);
+  }
+}
+
+@keyframes skull {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(-6px);
+    opacity: 1;
+  }
+}

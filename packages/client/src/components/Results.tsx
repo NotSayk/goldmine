@@ -1,4 +1,5 @@
 import type { PlayerView, RoundResult } from '@pepite/engine';
+import { IconCrown } from '../assets/Icons';
 import { BigNugget } from '../assets/Nugget';
 import { ROUND_END_CAUSES, dwarfName } from '../i18n/fr';
 
@@ -80,9 +81,10 @@ export function FinalStandings({ view }: { view: PlayerView }) {
     <div className="stack">
       <div className="final-hero">
         <h2>
+          <IconCrown size={30} className="final-hero__crown" />
           {youWon
-            ? '🏆 Vous gagnez !'
-            : `🏆 ${names.join(' et ')} ${names.length > 1 ? 'gagnent' : 'gagne'} !`}
+            ? 'Vous gagnez !'
+            : `${names.join(' et ')} ${names.length > 1 ? 'gagnent' : 'gagne'} !`}
         </h2>
         {names.length > 1 && <p className="muted">Égalité parfaite : la victoire est partagée.</p>}
       </div>

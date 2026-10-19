@@ -1,0 +1,110 @@
+/* ---------- Accueil ---------- */
+
+.hero {
+  text-align: center;
+  padding: 12px 0 8px;
+}
+
+.hero h1 {
+  font-size: clamp(2.3rem, 9vw, 4rem);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+  color: var(--gold-text);
+  background: linear-gradient(180deg, #fff1c2 0%, #ffd36a 40%, #d08f14 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(60, 30, 0, 0.8)) drop-shadow(0 0 24px rgba(242, 182, 50, 0.3));
+}
+
+:root[data-theme='contrast'] .hero h1 {
+  -webkit-text-fill-color: var(--gold);
+  background: none;
+  filter: none;
+}
+
+.hero__tagline {
+  font-size: 1.05rem;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.home-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+  max-width: 760px;
+  margin: 16px auto 0;
+}
+
+.home-name {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+@media (min-width: 720px) {
+  .home-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .home-grid > .panel + .panel {
+    margin-top: 0;
+  }
+}
+
+.home-footer {
+  text-align: center;
+  margin-top: 24px;
+}
+
+/* ---------- Salon d'attente ---------- */
+
+.invite {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.invite input {
+  flex: 1 1 220px;
+  min-width: 0;
+  font-size: 0.9rem;
+}
+
+.room-code {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 9vw, 2.8rem);
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  color: var(--gold-text);
+  text-shadow: 0 0 22px rgba(242, 182, 50, 0.35);
+}
+
+.player-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.player-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  min-height: 56px;
+  animation: pop-in 320ms var(--ease-spring) both;
+}
+
+.player-item__name {
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
