@@ -7,6 +7,7 @@ import { ActionBar } from '../components/ActionBar';
 import { CardMemo } from '../components/CardMemo';
 import { ChoiceDialog } from '../components/ChoiceDialog';
 import { Decks } from '../components/Decks';
+import { FxLayer } from '../components/FxLayer';
 import { GameLog } from '../components/GameLog';
 import { Modal } from '../components/Modal';
 import { Players } from '../components/Players';
@@ -227,6 +228,7 @@ export function GameScreen({
           <GameLog entries={log} />
         </aside>
       </main>
+      <FxLayer />
       <Spotlight
         sequence={sequence}
         durationMs={sequenceMs}

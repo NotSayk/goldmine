@@ -8,6 +8,7 @@ export type FxEvent =
       readonly effect: BurstEffect;
       readonly anchor: Anchor;
       readonly count: number;
+      readonly target?: Anchor;
     }
   | { readonly type: 'camera'; readonly position: number; readonly duration: number }
   | { readonly type: 'flameSweep'; readonly from: number; readonly to: number };
@@ -32,7 +33,7 @@ export function anchorPoint(anchor: Anchor): { x: number; y: number } | null {
   } else if (anchor.kind === 'player') {
     element = document.querySelector(`[data-gold-anchor="${CSS.escape(anchor.playerId)}"]`);
   } else {
-    element = document.querySelector('.spotlight__panel .spot-card') ?? null;
+    element = document.querySelector('.spotlight .staged-card') ?? null;
     if (!element) return { x: window.innerWidth / 2, y: window.innerHeight * 0.35 };
   }
   if (!element) return null;

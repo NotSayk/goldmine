@@ -140,6 +140,7 @@
   width: 100%;
   aspect-ratio: 9 / 2;
   margin: 4px 0;
+  perspective: 900px;
 }
 
 @media (min-width: 640px) {
@@ -166,9 +167,7 @@
   border: 2px solid var(--card-ink);
   overflow: hidden;
   background: var(--mine-blue);
-  box-shadow:
-    0 4px 10px rgba(0, 0, 0, 0.5),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 /* Grain et cadre gaufré par-dessus l'illustration. */
@@ -198,9 +197,6 @@
 .track-card[data-kind='dragon'] .track-card__face {
   background: var(--dragon-card);
   border-color: #1a0606;
-  box-shadow:
-    0 0 calc(10px + var(--heat) * 20px) rgba(255, 90, 30, calc(0.35 + var(--heat) * 0.4)),
-    inset 0 0 0 1px rgba(255, 140, 60, 0.4);
 }
 
 .track-card[data-burned='true'] .track-card__face {
@@ -352,14 +348,10 @@ button.disc--target {
   display: block;
 }
 
-.deck__card--stacked::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  transform: translate(4px, 4px);
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.45);
-  z-index: -1;
+.deck__card--stacked .card3d__body {
+  box-shadow:
+    var(--stack),
+    calc(var(--tx) * -6px) calc(8px + var(--ty) * -4px) 16px rgba(0, 0, 0, 0.5);
 }
 
 .deck__label {
@@ -598,22 +590,6 @@ button.disc--target {
 
 .player-card--you .player-card__name {
   color: var(--gold-text);
-}
-
-.gold-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 10px 2px 6px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #ffe9a8, var(--gold-chip));
-  color: var(--gold-chip-ink);
-  border: 1px solid var(--gold-deep);
-  font-size: 1rem;
-  font-variant-numeric: tabular-nums;
-  min-width: 56px;
-  justify-content: center;
-  box-shadow: 0 0 12px rgba(242, 182, 50, 0.2);
 }
 
 .player-card__discs {
@@ -1007,5 +983,259 @@ button.disc--target {
 @keyframes tick {
   50% {
     transform: scale(1.15);
+  }
+}
+
+/* ---------- Cartes en relief ---------- */
+
+.card3d {
+  --tx: 0;
+  --ty: 0;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  perspective: 700px;
+}
+
+.card3d__body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  transform: rotateX(calc(var(--ty) * -12deg)) rotateY(calc(var(--tx) * 14deg));
+  transition:
+    transform 450ms var(--ease-out),
+    box-shadow 450ms var(--ease-out);
+  box-shadow: calc(var(--tx) * -6px) calc(6px + var(--ty) * -4px) 14px rgba(0, 0, 0, 0.5);
+}
+
+.card3d--tilting .card3d__body {
+  transition-duration: 90ms;
+}
+
+.card3d__body > .card-art,
+.card3d__body > .exit-face {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Reflet qui suit le pointeur. */
+.card3d__sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  background: radial-gradient(
+    circle at calc(50% + var(--tx) * 45%) calc(50% + var(--ty) * 45%),
+    rgba(255, 255, 255, 0.4),
+    transparent 55%
+  );
+  mix-blend-mode: overlay;
+}
+
+.card3d--tilting .card3d__sheen {
+  opacity: 1;
+}
+
+/* Cartes d'or : reflet holographique doré et irisé. */
+.card3d--gold .card3d__sheen {
+  background:
+    radial-gradient(
+      circle at calc(50% + var(--tx) * 45%) calc(50% + var(--ty) * 45%),
+      rgba(255, 240, 190, 0.55),
+      transparent 50%
+    ),
+    linear-gradient(
+      115deg,
+      transparent 25%,
+      rgba(255, 215, 120, 0.4) 42%,
+      rgba(140, 255, 240, 0.25) 50%,
+      rgba(255, 150, 220, 0.25) 58%,
+      transparent 75%
+    );
+  background-size:
+    100% 100%,
+    260% 260%;
+  background-position:
+    center,
+    calc(50% + var(--tx) * 60%) calc(50% + var(--ty) * 60%);
+  mix-blend-mode: color-dodge;
+}
+
+/* Dragon : bords de braise qui rougeoient, plus vifs quand la chaleur monte. */
+.card3d--dragon .card3d__body::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 9px;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 1px rgba(255, 140, 60, 0.75),
+    0 0 calc(8px + var(--heat) * 16px) 2px rgba(255, 80, 20, calc(0.4 + var(--heat) * 0.4)),
+    inset 0 -12px 16px -10px rgba(255, 110, 30, 0.85);
+  animation: ember-edge 1.4s ease-in-out infinite alternate;
+}
+
+:root[data-theme='contrast'] .card3d__sheen,
+:root[data-theme='contrast'] .card3d--dragon .card3d__body::after {
+  display: none;
+}
+
+/* Distribution de la piste en cascade, à chaque manche. */
+.track-card .card3d {
+  animation: deal 560ms var(--ease-out) calc(160ms + var(--i) * 75ms) both;
+}
+
+/* Galerie brûlée : elle se retourne côté rouge juste après le passage des flammes. */
+.track-card[data-burned='true'] .card3d {
+  animation: burn-flip 760ms var(--ease-out) 260ms both;
+}
+
+@keyframes deal {
+  from {
+    opacity: 0;
+    transform: translateY(-36px) rotateY(95deg) scale(0.7);
+  }
+  55% {
+    opacity: 1;
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes burn-flip {
+  0% {
+    transform: none;
+    filter: none;
+  }
+  45% {
+    transform: rotateY(90deg) scale(1.06);
+    filter: brightness(1.9) sepia(1) saturate(3);
+  }
+  100% {
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes ember-edge {
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------- Piles d'or et compteurs ---------- */
+
+.gold-pile {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 78px;
+  padding: 3px 10px 3px 6px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 233, 168, 0.16), rgba(242, 182, 50, 0.07));
+  border: 1px solid rgba(242, 182, 50, 0.45);
+  color: var(--gold-text);
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.gold-pile__stack {
+  position: relative;
+  width: 22px;
+  height: 30px;
+  transform-origin: 50% 100%;
+}
+
+.gold-pile__stack[data-parity='0'] {
+  animation: settle-a 420ms var(--ease-out);
+}
+
+.gold-pile__stack[data-parity='1'] {
+  animation: settle-b 420ms var(--ease-out);
+}
+
+.gold-pile__card,
+.gold-pile__empty {
+  position: absolute;
+  left: 3px;
+  bottom: calc(var(--i, 0) * 2px);
+  width: 16px;
+  height: 22px;
+  border-radius: 3px;
+}
+
+.gold-pile__card {
+  background:
+    radial-gradient(circle at 50% 62%, var(--gold) 0 2.6px, transparent 3px), var(--grain),
+    linear-gradient(160deg, #f8ecc9, #dcc690);
+  border: 1px solid #6b4a12;
+  transform: translateX(var(--x)) rotate(var(--r));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.gold-pile__card:last-child {
+  animation: pile-drop 460ms var(--ease-spring) both;
+}
+
+.gold-pile__empty {
+  border: 1px dashed rgba(242, 182, 50, 0.45);
+}
+
+.gold-pile__value {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+}
+
+.rolling {
+  display: inline-flex;
+  font-variant-numeric: tabular-nums;
+}
+
+.rolling__digits {
+  display: inline-flex;
+}
+
+.rolling__column {
+  display: inline-block;
+  width: 0.62em;
+  height: 1.2em;
+  line-height: 1.2em;
+  overflow: hidden;
+  text-align: center;
+}
+
+.rolling__strip {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(calc(var(--d) * -10%));
+  transition: transform 750ms var(--ease-spring);
+}
+
+@keyframes pile-drop {
+  from {
+    opacity: 0;
+    transform: translate(var(--x), -18px) rotate(calc(var(--r) * 3));
+  }
+}
+
+@keyframes settle-a {
+  40% {
+    transform: scaleY(0.86) scaleX(1.06);
+  }
+}
+
+@keyframes settle-b {
+  40% {
+    transform: scaleY(0.86) scaleX(1.06);
   }
 }

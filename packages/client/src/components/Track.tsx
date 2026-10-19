@@ -4,6 +4,7 @@ import { BRANDING } from '@pepite/shared/branding';
 import { DwarfDisc } from '../assets/DwarfDisc';
 import { TrackCardArt } from '../assets/Cards';
 import { dwarfLook, dwarfName } from '../i18n/fr';
+import { Card3D } from './Card3D';
 
 const COLUMNS = 9;
 
@@ -65,7 +66,8 @@ export function Track({
     >
       {view.track.map((card, index) => (
         <div
-          key={card.id}
+          // Nouvelle clé à chaque manche : la piste est redistribuée en cascade.
+          key={`${view.round}-${card.id}`}
           className="track-card"
           data-kind={card.kind}
           data-burned={card.burned}
@@ -73,14 +75,16 @@ export function Track({
           style={{ '--i': index } as CSSProperties}
           title={cardLabel(card, index)}
         >
-          <div className="track-card__face" role="img" aria-label={cardLabel(card, index)}>
-            <TrackCardArt kind={card.kind} burned={card.burned} />
-            {card.kind !== 'exit' && card.kind !== 'dragon' && (
-              <span className="track-card__index" aria-hidden>
-                {index}
-              </span>
-            )}
-          </div>
+          <Card3D finish={card.kind === 'dragon' ? 'dragon' : 'plain'}>
+            <div className="track-card__face" role="img" aria-label={cardLabel(card, index)}>
+              <TrackCardArt kind={card.kind} burned={card.burned} />
+              {card.kind !== 'exit' && card.kind !== 'dragon' && (
+                <span className="track-card__index" aria-hidden>
+                  {index}
+                </span>
+              )}
+            </div>
+          </Card3D>
         </div>
       ))}
 

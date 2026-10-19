@@ -130,7 +130,13 @@ function playCue(cue: Cue): void {
       emitFx({ type: 'shake', strength: cue.strength });
       return;
     case 'burst':
-      emitFx({ type: 'burst', effect: cue.effect, anchor: cue.anchor, count: cue.count });
+      emitFx({
+        type: 'burst',
+        effect: cue.effect,
+        anchor: cue.anchor,
+        count: cue.count,
+        ...(cue.target ? { target: cue.target } : {}),
+      });
       return;
     case 'camera':
       emitFx({ type: 'camera', position: cue.position, duration: cue.duration });

@@ -190,6 +190,23 @@ export function ExtractionCardArt({ kind }: { kind: ExtractionKind }) {
         stroke={STROKE}
         strokeWidth="2"
       />
+      {/* Cadre gaufré et rivets */}
+      <rect
+        x="5"
+        y="5"
+        width="50"
+        height="74"
+        rx="3.5"
+        fill="none"
+        stroke="var(--parchment-deep)"
+        strokeWidth="1.2"
+      />
+      <path
+        d="M8 8 h0.01 M52 8 h0.01 M8 76 h0.01 M52 76 h0.01"
+        stroke="var(--gold-deep)"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+      />
       {kind === 'redDoor' && (
         <g transform="translate(0 6)">
           <Arrow direction="right" />
@@ -249,7 +266,7 @@ export function ExtractionCardArt({ kind }: { kind: ExtractionKind }) {
   );
 }
 
-/** Dos d'une carte Exit. */
+/** Dos d'une carte Exit : rayures sarcelle, cadre argenté, porte et flèche vers la sortie. */
 function ExitBack() {
   return (
     <svg viewBox="0 0 60 84" aria-hidden className="card-art">
@@ -276,24 +293,42 @@ function ExitBack() {
         strokeWidth="2"
       />
       <rect
-        x="9"
+        x="5"
+        y="5"
+        width="50"
+        height="74"
+        rx="4"
+        fill="none"
+        stroke="#cfe3ea"
+        strokeOpacity="0.7"
+        strokeWidth="1.2"
+      />
+      <path
+        d="M9 13 L9 9 L13 9 M47 9 L51 9 L51 13 M9 71 L9 75 L13 75 M47 75 L51 75 L51 71"
+        fill="none"
+        stroke="#e6f4f7"
+        strokeWidth="1.4"
+      />
+      <rect
+        x="10"
         y="22"
-        width="42"
+        width="40"
         height="40"
-        rx="5"
+        rx="6"
         fill="var(--exit-back)"
-        stroke={STROKE}
+        stroke="#cfe3ea"
+        strokeOpacity="0.85"
         strokeWidth="1.6"
       />
       <path
-        d="M22 54 V36 Q22 30 28 30 H34 V54"
+        d="M21 55 V37 Q21 30 28 30 H33 V55"
         fill="none"
         stroke="#f4f1e6"
         strokeWidth="3"
         strokeLinejoin="round"
       />
       <path
-        d="M36 42 H46 M42 38 L46 42 L42 46"
+        d="M36 43 H46 M42 39 L46 43 L42 47"
         fill="none"
         stroke="#f4f1e6"
         strokeWidth="3"
@@ -304,15 +339,19 @@ function ExitBack() {
   );
 }
 
-/** Dos d'une carte Extraction : pioche face cachée, pioche et pépite. */
+/** Dos d'une carte Extraction : cuir cousu, médaillon doré, pioche et pépite. */
 function ExtractionBack() {
   return (
     <svg viewBox="0 0 60 84" aria-hidden className="card-art">
       <defs>
         <pattern id="extraction-back-pattern" width="10" height="10" patternUnits="userSpaceOnUse">
           <rect width="10" height="10" fill="var(--extraction-back)" />
-          <circle cx="5" cy="5" r="1.4" fill="var(--extraction-back-dot)" />
+          <circle cx="5" cy="5" r="1.3" fill="var(--extraction-back-dot)" />
         </pattern>
+        <radialGradient id="extraction-back-medal" cx="0.4" cy="0.35" r="0.7">
+          <stop offset="0" stopColor="#8a5a2c" />
+          <stop offset="1" stopColor="#4a2a12" />
+        </radialGradient>
       </defs>
       <rect
         x="1.5"
@@ -324,14 +363,28 @@ function ExtractionBack() {
         stroke={STROKE}
         strokeWidth="2"
       />
+      {/* Couture */}
+      <rect
+        x="5.5"
+        y="5.5"
+        width="49"
+        height="73"
+        rx="4"
+        fill="none"
+        stroke="#e9c98a"
+        strokeOpacity="0.75"
+        strokeWidth="1"
+        strokeDasharray="2.4 2"
+      />
       <circle
         cx="30"
         cy="42"
         r="19"
-        fill="var(--extraction-back)"
-        stroke={STROKE}
-        strokeWidth="1.6"
+        fill="url(#extraction-back-medal)"
+        stroke="var(--gold)"
+        strokeWidth="2"
       />
+      <circle cx="30" cy="42" r="15.5" fill="none" stroke="var(--gold-deep)" strokeWidth="0.8" />
       {/* Pioche de mineur */}
       <path d="M21 52 L38 32" stroke="#e9d3a6" strokeWidth="3.4" strokeLinecap="round" />
       <path
@@ -342,6 +395,7 @@ function ExtractionBack() {
         strokeLinejoin="round"
       />
       <MiniNugget x={36} y={50} scale={0.7} />
+      <path d="M30 9 L32 12 L30 15 L28 12 Z M30 69 L32 72 L30 75 L28 72 Z" fill="var(--gold)" />
     </svg>
   );
 }

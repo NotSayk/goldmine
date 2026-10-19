@@ -14,6 +14,7 @@ import {
 import { EXIT_LABELS } from '../i18n/fr';
 import { reducedMotion } from '../preferences';
 import { client } from '../store';
+import { Card3D, type CardFinish } from './Card3D';
 
 const FLIP_MS = 260;
 /** Départ de la carte vers la pile ou la défausse, avant la fin de la séquence. */
@@ -64,6 +65,7 @@ function StagedCard({
   front,
   back,
   className,
+  finish = 'plain',
 }: {
   sequence: Sequence;
   durationMs: number;
@@ -71,6 +73,7 @@ function StagedCard({
   front: ReactNode | null;
   back: ReactNode;
   className?: string;
+  finish?: CardFinish;
 }) {
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
@@ -229,10 +232,12 @@ function StagedCard({
       ref={outerRef}
       className={`staged-card ${flat ? 'staged-card--flat' : ''} ${className ?? ''}`}
     >
-      <div ref={innerRef} className="staged-card__inner">
-        <div className="staged-card__face staged-card__back">{back}</div>
-        {front && <div className="staged-card__face staged-card__front">{front}</div>}
-      </div>
+      <Card3D finish={finish}>
+        <div ref={innerRef} className="staged-card__inner">
+          <div className="staged-card__face staged-card__back">{back}</div>
+          {front && <div className="staged-card__face staged-card__front">{front}</div>}
+        </div>
+      </Card3D>
     </div>
   );
 }
@@ -277,6 +282,7 @@ function CardVisual({
           back={<CardBack deck="extraction" />}
           front={<ExtractionCardArt kind={visual.card} />}
           className="staged-card--gold"
+          finish={visual.card === 'dragon' ? 'dragon' : 'gold'}
         />
       );
     case 'exitBack':

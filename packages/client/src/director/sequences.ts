@@ -55,7 +55,8 @@ export type SoundName =
   | 'shuffle'
   | 'dissolve';
 
-export type BurstEffect = 'gold' | 'sparks' | 'ash' | 'embers' | 'daylight' | 'dust';
+export type BurstEffect =
+  'gold' | 'bigGold' | 'sparks' | 'ash' | 'embers' | 'daylight' | 'dust' | 'confetti';
 
 /** Où placer un effet : une carte de la piste, le centre de l'écran ou la pile d'un joueur. */
 export type Anchor =
@@ -78,6 +79,8 @@ export type Cue =
       readonly effect: BurstEffect;
       readonly anchor: Anchor;
       readonly count: number;
+      /** Destination des particules (pépites qui rejoignent une pile). */
+      readonly target?: Anchor;
     }
   | {
       readonly at: number;
@@ -205,6 +208,7 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
       case 'CardDrawn': {
         if (event.deck === 'extraction') {
           const label = EXTRACTION_LABELS[event.card];
+          const owner = ownerOf(event.dwarfId);
           start({
             dwarfId: event.dwarfId,
             title: say(event.dwarfId, 'creusez', 'creuse'),
@@ -213,7 +217,7 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
             visual: { kind: 'extraction', card: event.card },
             tone: 'info',
             duration: 2100,
-            targetPlayerId: ownerOf(event.dwarfId),
+            targetPlayerId: owner,
             flight: 'extraction',
             cues: [
               ...drawCues(),
@@ -223,6 +227,7 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
                 effect: 'gold',
                 anchor: { kind: 'center' },
                 count: event.gold,
+                ...(owner ? { target: { kind: 'player', playerId: owner } as const } : {}),
               },
               { at: REVEAL_AT + 120, type: 'sound', sound: 'gold', count: event.gold },
             ],

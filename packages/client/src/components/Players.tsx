@@ -2,9 +2,10 @@ import type { DwarfView, PlayerView } from '@pepite/engine';
 import type { RoomView } from '@pepite/shared';
 import { DwarfDisc } from '../assets/DwarfDisc';
 import { IconChest, IconLock } from '../assets/Icons';
-import { BigNugget, Nugget } from '../assets/Nugget';
+import { BigNugget } from '../assets/Nugget';
 import { dwarfLook, plural } from '../i18n/fr';
 import { client } from '../store';
+import { GoldPile } from './GoldPile';
 
 function dwarfStatus(dwarf: DwarfView): string {
   switch (dwarf.status) {
@@ -63,19 +64,7 @@ export function Players({ view, room }: { view: PlayerView; room: RoomView }) {
                 {isYou && ' (vous)'}
                 {active && <span className="sr-only"> — joue en ce moment</span>}
               </span>
-              <span
-                className="gold-chip"
-                data-gold-anchor={player.id}
-                title="Or en jeu : perdu si le dragon rattrape le nain"
-                aria-label={
-                  gold === null
-                    ? `Or en jeu : valeur cachée, ${plural(player.pile.cardCount, 'carte')}`
-                    : `Or en jeu : ${plural(gold, 'pépite')}`
-                }
-              >
-                <Nugget size={18} />
-                <strong>{gold ?? '?'}</strong>
-              </span>
+              <GoldPile playerId={player.id} cards={player.pile.cardCount} gold={gold} />
               <span className="player-card__stats">
                 {!roomPlayer?.isBot && (
                   <span
