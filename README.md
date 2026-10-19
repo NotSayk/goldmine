@@ -36,6 +36,33 @@ Ouvrez <http://localhost:5173>, créez un salon et partagez le code (ou le lien 
 | `npm start`        | Lance le serveur construit, qui sert aussi le client                                                        |
 | `npm run format`   | Formate le code avec Prettier                                                                               |
 
+## Jouer en réseau local depuis votre PC
+
+Tous les joueurs doivent être sur le même réseau (même Wi-Fi ou même box).
+
+1. Sur le PC qui héberge la partie :
+
+   ```bash
+   npm install
+   npm run build
+   npm start
+   ```
+
+   Le serveur affiche ses adresses, par exemple :
+
+   ```
+   Pépite Rush : serveur prêt.
+     Sur ce PC           : http://localhost:3000
+     Sur le réseau local : http://192.168.1.42:3000
+   ```
+
+2. **Pare-feu.** Sous Windows, à la première exécution, acceptez la fenêtre « Autoriser l'accès » pour Node.js en cochant **Réseaux privés**, et vérifiez que votre Wi-Fi est réglé en réseau **privé** (Paramètres → Réseau et Internet → propriétés du Wi-Fi) : en réseau « public », Windows bloque les autres appareils. Sous macOS, acceptez les connexions entrantes pour `node`. Sous Linux avec ufw : `sudo ufw allow 3000/tcp`.
+3. Ouvrez le jeu, créez un salon et envoyez aux autres le **lien d'invitation** du salon (bouton « Copier »). Même si vous ouvrez le jeu via `localhost`, ce lien utilise l'adresse réseau de votre PC. Les autres peuvent aussi taper l'adresse « réseau local » dans leur navigateur et saisir le code du salon.
+
+Si personne n'arrive à se connecter : vérifiez que l'adresse commence bien par `192.168.`, `10.` ou `172.`, que tout le monde est sur le même Wi-Fi (pas sur un réseau « invités » isolé, ni en 4G), et que le pare-feu laisse passer le port 3000. Pour changer de port : `PORT=8080 npm start` (sous Windows PowerShell : `$env:PORT=8080; npm start`).
+
+Pour jouer avec des amis **hors de chez vous**, il faut un hébergeur Node.js (voir ci-dessous) ou un tunnel ; ouvrir un port sur votre box est déconseillé.
+
 ## Déploiement (Node.js, sans Docker)
 
 Sur n'importe quelle machine ou hébergeur Node.js (VPS, Render, Railway, Fly.io, etc.) :

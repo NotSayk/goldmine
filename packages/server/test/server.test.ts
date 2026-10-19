@@ -301,6 +301,25 @@ describe('déconnexion et reconnexion', () => {
 });
 
 describe('HTTP', () => {
+  it('donne l’adresse réseau local seulement à l’hôte qui joue sur « localhost »', async () => {
+    const lan = await startServer({
+      port: 0,
+      host: '127.0.0.1',
+      logger: false,
+      lanAddresses: () => ['192.168.1.42'],
+    });
+    const port = new URL(lan.url).port;
+    const ask = async (remoteAddress: string, host: string): Promise<unknown> =>
+      (await lan.app.inject({ url: '/api/lan', remoteAddress, headers: { host } })).json();
+    expect(await ask('127.0.0.1', `localhost:${port}`)).toEqual({
+      urls: [`http://192.168.1.42:${port}`],
+    });
+    // Autre machine, ou requête relayée par un proxy sous un nom public : rien n'est révélé.
+    expect(await ask('192.168.1.7', `192.168.1.42:${port}`)).toEqual({ urls: [] });
+    expect(await ask('127.0.0.1', 'jeu.example.org')).toEqual({ urls: [] });
+    await lan.close();
+  });
+
   it('répond sur /healthz avec les en-têtes de sécurité', async () => {
     const response = await fetch(`${server.url}/healthz`);
     expect(response.status).toBe(200);

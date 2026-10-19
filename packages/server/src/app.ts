@@ -2,9 +2,11 @@ import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { existsSync } from 'node:fs';
 import type { IncomingMessage } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import type { Duplex } from 'node:stream';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { MAX_MESSAGE_BYTES } from '@pepite/shared';
+import { isLocalRequest, lanAddresses } from './network';
 import { InMemoryRoomStore, type RoomStore } from './roomStore';
 import { RoomManager, type Connection } from './rooms';
 
@@ -22,6 +24,8 @@ export interface ServerOptions {
   rateLimit: { burst: number; perSecond: number };
   logger: boolean;
   store?: RoomStore;
+  /** Adresses de la machine sur le réseau local (remplaçable dans les tests). */
+  lanAddresses?: () => string[];
 }
 
 export const DEFAULT_OPTIONS: ServerOptions = {
@@ -64,6 +68,14 @@ export async function startServer(overrides: Partial<ServerOptions> = {}): Promi
   });
 
   app.get('/healthz', () => ({ ok: true, rooms: manager.roomCount() }));
+
+  // Adresse à donner aux autres joueurs quand l'hôte joue sur « localhost ».
+  app.get('/api/lan', (request) => {
+    if (!isLocalRequest(request.ip, request.headers.host)) return { urls: [] };
+    const { port } = app.server.address() as AddressInfo;
+    const addresses = (options.lanAddresses ?? lanAddresses)();
+    return { urls: addresses.map((ip) => `http://${ip}:${port}`) };
+  });
 
   const staticDir = options.staticDir;
   if (staticDir && existsSync(staticDir)) {

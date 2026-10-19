@@ -376,6 +376,18 @@ select {
 
 /* ---------- Salon d'attente ---------- */
 
+.invite {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.invite input {
+  flex: 1 1 220px;
+  min-width: 0;
+  font-size: 0.9rem;
+}
+
 .room-code {
   font-size: 2rem;
   font-weight: 800;

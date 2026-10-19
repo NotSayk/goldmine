@@ -1,30 +1,69 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { RoomView } from '@pepite/shared';
 import { DwarfDisc } from '../assets/DwarfDisc';
 import { TopBar } from '../components/TopBar';
 import { client } from '../store';
 
+const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+/**
+ * Adresse à partager. Sur « localhost », les autres joueurs ne peuvent pas
+ * l'utiliser : le serveur fournit alors l'adresse de ce PC sur le réseau local.
+ */
+function useShareOrigin(): { origin: string; onLocalhost: boolean; lanFound: boolean } {
+  const onLocalhost = LOCAL_HOSTNAMES.has(location.hostname);
+  const [lanUrl, setLanUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!onLocalhost) return;
+    let cancelled = false;
+    fetch('/api/lan')
+      .then((response) => (response.ok ? (response.json() as Promise<{ urls?: string[] }>) : null))
+      .then((data) => {
+        if (!cancelled) setLanUrl(data?.urls?.[0] ?? null);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [onLocalhost]);
+  return { origin: lanUrl ?? location.origin, onLocalhost, lanFound: lanUrl !== null };
+}
+
 export function LobbyScreen({ room, playerId }: { room: RoomView; playerId: string | null }) {
   const [copied, setCopied] = useState(false);
+  const linkRef = useRef<HTMLInputElement>(null);
   const isHost = room.hostId === playerId;
   const count = room.players.length;
-  const link = `${location.origin}/?salon=${room.code}`;
+  const { origin, onLocalhost, lanFound } = useShareOrigin();
+  const link = `${origin}/?salon=${room.code}`;
+  const canShare = typeof navigator.share === 'function';
+
+  const copy = async () => {
+    try {
+      if (window.isSecureContext && navigator.clipboard) {
+        await navigator.clipboard.writeText(link);
+      } else {
+        // En HTTP sur le réseau local, le presse-papiers moderne est bloqué par le navigateur.
+        linkRef.current?.select();
+        if (!document.execCommand('copy')) throw new Error('copie refusée');
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Le lien reste sélectionné dans le champ : copie manuelle possible.
+      linkRef.current?.select();
+    }
+  };
 
   const share = async () => {
     try {
-      if (navigator.share) {
-        await navigator.share({
-          title: 'Rejoins ma partie',
-          text: `Code du salon : ${room.code}`,
-          url: link,
-        });
-      } else {
-        await navigator.clipboard.writeText(link);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }
+      await navigator.share({
+        title: 'Rejoins ma partie',
+        text: `Code du salon : ${room.code}`,
+        url: link,
+      });
     } catch {
-      // Partage annulé ou presse-papiers indisponible : le code reste affiché.
+      // Partage annulé.
     }
   };
 
@@ -45,11 +84,40 @@ export function LobbyScreen({ room, playerId }: { room: RoomView; playerId: stri
           <p className="room-code" aria-label={`Code ${room.code.split('').join(' ')}`}>
             {room.code}
           </p>
-          <div className="row">
-            <button type="button" className="btn btn--ghost" onClick={() => void share()}>
-              {copied ? 'Lien copié !' : 'Partager le lien'}
-            </button>
+          <div className="field">
+            <label htmlFor="invite-link">Lien d’invitation</label>
+            <div className="invite">
+              <input
+                id="invite-link"
+                ref={linkRef}
+                readOnly
+                value={link}
+                onFocus={(event) => event.target.select()}
+              />
+              <button type="button" className="btn btn--ghost" onClick={() => void copy()}>
+                {copied ? 'Copié !' : 'Copier'}
+              </button>
+              {canShare && (
+                <button type="button" className="btn btn--ghost" onClick={() => void share()}>
+                  Partager
+                </button>
+              )}
+            </div>
           </div>
+          {onLocalhost && lanFound && (
+            <p className="small muted">
+              Les joueurs connectés au même réseau (même Wi-Fi ou même box) ouvrent cette adresse.
+            </p>
+          )}
+          {onLocalhost && !lanFound && (
+            <p className="notice notice--info small">
+              <span>
+                Vous jouez sur « localhost » : les autres joueurs doivent utiliser l’adresse de ce
+                PC sur le réseau, affichée au démarrage du serveur (par exemple
+                http://192.168.1.42:3000).
+              </span>
+            </p>
+          )}
         </section>
 
         <section className="panel stack" aria-label="Joueurs du salon">
