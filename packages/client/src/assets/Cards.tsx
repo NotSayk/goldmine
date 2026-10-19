@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import type { ExitActionKind, ExtractionKind, TrackCardKind } from '@pepite/engine';
+import { EXIT_LABELS } from '../i18n/fr';
 import { DragonHead } from './Dragon';
 
 const STROKE = '#14161c';
@@ -493,14 +494,34 @@ export function ExitActionIcon({ action, size = 28 }: { action: ExitActionKind; 
   );
 }
 
-/** Face d'une carte Exit (défausse, choix d'action). */
-export function ExitCardFace({ actions }: { actions: readonly ExitActionKind[] }) {
+/**
+ * Face d'une carte Exit (défausse, carte mise en scène) : chaque action avec
+ * son pictogramme et son nom, centrés ; « ou » entre les deux actions d'une
+ * carte double. `chosen` met en avant l'action jouée.
+ */
+export function ExitCardFace({
+  actions,
+  chosen = null,
+}: {
+  actions: readonly ExitActionKind[];
+  chosen?: ExitActionKind | null;
+}) {
   return (
-    <div className="exit-face" aria-hidden>
+    <div className={`exit-face exit-face--${actions.length > 1 ? 'double' : 'single'}`} aria-hidden>
       {actions.map((action, i) => (
-        <span key={i} className="exit-face__action">
-          <ExitActionIcon action={action} size={22} />
-        </span>
+        <Fragment key={i}>
+          {i > 0 && <span className="exit-face__or">ou</span>}
+          <span
+            className={[
+              'exit-face__action',
+              chosen === action ? 'exit-face__action--chosen' : '',
+              chosen && chosen !== action ? 'exit-face__action--dim' : '',
+            ].join(' ')}
+          >
+            <ExitActionIcon action={action} size={32} />
+            <span className="exit-face__name">{EXIT_LABELS[action].name}</span>
+          </span>
+        </Fragment>
       ))}
     </div>
   );

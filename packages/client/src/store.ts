@@ -1,7 +1,14 @@
 import { useSyncExternalStore } from 'react';
 import { flushSync } from 'react-dom';
 import type { ExtractionKind, GameEvent, PlayerView } from '@pepite/engine';
-import type { AutoPlay, ClientMessage, Emote, RoomView, ServerMessage } from '@pepite/shared';
+import type {
+  AutoPlay,
+  ClientMessage,
+  Emote,
+  OpenRoomSummary,
+  RoomView,
+  ServerMessage,
+} from '@pepite/shared';
 import { runCues } from './director/cues';
 import { Director, browserClock } from './director/director';
 import {
@@ -72,6 +79,8 @@ export interface AppState {
   /** Or du joueur coup après coup (récapitulatif de fin de partie). */
   readonly goldHistory: readonly GoldSample[];
   readonly emotes: readonly EmoteBubble[];
+  /** Salons publics ouverts, listés à l'accueil. */
+  readonly openRooms: readonly OpenRoomSummary[];
 }
 
 /**
@@ -180,6 +189,7 @@ class GameClient {
     turnTimer: null,
     goldHistory: [],
     emotes: [],
+    openRooms: [],
   };
   private readonly listeners = new Set<() => void>();
   private socket: WebSocket | null = null;
@@ -366,6 +376,9 @@ class GameClient {
       case 'emote':
         this.showEmote(message.playerId, message.emote);
         break;
+      case 'roomList':
+        this.set({ openRooms: message.rooms });
+        break;
       case 'pong':
         break;
     }
@@ -445,6 +458,17 @@ class GameClient {
       if (frame.lastDrawn !== undefined) lastDrawn = frame.lastDrawn;
     }
     if (!applied) return;
+    // Garde-fou : dans une manche, la table ne montre jamais le dragon reculer.
+    const before = this.state.boardView;
+    if (
+      before &&
+      before.round === applied.view.round &&
+      applied.view.dragonPosition > before.dragonPosition
+    ) {
+      console.error(
+        `Table incohérente : le dragon recule (${before.dragonPosition} → ${applied.view.dragonPosition}).`,
+      );
+    }
     // Courbe d'or du joueur, pour le récapitulatif.
     let goldHistory = this.state.goldHistory;
     const gold = viewerGold(applied.view);

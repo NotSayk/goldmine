@@ -1,6 +1,7 @@
-import type { CSSProperties } from 'react';
-import type { PlayerView } from '@pepite/engine';
+import type { CSSProperties, ReactNode } from 'react';
+import type { Availability, PlayerView } from '@pepite/engine';
 import { CardBack, ExitCardFace, ExtractionCardArt } from '../assets/Cards';
+import { IconPickaxe, IconRun } from '../assets/Icons';
 import { EXIT_LABELS, EXTRACTION_LABELS, plural } from '../i18n/fr';
 import type { LastDrawn } from '../store';
 import { Card3D } from './Card3D';
@@ -15,13 +16,62 @@ function thickness(count: number): CSSProperties {
   return { '--stack': shadows.length > 0 ? shadows.join(', ') : 'none' } as CSSProperties;
 }
 
+/** Ce que le joueur peut piocher maintenant (d'après la dernière vue du serveur). */
+export interface DrawChoices {
+  readonly extraction: Availability;
+  readonly exit: Availability;
+  readonly waiting: boolean;
+  readonly onDraw: (deck: 'extraction' | 'exit') => void;
+}
+
+/** Pioche jouable : on la touche pour piocher (plus de boutons séparés). */
+function DeckSlot({
+  deck,
+  draw,
+  label,
+  stackStyle,
+  children,
+}: {
+  deck: 'extraction' | 'exit';
+  draw: DrawChoices | undefined;
+  label: string;
+  stackStyle: CSSProperties;
+  children: ReactNode;
+}) {
+  const availability = draw?.[deck];
+  const playable = availability?.allowed === true && draw?.waiting === false;
+  const verb = deck === 'extraction' ? 'Creuser' : 'Fuir';
+  return (
+    <button
+      type="button"
+      className={`deck__card deck__card--stacked deck__card--button${playable ? ' deck__card--playable' : ''}`}
+      style={stackStyle}
+      data-deck={deck}
+      disabled={!playable}
+      onClick={() => draw?.onDraw(deck)}
+      aria-label={`${verb} : ${label}`}
+      aria-describedby="action-note"
+      title={playable ? `${verb} : ${label}` : label}
+    >
+      {children}
+      <span className={`deck__verb deck__verb--${deck}`} aria-hidden>
+        {deck === 'extraction' ? <IconPickaxe size={16} /> : <IconRun size={16} />}
+        {verb}
+      </span>
+    </button>
+  );
+}
+
 export function Decks({
   view,
   lastDrawn,
+  draw,
 }: {
   view: PlayerView;
   /** Dernière carte creusée (vue par tous au moment de la pioche). */
   lastDrawn: LastDrawn | null;
+  /** Absent pour un spectateur. */
+  draw?: DrawChoices;
 }) {
   const top = view.extraction.top;
   const discardTop = view.exit.discard[view.exit.discard.length - 1];
@@ -31,20 +81,14 @@ export function Decks({
     <section className="decks" aria-label="Pioches">
       <div className="deck">
         <div className="deck__label">Extraction</div>
-        <div
-          className="deck__card deck__card--stacked"
-          style={thickness(count)}
-          data-deck="extraction"
-          role="img"
-          aria-label={
+        <DeckSlot
+          deck="extraction"
+          draw={draw}
+          stackStyle={thickness(count)}
+          label={
             top
-              ? `Carte visible : ${EXTRACTION_LABELS[top].name}, ${EXTRACTION_LABELS[top].effect}`
-              : `Pioche Extraction, face cachée : ${plural(count, 'carte')}`
-          }
-          title={
-            top
-              ? `${EXTRACTION_LABELS[top].name} : ${EXTRACTION_LABELS[top].effect}`
-              : 'Face cachée : on découvre la carte en la piochant'
+              ? `${EXTRACTION_LABELS[top].name}, ${EXTRACTION_LABELS[top].effect}`
+              : `piocher une carte Extraction, face cachée (${plural(count, 'carte')})`
           }
         >
           {top ? (
@@ -58,7 +102,7 @@ export function Decks({
           ) : (
             <div className="card-empty">Vide</div>
           )}
-        </div>
+        </DeckSlot>
         <div className="deck__count">{plural(count, 'carte')}</div>
         {lastDrawn && (
           <div className="deck__hint">
@@ -68,13 +112,11 @@ export function Decks({
       </div>
       <div className="deck">
         <div className="deck__label">Exit</div>
-        <div
-          className="deck__card deck__card--stacked"
-          style={thickness(exitCount)}
-          data-deck="exit"
-          role="img"
-          aria-label={`Pioche Exit, face cachée : ${plural(exitCount, 'carte')}`}
-          title="Cartes Exit : face cachée"
+        <DeckSlot
+          deck="exit"
+          draw={draw}
+          stackStyle={thickness(exitCount)}
+          label={`piocher une carte Exit, face cachée (${plural(exitCount, 'carte')})`}
         >
           {exitCount > 0 ? (
             <Card3D finish="exit">
@@ -83,7 +125,7 @@ export function Decks({
           ) : (
             <div className="card-empty">Vide</div>
           )}
-        </div>
+        </DeckSlot>
         <div className="deck__count">{plural(exitCount, 'carte')}</div>
       </div>
       <div className="deck">

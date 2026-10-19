@@ -167,6 +167,31 @@ describe('salons', () => {
     expect(host!.room).toBeNull();
   });
 
+  it('liste les salons publics ouverts, jamais les privés, complets ou commencés', async () => {
+    const [open] = await lobby(2);
+    const [hidden] = await lobby(1);
+    hidden!.send({ type: 'updateSettings', isPublic: false });
+    await waitUntil(() => hidden!.room?.settings.isPublic === false);
+    const [started] = await lobby(2);
+    started!.send({ type: 'startGame' });
+    await waitUntil(() => started!.room?.status === 'playing');
+    const visitor = await client();
+    visitor.send({ type: 'listRooms' });
+    const list = await visitor.waitFor((m) => m.type === 'roomList');
+    expect(list).toEqual({
+      type: 'roomList',
+      rooms: [{ code: open!.room!.code, hostName: 'Hôte', players: 2, maxPlayers: 6 }],
+    });
+    // Le salon rouvert au public réapparaît.
+    hidden!.send({ type: 'updateSettings', isPublic: true });
+    await waitUntil(() => hidden!.room?.settings.isPublic === true);
+    visitor.send({ type: 'listRooms' });
+    const again = await visitor.waitFor((m) => m.type === 'roomList');
+    expect(again.type === 'roomList' && again.rooms.map((r) => r.code)).toContain(
+      hidden!.room!.code,
+    );
+  });
+
   it('valide les messages entrants', async () => {
     const c = await client();
     c.sendRaw('pas du json');

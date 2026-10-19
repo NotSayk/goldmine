@@ -23,7 +23,7 @@ npm run dev
 - le serveur de jeu (port **3000**, rechargé à chaque modification) ;
 - le client Vite (port **5173**), qui relaie `/ws` vers le serveur.
 
-Ouvrez <http://localhost:5173>, créez un salon et partagez le code (ou le lien `?salon=CODE`). Pour tester seul : ajoutez des bots dans le salon, ou ouvrez plusieurs fenêtres de navigation privée.
+Ouvrez <http://localhost:5173>, créez un salon et partagez le code (ou le lien `?salon=CODE`). Les salons publics apparaissent aussi dans la liste « Salons ouverts » de l'accueil ; l'hôte peut rendre le sien privé. Pour tester seul : ajoutez des bots dans le salon, ou ouvrez plusieurs fenêtres de navigation privée.
 
 ## Scripts
 
@@ -121,7 +121,7 @@ docs/
 
 ## Animations et réglages
 
-Chaque coup est mis en scène sur la zone des pioches, sans jamais cacher la piste : la carte piochée vole depuis la pioche, marque une pause de suspense puis se retourne ; le dragon déclenche un travelling, un tremblement et un souffle de flammes ; les nains bondissent de carte en carte. Les coups des bots défilent au même rythme que ceux des joueurs. On peut toujours jouer sans attendre la fin d'une animation, et la passer (clic, bouton « Passer », touche Échap).
+On joue en touchant directement la pioche Extraction (creuser) ou la pioche Exit (fuir). Chaque coup est mis en scène sur la zone des pioches, sans jamais cacher la piste : la carte piochée vole depuis la pioche, marque une pause de suspense puis se retourne ; le dragon déclenche un travelling, un tremblement et un souffle de flammes ; les nains bondissent de carte en carte. Les coups des bots défilent au même rythme que ceux des joueurs. On peut toujours jouer sans attendre la fin d'une animation, et la passer (clic, bouton « Passer », touche Échap).
 
 Le menu **Réglages** (roue dentée) propose : thème (mine ou contraste élevé), animations réduites, vitesse des cinématiques, qualité des effets (basse, moyenne, élevée ou automatique), vibrations et affichage des réactions des autres joueurs. Dans le salon, chacun choisit le chapeau et la barbe de ses nains. Pas de son pour l'instant.
 

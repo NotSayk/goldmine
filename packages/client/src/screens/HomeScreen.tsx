@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
+import type { OpenRoomSummary } from '@pepite/shared';
 import { BRANDING } from '@pepite/shared/branding';
 import { DwarfToken } from '../assets/DwarfToken';
 import { DragonHead } from '../assets/Dragon';
@@ -24,8 +25,69 @@ function rememberName(name: string): void {
   }
 }
 
-export function HomeScreen({ connected }: { connected: boolean }) {
+/** Liste des salons publics, rafraîchie régulièrement tant que l'accueil est affiché. */
+function useOpenRoomsPolling(connected: boolean): void {
+  useEffect(() => {
+    if (!connected) return;
+    client.send({ type: 'listRooms' });
+    const timer = setInterval(() => client.send({ type: 'listRooms' }), 4000);
+    return () => clearInterval(timer);
+  }, [connected]);
+}
+
+function OpenRooms({
+  rooms,
+  canJoin,
+  onJoin,
+}: {
+  rooms: readonly OpenRoomSummary[];
+  canJoin: boolean;
+  onJoin: (code: string) => void;
+}) {
+  return (
+    <section className="panel stack open-rooms" aria-labelledby="open-rooms-title">
+      <h2 id="open-rooms-title">Salons ouverts</h2>
+      {rooms.length === 0 ? (
+        <p className="muted small">
+          Aucun salon public pour l’instant. Créez-en un, ou rejoignez un salon privé avec son code.
+        </p>
+      ) : (
+        <ul className="open-rooms__list">
+          {rooms.map((room) => (
+            <li key={room.code} className="open-rooms__item">
+              <span className="open-rooms__host">Salon de {room.hostName}</span>
+              <span className="badge">
+                {room.players}/{room.maxPlayers} joueurs
+              </span>
+              <button
+                type="button"
+                className="btn btn--small"
+                disabled={!canJoin}
+                onClick={() => onJoin(room.code)}
+                aria-label={`Rejoindre le salon de ${room.hostName}`}
+              >
+                Rejoindre
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {!canJoin && rooms.length > 0 && (
+        <p className="small muted">Choisissez d’abord votre pseudo.</p>
+      )}
+    </section>
+  );
+}
+
+export function HomeScreen({
+  connected,
+  openRooms,
+}: {
+  connected: boolean;
+  openRooms: readonly OpenRoomSummary[];
+}) {
   const [name, setName] = useState(savedName);
+  useOpenRoomsPolling(connected);
   const [code, setCode] = useState(INVITE_CODE);
   const trimmed = name.trim();
   const validCode = /^[A-Za-z0-9]{4,5}$/.test(code.trim());
@@ -42,6 +104,12 @@ export function HomeScreen({ connected }: { connected: boolean }) {
     if (!trimmed || !validCode) return;
     rememberName(trimmed);
     client.send({ type: 'joinRoom', code: code.trim().toUpperCase(), name: trimmed });
+  };
+
+  const joinOpen = (roomCode: string) => {
+    if (!trimmed) return;
+    rememberName(trimmed);
+    client.send({ type: 'joinRoom', code: roomCode, name: trimmed });
   };
 
   return (
@@ -85,7 +153,7 @@ export function HomeScreen({ connected }: { connected: boolean }) {
             </button>
           </form>
           <form className="panel stack" onSubmit={join}>
-            <h2>Rejoindre</h2>
+            <h2>Rejoindre avec un code</h2>
             <div className="field">
               <label htmlFor="room-code">Code du salon</label>
               <input
@@ -103,6 +171,9 @@ export function HomeScreen({ connected }: { connected: boolean }) {
               Rejoindre
             </button>
           </form>
+        </div>
+        <div className="home-rooms">
+          <OpenRooms rooms={openRooms} canJoin={trimmed !== '' && connected} onJoin={joinOpen} />
         </div>
         <p className="small muted home-footer">
           Projet de fan non officiel, nom de travail provisoire.

@@ -248,7 +248,24 @@ export function GameScreen({
                 client.send({ type: 'action', action: { type: 'chooseSwapTarget', dwarfId } })
               }
             />
-            <Decks view={boardView} lastDrawn={lastDrawn} />
+            <Decks
+              view={boardView}
+              lastDrawn={lastDrawn}
+              draw={
+                view.phase === 'playing' && !view.pending
+                  ? {
+                      extraction: view.legal.drawExtraction,
+                      exit: view.legal.drawExit,
+                      waiting,
+                      onDraw: (deck) =>
+                        client.send({
+                          type: 'action',
+                          action: { type: deck === 'extraction' ? 'drawExtraction' : 'drawExit' },
+                        }),
+                    }
+                  : undefined
+              }
+            />
           </Scene>
           <RoundEndPanel key={boardView.round} view={boardView} isHost={isHost} idle={idle} />
           {boardView.phase === 'finished' && (
@@ -258,7 +275,7 @@ export function GameScreen({
             (view.pending?.playerId === view.viewerId ? (
               <ChoicePanel view={view} waiting={waiting} turnTimer={turnTimer} />
             ) : (
-              <ActionBar view={view} waiting={waiting} turnTimer={turnTimer} />
+              <ActionBar view={view} turnTimer={turnTimer} />
             ))}
         </div>
         <aside className="game__side stack">

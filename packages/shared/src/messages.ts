@@ -43,7 +43,9 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
     type: z.literal('updateSettings'),
     doubleDraw: z.boolean().optional(),
     firstPlayer: z.union([z.literal('random'), playerId]).optional(),
+    isPublic: z.boolean().optional(),
   }),
+  z.strictObject({ type: z.literal('listRooms') }),
   z.strictObject({ type: z.literal('addBot') }),
   z.strictObject({ type: z.literal('removePlayer'), playerId }),
   z.strictObject({ type: z.literal('startGame') }),
@@ -100,6 +102,16 @@ export interface RoomSettings {
   readonly doubleDraw: boolean;
   /** Premier joueur de la manche 1 (« le plus jeune »), ou `'random'` pour un tirage au sort. */
   readonly firstPlayer: PlayerId;
+  /** Salon public : listé à l'accueil ; privé : on n'y entre qu'avec le code. */
+  readonly isPublic: boolean;
+}
+
+/** Salon public en attente de joueurs, tel que listé à l'accueil. */
+export interface OpenRoomSummary {
+  readonly code: string;
+  readonly hostName: string;
+  readonly players: number;
+  readonly maxPlayers: number;
 }
 
 export interface RoomView {
@@ -180,6 +192,8 @@ export type ServerMessage =
       readonly autoPlay?: AutoPlay;
     }
   | { readonly type: 'error'; readonly code: ServerErrorCode; readonly message: string }
+  /** Salons publics ouverts (réponse à « listRooms »). */
+  | { readonly type: 'roomList'; readonly rooms: readonly OpenRoomSummary[] }
   /** Réaction d'un joueur, relayée à tout le salon. */
   | { readonly type: 'emote'; readonly playerId: PlayerId; readonly emote: Emote }
   | { readonly type: 'pong' };

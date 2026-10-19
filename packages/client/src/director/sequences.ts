@@ -363,7 +363,7 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
           const step = draft.visual.steps;
           const at = Math.min(step * DRAGON_STEP_MS, 2 * DRAGON_STEP_MS);
           draft.visual = { kind: 'dragon', steps: step + 1 };
-          draft.title = `Dragon révélé : ${BRANDING.dragonName} avance de ${step + 1} cartes !`;
+          draft.title = `${BRANDING.dragonName} avance de ${step + 1} cartes !`;
           draft.duration = Math.min(draft.duration + DRAGON_STEP_MS, PACE.dragonMaxMs);
           draft.cues.push(
             { at, type: 'shake', strength: Math.min(3, 1 + step * 0.7) },
@@ -381,7 +381,7 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
         }
         start({
           dwarfId: null,
-          title: `Dragon révélé : ${BRANDING.dragonName} avance !`,
+          title: `${BRANDING.dragonName} avance d’une carte !`,
           name: 'Dragon',
           detail: 'La carte Mine dépassée est retournée sur sa face rouge.',
           visual: { kind: 'dragon', steps: 1 },

@@ -239,6 +239,22 @@ export function LobbyScreen({
           <label className="checkbox-row">
             <input
               type="checkbox"
+              checked={room.settings.isPublic}
+              disabled={!isHost}
+              onChange={(e) => client.send({ type: 'updateSettings', isPublic: e.target.checked })}
+            />
+            <span>
+              <strong>Salon public</strong> : il apparaît dans la liste « Salons ouverts » de
+              l’accueil.
+              <span className="muted small">
+                {' '}
+                (décoché : on n’entre qu’avec le code ou le lien)
+              </span>
+            </span>
+          </label>
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
               checked={room.settings.doubleDraw}
               disabled={!isHost}
               onChange={(e) =>

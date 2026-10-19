@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import type { PlayerView } from '@pepite/engine';
 import type { DwarfLook } from '@pepite/shared';
 import { PACE } from '@pepite/shared/pacing';
-import { CardBack, ExitActionIcon, ExtractionCardArt } from '../assets/Cards';
+import { CardBack, ExitCardFace, ExtractionCardArt } from '../assets/Cards';
 import { DragonHead, Flame } from '../assets/Dragon';
 import { DwarfToken } from '../assets/DwarfToken';
 import { IconSkip, IconSkull, IconSparkle } from '../assets/Icons';
@@ -15,7 +15,6 @@ import {
   type Sequence,
   type SequenceVisual,
 } from '../director/sequences';
-import { EXIT_LABELS } from '../i18n/fr';
 import { useLooks } from '../looks';
 import { reducedMotion } from '../preferences';
 import { client } from '../store';
@@ -247,26 +246,6 @@ function StagedCard({
   );
 }
 
-function ExitFace({ visual }: { visual: Extract<SequenceVisual, { kind: 'exit' }> }) {
-  return (
-    <div className="spot-exit">
-      {visual.actions.map((action, i) => (
-        <span
-          key={i}
-          className={[
-            'spot-action',
-            action === visual.chosen ? 'spot-action--chosen' : '',
-            visual.chosen && action !== visual.chosen ? 'spot-action--dim' : '',
-          ].join(' ')}
-        >
-          <ExitActionIcon action={action} size={36} />
-          <span>{EXIT_LABELS[action].name}</span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
 function CardVisual({
   sequence,
   durationMs,
@@ -308,7 +287,7 @@ function CardVisual({
           durationMs={durationMs}
           speed={speed}
           back={<CardBack />}
-          front={<ExitFace visual={visual} />}
+          front={<ExitCardFace actions={visual.actions} chosen={visual.chosen} />}
         />
       );
     case 'coin':
@@ -396,7 +375,7 @@ function BannerIcon({
   }
 }
 
-function Controls({ queued }: { queued: number }) {
+function Controls({ queued, yourTurn }: { queued: number; yourTurn: boolean }) {
   return (
     <div className="spotlight__controls">
       <button
@@ -404,14 +383,15 @@ function Controls({ queued }: { queued: number }) {
         className="spot-skip"
         onClick={(event) => {
           event.stopPropagation();
-          client.skipSequence();
+          if (yourTurn) client.skipAllSequences();
+          else client.skipSequence();
         }}
         title="Passer (Échap)"
       >
         <IconSkip size={16} />
-        <span>Passer</span>
+        <span>{yourTurn ? 'À vous : passer' : 'Passer'}</span>
       </button>
-      {queued > 0 && (
+      {queued > 0 && !yourTurn && (
         <button
           type="button"
           className="spot-skip"
@@ -464,12 +444,15 @@ export function Spotlight({
   useSkipKey(sequence !== null);
   const looks = useLooks();
   if (!sequence) return null;
+  // À votre tour, un clic dégage tout de suite les pioches : toute la file est passée.
+  const yourTurn = view.legal.yourTurn;
+  const skip = (): void => (yourTurn ? client.skipAllSequences() : client.skipSequence());
   const layout = layoutOf(sequence.visual);
   const dwarf = sequence.dwarfId === null ? undefined : view.dwarves[sequence.dwarfId];
   const color = dwarf?.color ?? null;
   const look = dwarf ? looks.get(dwarf.ownerId) : undefined;
-  // Le nom et l'effet de la carte n'apparaissent qu'une fois la carte retournée.
-  const revealDelay = sequence.flight && layout === 'card' ? REVEAL_AT / speed : 0;
+  // Le nom et l'effet de la carte s'affichent dès qu'elle commence à se retourner.
+  const revealDelay = sequence.flight && layout === 'card' ? FLIP_AT / speed : 0;
   const style = {
     '--dur': `${durationMs}ms`,
     '--reveal-delay': `${Math.round(revealDelay)}ms`,
@@ -504,7 +487,7 @@ export function Spotlight({
         <div
           key={sequence.id}
           className={`spotlight__panel spotlight__panel--${sequence.tone}`}
-          onClick={() => client.skipSequence()}
+          onClick={skip}
         >
           <div className="spot-eliminated" aria-hidden>
             <span className="spot-flames">
@@ -523,7 +506,7 @@ export function Spotlight({
             <IconSkull className="spot-skull" size={32} />
           </div>
           {text}
-          <Controls queued={queued} />
+          <Controls queued={queued} yourTurn={yourTurn} />
           <span className="spotlight__timer" aria-hidden />
         </div>
       </div>
@@ -536,13 +519,13 @@ export function Spotlight({
         <div
           key={sequence.id}
           className={`spotlight__panel spotlight__panel--${sequence.tone}`}
-          onClick={() => client.skipSequence()}
+          onClick={skip}
         >
           <div aria-hidden>
             <BannerIcon visual={sequence.visual} color={color} look={look} />
           </div>
           {text}
-          <Controls queued={queued} />
+          <Controls queued={queued} yourTurn={yourTurn} />
           <span className="spotlight__timer" aria-hidden />
         </div>
       </div>
@@ -554,13 +537,13 @@ export function Spotlight({
       <div
         key={sequence.id}
         className={`spotlight__panel spotlight__panel--${sequence.tone}`}
-        onClick={() => client.skipSequence()}
+        onClick={skip}
       >
         <div className="spotlight__card" aria-hidden>
           <CardVisual sequence={sequence} durationMs={durationMs} speed={speed} />
         </div>
         {text}
-        <Controls queued={queued} />
+        <Controls queued={queued} yourTurn={yourTurn} />
         <span className="spotlight__timer" aria-hidden />
       </div>
     </div>

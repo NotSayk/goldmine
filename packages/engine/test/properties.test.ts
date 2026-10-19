@@ -104,6 +104,13 @@ function runGame(options: RunOptions): { state: GameState; actions: GameAction[]
     }
     const result = reduce(state, action, rng);
     if (!result.ok) throw new Error(result.error.code);
+    // Le dragon ne recule jamais pendant une manche, et n'avance que d'une carte à la fois.
+    if (result.state.round === state.round) {
+      expect(result.state.dragonPosition).toBeLessThanOrEqual(state.dragonPosition);
+    }
+    for (const event of result.events) {
+      if (event.type === 'DragonMoved') expect(event.to).toBe(event.from - 1);
+    }
     actions.push(action);
     state = result.state;
     if (options.checkEveryStep) {

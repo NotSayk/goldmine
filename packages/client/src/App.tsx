@@ -36,7 +36,9 @@ export function App() {
             </button>
           </div>
         )}
-        {!room && <HomeScreen connected={state.connection === 'open'} />}
+        {!room && (
+          <HomeScreen connected={state.connection === 'open'} openRooms={state.openRooms} />
+        )}
         {room && room.status === 'lobby' && (
           <LobbyScreen room={room} playerId={state.playerId} emotes={state.emotes} />
         )}

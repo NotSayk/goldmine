@@ -63,6 +63,7 @@ Chaque cas est isolé dans une fonction nommée et documentée de [`packages/eng
 
 **Salons et connexions** (choix hors règles)
 
+- **Salons publics ou privés** : un salon est public par défaut et apparaît dans la liste « Salons ouverts » de l'accueil (salons en attente et pas complets, 20 au plus, les plus récents d'abord, rafraîchie toutes les 4 s) ; l'hôte peut le rendre privé, on n'y entre alors qu'avec le code ou le lien.
 - Un joueur qui quitte une partie en cours est remplacé définitivement par un bot.
 - Après le délai de grâce (30 s par défaut), l'hôte peut **remplacer** un joueur déconnecté par un bot (il reprend la main à sa reconnexion) ou **passer son tour** (action système `skipTurn` du moteur ; une carte Exit en attente de choix est alors défaussée sans effet).
 - Si l'hôte reste déconnecté au-delà du délai de grâce, le premier humain connecté devient hôte.
@@ -182,7 +183,7 @@ Sont chargés à la demande (`import()`) : les particules d'ambiance, le moteur 
 
 ### Rythme (retour de l'utilisateur : « trop rapide »)
 
-- Les durées sont communes au client et au serveur ([`shared/src/pacing.ts`](../packages/shared/src/pacing.ts)) : une pioche dure environ 3,7 s (vol 0,75 s, suspense 0,75 s, retournement 0,38 s, lecture 1,8 s), le dragon 2,8 s (+0,7 s par pas en chaîne, 4,8 s au plus), une élimination 3,8 s, un bond de nain 0,44 s par carte.
+- Les durées sont communes au client et au serveur ([`shared/src/pacing.ts`](../packages/shared/src/pacing.ts)) : une pioche dure environ 4,3 s (vol 0,65 s, suspense 0,65 s, retournement 0,38 s, lecture 2,6 s) ; le nom et l'effet de la carte s'affichent dès le début du retournement, soit près de 3 s de lecture, le dragon 2,8 s (+0,7 s par pas en chaîne, 4,8 s au plus), une élimination 3,8 s, un bond de nain 0,44 s par carte.
 - **Les coups des bots se jouent au même rythme que ceux des joueurs** : le serveur estime la durée des animations de chaque coup (`animationMs`) et un bot ne joue qu'une fois ce temps écoulé (plus 0,9 s de réflexion, et au moins `BOT_DELAY_MS`). La version courte pour les spectateurs prévue par le prompt et l'accélération quand c'est son tour sont retirées ; la file n'accélère plus que si elle déborde vraiment (×1,25 à partir de 3 séquences en attente, ×1,6 à partir de 5), par exemple après une reconnexion. `PACE_ANIMATIONS=0` désactive ce rythme côté serveur (tests, captures).
 - Réglage « Vitesse des cinématiques : rapide » (×1,5) pour qui préfère.
 
@@ -199,6 +200,8 @@ Sont chargés à la demande (`import()`) : les particules d'ambiance, le moteur 
 - Le coup mis en scène (carte piochée, dragon, sortie, élimination) s'affiche **sur la zone des pioches, sous la piste**, jamais par-dessus la piste ni en plein écran : on voit toujours les nains bouger et le dragon avancer. L'annonce d'une élimination garde un éclair rouge sur les bords de l'écran. La carte piochée peut toujours voler jusqu'à la pile du joueur (le décor reste rogné aux bords du plateau, pas la mise en scène).
 - Les choix (action d'une carte Exit à deux actions, nain à échanger) remplacent les boutons d'action dans la barre du bas au lieu d'ouvrir une fenêtre ; pour un échange, on peut aussi toucher le nain directement sur le plateau.
 - Les emplacements de l'échelle de la Sortie ont la silhouette des nains-personnages.
+- **On joue en touchant les pioches** : les boutons « Creuser » et « Fuir » sont retirés ; la pioche Extraction (creuser) et la pioche Exit (fuir) sont des boutons, entourés d'un anneau doré quand c'est à vous, avec l'étiquette « Creuser » ou « Fuir ». Un bandeau sous le plateau dit quoi faire ou pourquoi ce n'est pas possible. À votre tour, toucher la mise en scène passe d'un coup toutes les animations en attente, pour dégager les pioches.
+- **Le dragon ne recule jamais** : le moteur le garantit (test de propriété sur des milliers de coups). Le recul signalé venait de la mise en scène de l'échange prévu par le livret (la carte Mine dépassée passe derrière le dragon) : elle glissait vers la droite en s'embrasant en même temps que le dragon avançait. Désormais le dragon passe par-dessus, la carte glisse dessous et ne se retourne qu'une fois l'échange fini, et le souffle part de la gueule du dragon vers la Sortie. Un garde-fou écrit une erreur dans la console si la table montrait un jour le dragon reculer dans une manche (la partie de fumée échoue alors).
 
 ### Réactions rapides et apparence
 

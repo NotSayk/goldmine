@@ -8,13 +8,13 @@ import type { GameEvent } from '@pepite/engine';
  */
 export const PACE = {
   /** Pioche : la carte vole depuis la pioche… */
-  flyMs: 750,
+  flyMs: 650,
   /** …marque une pause de suspense, identique pour toutes les cartes… */
-  suspenseMs: 750,
-  /** …puis se retourne… */
+  suspenseMs: 650,
+  /** …puis se retourne (son texte s'affiche dès le début du retournement)… */
   flipMs: 380,
   /** …et reste lisible avant de rejoindre la pile ou la défausse. */
-  readMs: 1800,
+  readMs: 2600,
   /** Carte Exit d'un autre joueur, de dos, pendant qu'il choisit. */
   exitPendingMs: 2000,
   /** Action Exit choisie après coup (carte déjà piochée). */

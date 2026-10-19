@@ -192,6 +192,7 @@ export function Track({
   return (
     <div
       className="track"
+      data-round={view.round}
       role="group"
       aria-label="Piste de la mine, de la Sortie (à gauche) au dragon (à droite)"
     >

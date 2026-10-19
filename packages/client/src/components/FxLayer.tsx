@@ -67,21 +67,24 @@ function transient(
   animation.oncancel = () => element.remove();
 }
 
-/** Souffle de flammes qui balaie les cartes Mine que le dragon vient de retourner. */
-function flameSweep(layer: HTMLElement, from: number, to: number): void {
-  const a = trackCard(from)?.getBoundingClientRect();
-  const b = trackCard(to)?.getBoundingClientRect();
-  if (!a || !b) return;
-  // Le jet part de la gueule du dragon (à droite) et balaie la piste vers la Sortie.
-  const right = Math.max(a.right, b.right);
-  const left = Math.min(a.left, b.left) - a.width * 1.2;
+/**
+ * Souffle de flammes : il part de la gueule du dragon, à sa nouvelle place, et
+ * balaie la piste vers la Sortie. Calculé sur la grille de la piste (la carte
+ * du dragon est encore en train de glisser à cet instant).
+ */
+function flameSweep(layer: HTMLElement, to: number): void {
+  const track = document.querySelector('.track')?.getBoundingClientRect();
+  if (!track) return;
+  const card = track.width / 9;
+  const mouth = track.left + (to + 0.3) * card;
+  const left = mouth - card * 1.6;
   transient(
     layer,
     'fx-flame',
-    { left, top: a.top + a.height * 0.15, width: right - left, height: a.height * 0.7 },
+    { left, top: track.top + track.height * 0.12, width: mouth - left, height: track.height * 0.7 },
     [
       { opacity: 0, transform: 'scaleX(0.05) scaleY(0.6)' },
-      { opacity: 1, transform: 'scaleX(0.7) scaleY(1)', offset: 0.25 },
+      { opacity: 1, transform: 'scaleX(0.75) scaleY(1)', offset: 0.25 },
       { opacity: 1, transform: 'scaleX(1) scaleY(1.1)', offset: 0.55 },
       { opacity: 0, transform: 'scaleX(1.05) scaleY(0.5) translateX(-6%)' },
     ],
@@ -140,7 +143,7 @@ export function FxLayer() {
           camera(event.position, event.duration);
           return;
         case 'flameSweep':
-          flameSweep(layer, event.from, event.to);
+          flameSweep(layer, event.to);
           return;
         case 'burst': {
           const point = anchorPoint(event.anchor);

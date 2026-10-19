@@ -249,43 +249,6 @@
   pointer-events: none;
 }
 
-.spot-exit {
-  display: grid;
-  align-content: center;
-  gap: 6px;
-  width: 100%;
-  height: 100%;
-  padding: 6px;
-  border: 2px solid var(--card-ink);
-  border-radius: 9px;
-  background: var(--grain), linear-gradient(160deg, #24727f, var(--exit-back));
-  color: #f4f1e6;
-}
-
-.spot-action {
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  width: 100%;
-  padding: 4px 2px;
-  border-radius: 8px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.spot-action--chosen {
-  background: var(--gold-metal);
-  color: #2a1a00;
-  box-shadow: 0 0 14px var(--gold-glow);
-  animation: spot-pop 500ms var(--ease-spring) calc(var(--reveal-delay) + 200ms) both;
-}
-
-.spot-action--dim {
-  opacity: 0.35;
-}
-
 /* ---------- Pile ou face ---------- */
 
 .spot-coin {

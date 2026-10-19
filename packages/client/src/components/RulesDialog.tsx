@@ -21,6 +21,7 @@ export function RulesDialog({ open, onClose }: { open: boolean; onClose: () => v
           Mine sur leur face rouge. La partie dure <strong>3 manches</strong>.
         </p>
         <h3>À votre tour : creuser ou fuir</h3>
+        <p>On joue en touchant directement une pioche sur le plateau.</p>
         <ul>
           <li>
             <strong>Creuser</strong> : piochez la carte du dessus de la pioche Extraction, face

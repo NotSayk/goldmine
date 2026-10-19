@@ -57,7 +57,7 @@ describe('séquences du réalisateur', () => {
     const highlights = buildHighlights(events, viewFor(state, 'a'));
     expect(highlights.map((h) => h.visual.kind)).toEqual(['extraction', 'dragon', 'eliminated']);
     expect(highlights[1]).toMatchObject({
-      title: 'Dragon révélé : Dragobert avance de 2 cartes !',
+      title: 'Dragobert avance de 2 cartes !',
       visual: { kind: 'dragon', steps: 2 },
       tone: 'danger',
     });

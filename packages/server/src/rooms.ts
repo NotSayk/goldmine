@@ -72,6 +72,9 @@ interface ConnectionState {
   lastRateLimitNotice: number;
 }
 
+/** Nombre maximal de salons publics listés à l'accueil. */
+const OPEN_ROOMS_LIMIT = 20;
+
 const BOT_NAMES = ['Silex', 'Quartz', 'Mica', 'Onyx', 'Jaspe', 'Ambre', 'Agate', 'Opale'];
 
 class RequestError extends Error {
@@ -201,6 +204,8 @@ export class RoomManager {
     }
     const session = state.session ?? fail('SESSION_REQUIRED', 'Envoyez d’abord « hello ».');
     switch (message.type) {
+      case 'listRooms':
+        return this.listRooms(session);
       case 'createRoom':
         return this.createRoom(session, message.name);
       case 'joinRoom':
@@ -280,6 +285,25 @@ export class RoomManager {
   // Salon
   // -------------------------------------------------------------------------
 
+  /** Salons publics encore dans le salon d'attente et pas complets, les plus récents d'abord. */
+  private listRooms(session: Session): void {
+    const rooms = this.store
+      .all()
+      .filter(
+        (room) =>
+          room.status === 'lobby' && room.settings.isPublic && room.players.length < MAX_PLAYERS,
+      )
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, OPEN_ROOMS_LIMIT)
+      .map((room) => ({
+        code: room.code,
+        hostName: room.players.find((p) => p.id === room.hostId)?.name ?? '?',
+        players: room.players.length,
+        maxPlayers: MAX_PLAYERS,
+      }));
+    this.sendTo(session, { type: 'roomList', rooms });
+  }
+
   private createRoom(session: Session, name: string): void {
     this.leaveCurrentRoom(session);
     const room: Room = {
@@ -287,7 +311,7 @@ export class RoomManager {
       hostId: session.playerId,
       status: 'lobby',
       players: [this.humanPlayer(session, name)],
-      settings: { doubleDraw: false, firstPlayer: 'random' },
+      settings: { doubleDraw: false, firstPlayer: 'random', isPublic: true },
       game: null,
       rng: null,
       createdAt: this.now(),
@@ -373,6 +397,7 @@ export class RoomManager {
     room.settings = {
       doubleDraw: message.doubleDraw ?? room.settings.doubleDraw,
       firstPlayer: message.firstPlayer ?? room.settings.firstPlayer,
+      isPublic: message.isPublic ?? room.settings.isPublic,
     };
     this.touch(room);
     this.broadcastRoom(room);

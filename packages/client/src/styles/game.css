@@ -201,8 +201,8 @@
 }
 
 .track-card[data-kind='dragon'] {
-  /* Le dragon glisse par-dessus les galeries qu'il brûle. */
-  z-index: 1;
+  /* Le dragon glisse par-dessus les cartes qu'il dépasse. */
+  z-index: 2;
 }
 
 .track-card[data-kind='dragon'] .track-card__face {
@@ -559,28 +559,6 @@ button.disc--target {
   font-size: 0.75rem;
 }
 
-.exit-face {
-  width: 100%;
-  height: 100%;
-  border-radius: 8px;
-  border: 2px solid var(--card-ink);
-  background: var(--grain), linear-gradient(160deg, #24727f, var(--exit-back));
-  color: #f4f1e6;
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: 4px;
-}
-
-.exit-face__action {
-  display: grid;
-  place-items: center;
-  width: 70%;
-  aspect-ratio: 1.4;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
 /* ---------- Barre d'actions, collée en bas sur téléphone ---------- */
 
 .actions {
@@ -598,136 +576,12 @@ button.disc--target {
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45);
 }
 
-.action-btn {
-  position: relative;
-  display: grid;
-  gap: 2px;
-  text-align: left;
-  min-height: 66px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid #7a4f00;
-  background: var(--gold-metal);
-  color: #2a1a00;
-  cursor: pointer;
-  overflow: hidden;
-  box-shadow:
-    0 4px 0 #7a4f00,
-    0 10px 20px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
-  transition:
-    transform var(--t-fast) var(--ease-out),
-    box-shadow var(--t-fast) var(--ease-out),
-    filter var(--t-fast) ease;
-}
-
-/* Reflet qui balaie le bouton au survol. */
-.action-btn::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 35%,
-    rgba(255, 255, 255, 0.35) 50%,
-    transparent 65%
-  );
-  transform: translateX(-120%);
-  transition: transform 600ms var(--ease-out);
-  pointer-events: none;
-}
-
-.action-btn:hover:not(:disabled)::after {
-  transform: translateX(120%);
-}
-
-.action-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow:
-    0 6px 0 #7a4f00,
-    0 14px 26px rgba(0, 0, 0, 0.4),
-    0 0 22px var(--gold-glow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
-}
-
-.action-btn:active:not(:disabled) {
-  transform: translateY(3px);
-  box-shadow:
-    0 1px 0 #7a4f00,
-    0 4px 10px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-
-.action-btn--exit {
-  border-color: #0b3640;
-  background: linear-gradient(180deg, #1f7484 0%, #1a6574 55%, #124b57 100%);
-  color: #f2fbff;
-  box-shadow:
-    0 4px 0 #0b3640,
-    0 10px 20px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-
-.action-btn--exit:hover:not(:disabled) {
-  box-shadow:
-    0 6px 0 #0b3640,
-    0 14px 26px rgba(0, 0, 0, 0.4),
-    0 0 22px var(--accent-glow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-
-.action-btn--exit:active:not(:disabled) {
-  box-shadow:
-    0 1px 0 #0b3640,
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-.action-btn:disabled {
-  background: var(--surface-2);
-  border-color: var(--border);
-  color: var(--text-faint);
-  box-shadow: none;
-  cursor: not-allowed;
-}
-
-.action-btn__title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.15rem;
-  letter-spacing: 0.04em;
-}
-
-.action-btn__sub {
-  font-size: 0.8rem;
-  line-height: 1.25;
-  opacity: 0.95;
-}
-
 .actions__note {
   grid-column: 1 / -1;
   font-size: 0.85rem;
   color: var(--text-muted);
   text-align: center;
   margin: 0;
-}
-
-:root[data-theme='contrast'] .action-btn {
-  background: var(--gold);
-  color: #000;
-  border: 2px solid #fff;
-  box-shadow: none;
-}
-
-:root[data-theme='contrast'] .action-btn--exit {
-  background: var(--accent);
-}
-
-:root[data-theme='contrast'] .action-btn:disabled {
-  background: #222;
-  color: #ccc;
 }
 
 /* ---------- Joueurs ---------- */
@@ -1263,9 +1117,17 @@ button.disc--target {
   animation: deal 720ms var(--ease-out) calc(200ms + var(--i) * 120ms) both;
 }
 
-/* Galerie brûlée : elle se retourne côté rouge juste après le passage des flammes. */
+/*
+ * Carte Mine dépassée : le dragon passe par-dessus et elle glisse dessous,
+ * derrière lui ; elle ne se retourne côté rouge qu'une fois l'échange fini,
+ * pour qu'on voie bien le dragon avancer (et rien reculer).
+ */
+.track-card[data-burned='true'] {
+  z-index: 0;
+}
+
 .track-card[data-burned='true'] .card3d {
-  animation: burn-flip 1000ms var(--ease-out) 450ms both;
+  animation: burn-flip 700ms var(--ease-out) 950ms both;
 }
 
 @keyframes deal {
@@ -1286,9 +1148,9 @@ button.disc--target {
     transform: none;
     filter: none;
   }
-  45% {
-    transform: rotateY(90deg) scale(1.06);
-    filter: brightness(1.9) sepia(1) saturate(3);
+  50% {
+    transform: rotateY(90deg);
+    filter: brightness(1.3);
   }
   100% {
     transform: none;
@@ -1558,7 +1420,7 @@ button.disc--target {
 .emote-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
   justify-content: center;
   padding: 8px;
   border-radius: var(--radius);
@@ -1573,7 +1435,7 @@ button.disc--target {
 .emote-bar__button {
   display: grid;
   place-items: center;
-  width: 44px;
+  width: 40px;
   height: 44px;
   border-radius: 12px;
   border: 1px solid var(--border);
@@ -1707,4 +1569,187 @@ button.disc--target {
   line-height: 28px;
   width: 28px;
   text-align: center;
+}
+
+/* ---------- Face des cartes Exit (défausse, carte mise en scène) ---------- */
+
+.exit-face {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4cqw;
+  width: 100%;
+  height: 100%;
+  padding: 9cqw 7cqw;
+  border-radius: 8px;
+  border: 2px solid var(--card-ink);
+  background: var(--grain), linear-gradient(160deg, #24727f, var(--exit-back));
+  color: #f4f1e6;
+  text-align: center;
+}
+
+.exit-face__action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3cqw;
+  width: 100%;
+  padding: 6cqw 3cqw;
+  border-radius: 7cqw;
+  background: rgba(255, 255, 255, 0.11);
+}
+
+.exit-face--single .exit-face__action {
+  flex: 1;
+}
+
+.exit-face__action svg {
+  width: 42cqw;
+  height: auto;
+}
+
+.exit-face--double .exit-face__action svg {
+  width: 28cqw;
+}
+
+.exit-face__name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: max(7px, 12.5cqw);
+  line-height: 1.1;
+}
+
+.exit-face--double .exit-face__name {
+  font-size: max(6px, 10.5cqw);
+}
+
+.exit-face__or {
+  font-size: max(6px, 10cqw);
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.exit-face__action--chosen {
+  background: var(--gold-metal);
+  color: #2a1a00;
+  box-shadow: 0 0 14px var(--gold-glow);
+  animation: spot-pop 500ms var(--ease-spring) calc(var(--reveal-delay, 0ms) + 200ms) both;
+}
+
+.exit-face__action--dim {
+  opacity: 0.35;
+}
+
+/* ---------- Pioches jouables : on les touche pour piocher ---------- */
+
+.deck__card--button {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  border-radius: 8px;
+}
+
+.deck__card--button:disabled {
+  cursor: default;
+}
+
+.deck__card--playable {
+  cursor: pointer;
+}
+
+.deck__card--playable .card3d {
+  transition: transform var(--t-med) var(--ease-spring);
+}
+
+.deck__card--playable:hover .card3d,
+.deck__card--playable:focus-visible .card3d {
+  transform: translateY(-6px);
+}
+
+.deck__card--playable:active .card3d {
+  transform: translateY(-2px) scale(0.97);
+}
+
+/* Anneau doré qui pulse : c'est à vous, touchez une pioche. */
+.deck__card--playable::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: 12px;
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 18px var(--gold-glow);
+  pointer-events: none;
+  animation: ready-pulse 1.6s ease-in-out infinite;
+}
+
+.deck__verb {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 8%;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  background: var(--gold-metal);
+  color: #2a1a00;
+  border: 1px solid #7a4f00;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+  transform: translateX(-50%) translateY(6px);
+  opacity: 0;
+  transition:
+    opacity var(--t-med) ease,
+    transform var(--t-med) var(--ease-spring);
+  pointer-events: none;
+}
+
+.deck__verb--exit {
+  background: linear-gradient(180deg, #1f7484 0%, #124b57 100%);
+  color: #f2fbff;
+  border-color: #0b3640;
+}
+
+.deck__card--playable .deck__verb {
+  opacity: 1;
+  transform: translateX(-50%);
+}
+
+.actions--hint {
+  display: block;
+}
+
+.actions--hint .actions__note {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.actions--your-turn {
+  border-color: var(--gold);
+}
+
+.actions--your-turn .actions__note {
+  color: var(--gold-text);
+  font-weight: 700;
+}
+
+@keyframes ready-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
 }
