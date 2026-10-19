@@ -39,9 +39,11 @@ function TurnBanner({
   const yours = view.legal.yourTurn;
   const pending = view.pending;
   const current = room.players.find((p) => p.id === view.currentPlayerId);
-  let text = yours ? 'À vous de jouer !' : `Au tour de ${dwarf ? dwarfName(view, dwarf.id) : '…'}`;
+  let text = yours
+    ? 'À vous de jouer\u202f!'
+    : `Au tour de ${dwarf ? dwarfName(view, dwarf.id) : '…'}`;
   if (yours && view.doubleDraw && dwarf) {
-    text = `À vous de jouer avec votre nain ${dwarfLook(dwarf.color).name} !`;
+    text = `À vous de jouer avec votre nain ${dwarfLook(dwarf.color).name}\u202f!`;
   }
   if (pending && !yours)
     text +=
