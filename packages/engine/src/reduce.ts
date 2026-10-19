@@ -53,7 +53,7 @@ export function reduce(state: GameState, action: GameAction, rng: Rng): ReduceRe
       drawExtraction(next, requireActiveDwarf(next), events);
       break;
     case 'drawExit':
-      drawExit(next, requireActiveDwarf(next), rng, events);
+      drawExit(next, requireActiveDwarf(next), events);
       break;
     case 'chooseExitAction':
       chooseExitAction(next, action.index, events);
@@ -62,7 +62,20 @@ export function reduce(state: GameState, action: GameAction, rng: Rng): ReduceRe
       chooseSwapTarget(next, action.dwarfId, events);
       break;
   }
+  if (next.phase === 'playing') refillExitDeck(next, rng, events);
   return { ok: true, state: next, events };
+}
+
+/**
+ * Pioche Exit vide : la défausse est remélangée dès la fin de l'action qui l'a
+ * vidée. L'ordre des cartes est donc toujours fixé avant qu'un joueur pioche ;
+ * aucune carte n'est tirée au hasard au moment de la pioche.
+ */
+function refillExitDeck(state: GameState, rng: Rng, events: GameEvent[]): void {
+  if (state.exitDeck.length > 0 || state.exitDiscard.length === 0) return;
+  state.exitDeck = shuffle(state.exitDiscard, rng);
+  state.exitDiscard = [];
+  events.push({ type: 'ExitDeckReshuffled', count: state.exitDeck.length });
 }
 
 function requireActiveDwarf(state: GameState): DwarfState {
@@ -176,12 +189,7 @@ export function isExitActionFeasible(
   return action === 'swap' ? swapTargets(state, dwarf).length > 0 : true;
 }
 
-function drawExit(state: GameState, dwarf: DwarfState, rng: Rng, events: GameEvent[]): void {
-  if (state.exitDeck.length === 0) {
-    state.exitDeck = shuffle(state.exitDiscard, rng);
-    state.exitDiscard = [];
-    events.push({ type: 'ExitDeckReshuffled', count: state.exitDeck.length });
-  }
+function drawExit(state: GameState, dwarf: DwarfState, events: GameEvent[]): void {
   const card = state.exitDeck.shift();
   if (!card) throw new Error('Pioche Exit vide.');
   events.push({ type: 'CardDrawn', deck: 'exit', dwarfId: dwarf.id, card: [...card.actions] });

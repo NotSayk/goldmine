@@ -33,7 +33,8 @@ export const DEFAULT_OPTIONS: ServerOptions = {
   host: '0.0.0.0',
   staticDir: null,
   graceMs: 30_000,
-  botDelayMs: 900,
+  // Laisse le temps de voir chaque coup des bots au premier plan.
+  botDelayMs: 1800,
   idleRoomTtlMs: 30 * 60_000,
   sweepIntervalMs: 1_000,
   heartbeatMs: 30_000,
@@ -82,7 +83,10 @@ export async function startServer(overrides: Partial<ServerOptions> = {}): Promi
     await app.register(fastifyStatic, { root: staticDir, index: 'index.html', wildcard: false });
     // Application monopage : toute autre route GET renvoie index.html.
     app.setNotFoundHandler((request, reply) => {
-      if (request.method === 'GET' && !request.url.startsWith('/ws')) {
+      const path = request.url.split('?')[0] ?? '';
+      // Un fichier absent (script, image…) reste une vraie 404, pas la page d'accueil.
+      const looksLikeFile = path.startsWith('/assets/') || /\.[a-z0-9]+$/i.test(path);
+      if (request.method === 'GET' && !path.startsWith('/ws') && !looksLikeFile) {
         return reply.type('text/html').sendFile('index.html');
       }
       return reply.code(404).send({ error: 'Not found' });

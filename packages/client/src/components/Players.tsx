@@ -26,7 +26,7 @@ export function Players({ view, room }: { view: PlayerView; room: RoomView }) {
   const isHost = room.hostId === view.viewerId;
   return (
     <section className="panel" aria-label="Joueurs">
-      <h2 className="small">Joueurs</h2>
+      <h2 className="panel__title">Joueurs</h2>
       <ul className="players">
         {view.players.map((player) => {
           const roomPlayer = room.players.find((p) => p.id === player.id);
@@ -37,16 +37,22 @@ export function Players({ view, room }: { view: PlayerView; room: RoomView }) {
           const active = view.currentPlayerId === player.id;
           const secured = dwarves.filter((d) => d.status === 'exit');
           const securedCards = secured.reduce((sum, d) => sum + d.secured.cardCount, 0);
-          const securedGold = secured.reduce((sum, d) => sum + (d.secured.gold ?? 0), 0);
+          const securedGold = secured.every((d) => d.secured.gold !== null)
+            ? secured.reduce((sum, d) => sum + (d.secured.gold ?? 0), 0)
+            : null;
           const connection = roomPlayer?.connection ?? 'online';
+          const gold = player.pile.gold;
           return (
-            <li key={player.id} className={`player-card${active ? ' player-card--active' : ''}`}>
+            <li
+              key={player.id}
+              className={`player-card${active ? ' player-card--active' : ''}${isYou ? ' player-card--you' : ''}`}
+            >
               <span className="player-card__discs">
                 {dwarves.map((d) => (
                   <DwarfDisc
                     key={d.id}
                     color={d.color}
-                    size={26}
+                    size={28}
                     label={`Nain ${dwarfLook(d.color).name}`}
                   />
                 ))}
@@ -56,12 +62,19 @@ export function Players({ view, room }: { view: PlayerView; room: RoomView }) {
                 {isYou && ' (vous)'}
                 {active && <span className="sr-only"> — joue en ce moment</span>}
               </span>
-              <span className="row">
-                {roomPlayer?.isHost && <span className="badge">Hôte</span>}
-                {roomPlayer?.isBot && <span className="badge">Bot</span>}
-                {roomPlayer?.botControlled && (
-                  <span className="badge badge--warn">Bot temporaire</span>
-                )}
+              <span
+                className="gold-chip"
+                title="Or en jeu : perdu si le dragon rattrape le nain"
+                aria-label={
+                  gold === null
+                    ? `Or en jeu : valeur cachée, ${plural(player.pile.cardCount, 'carte')}`
+                    : `Or en jeu : ${plural(gold, 'pépite')}`
+                }
+              >
+                <Nugget size={18} />
+                <strong>{gold ?? '?'}</strong>
+              </span>
+              <span className="player-card__stats">
                 {!roomPlayer?.isBot && (
                   <span
                     className="status-dot"
@@ -71,26 +84,23 @@ export function Players({ view, room }: { view: PlayerView; room: RoomView }) {
                     title={CONNECTION_LABELS[connection]}
                   />
                 )}
-              </span>
-              <span className="player-card__stats">
+                {roomPlayer?.isHost && <span className="badge">Hôte</span>}
+                {roomPlayer?.isBot && <span className="badge">Bot</span>}
+                {roomPlayer?.botControlled && (
+                  <span className="badge badge--warn">Bot temporaire</span>
+                )}
                 <span className="stat">{dwarves.map((d) => dwarfStatus(d)).join(' · ')}</span>
-                <span className="stat" title="Or en jeu (cartes face cachée)">
-                  <Nugget size={16} />
-                  {isYou ? (
-                    <strong>{plural(player.pile.gold ?? 0, 'pépite')}</strong>
-                  ) : (
-                    <span>valeur cachée</span>
-                  )}
-                  <span>({plural(player.pile.cardCount, 'carte')})</span>
-                </span>
+                {securedCards > 0 && (
+                  <span className="stat" title="Or à l'abri sur la carte Nain">
+                    🔒{' '}
+                    {securedGold === null
+                      ? plural(securedCards, 'carte')
+                      : `${plural(securedGold, 'pépite')} à l’abri`}
+                  </span>
+                )}
                 {player.pile.bonusCount > 0 && (
                   <span className="stat" title="Trésors cachés (+3 chacun à la sortie)">
                     🎁 {player.pile.bonusCount}
-                  </span>
-                )}
-                {securedCards > 0 && (
-                  <span className="stat" title="Or à l'abri sur la carte Nain">
-                    🔒 {isYou ? plural(securedGold, 'pépite') : plural(securedCards, 'carte')}
                   </span>
                 )}
                 <span className="stat" title="Grosses pépites">

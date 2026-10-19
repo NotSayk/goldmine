@@ -1,5 +1,8 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type { PlayerView } from '@pepite/engine';
+import { houseRules, type PlayerView } from '@pepite/engine';
 import { startServer, type RunningServer } from '../src/app';
 import { createSecureRng } from '../src/secureRng';
 import { TestClient, waitUntil } from './client';
@@ -65,14 +68,14 @@ function assertNoLeak(c: TestClient): void {
   for (const message of c.received) {
     if (message.type !== 'game') continue;
     const view = message.view;
-    for (const player of view.players) {
-      if (player.id !== c.playerId) {
-        expect(player.pile.gold).toBeNull();
-        expect(player.pile.cards).toBeNull();
+    // L'or de chacun est public par règle maison ; sinon il ne doit jamais sortir.
+    if (!houseRules.pileValuesArePublic()) {
+      for (const player of view.players) {
+        if (player.id !== c.playerId) expect(player.pile.gold).toBeNull();
       }
-    }
-    for (const dwarf of view.dwarves) {
-      if (dwarf.ownerId !== c.playerId) expect(dwarf.secured.gold).toBeNull();
+      for (const dwarf of view.dwarves) {
+        if (dwarf.ownerId !== c.playerId) expect(dwarf.secured.gold).toBeNull();
+      }
     }
     expect(Object.keys(view.exit).sort()).toEqual(['deckCount', 'discard']);
     for (const event of message.events) {
@@ -301,6 +304,20 @@ describe('déconnexion et reconnexion', () => {
 });
 
 describe('HTTP', () => {
+  it('sert le client, renvoie index.html pour les routes et 404 pour un fichier absent', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pepite-client-'));
+    writeFileSync(join(dir, 'index.html'), '<!doctype html><title>Accueil</title>');
+    const web = await startServer({ port: 0, host: '127.0.0.1', logger: false, staticDir: dir });
+    const home = await web.app.inject({ url: '/' });
+    expect(home.statusCode).toBe(200);
+    expect(home.body).toContain('Accueil');
+    expect((await web.app.inject({ url: '/salon?code=ABCDE' })).body).toContain('Accueil');
+    expect((await web.app.inject({ url: '/assets/absent-1234.js' })).statusCode).toBe(404);
+    expect((await web.app.inject({ url: '/favicon.png' })).statusCode).toBe(404);
+    await web.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+
   it('donne l’adresse réseau local seulement à l’hôte qui joue sur « localhost »', async () => {
     const lan = await startServer({
       port: 0,

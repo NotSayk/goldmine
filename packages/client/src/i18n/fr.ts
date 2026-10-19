@@ -9,33 +9,61 @@ import type { ServerErrorCode } from '@pepite/shared';
 import { BRANDING } from '@pepite/shared/branding';
 
 /** Noms et effets des cartes (noms originaux, propres à cette version). */
-export const EXTRACTION_LABELS: Record<ExtractionKind, { name: string; effect: string }> = {
-  redDoor: { name: 'Filon profond', effect: '2 pépites, puis 1 pas vers le dragon' },
-  blueDoor: { name: 'Galerie de sortie', effect: '1 pépite, puis 1 pas vers la Sortie' },
-  noDoor: { name: 'Petite veine', effect: '1 pépite, vous restez sur place' },
-  dragon: { name: 'Dragon', effect: `${BRANDING.dragonName} avance d’une carte vers la Sortie` },
+export const EXTRACTION_LABELS: Record<
+  ExtractionKind,
+  { name: string; effect: string; short: string }
+> = {
+  redDoor: {
+    name: 'Filon profond',
+    effect: '2 pépites, puis 1 pas vers le dragon',
+    short: '+2 pépites · 1 pas vers le dragon',
+  },
+  blueDoor: {
+    name: 'Galerie de sortie',
+    effect: '1 pépite, puis 1 pas vers la Sortie',
+    short: '+1 pépite · 1 pas vers la Sortie',
+  },
+  noDoor: {
+    name: 'Petite veine',
+    effect: '1 pépite, vous restez sur place',
+    short: '+1 pépite · sur place',
+  },
+  dragon: {
+    name: 'Dragon',
+    effect: `${BRANDING.dragonName} avance d’une carte vers la Sortie`,
+    short: 'Révélé : le dragon avance d’une carte',
+  },
 };
 
-export const EXIT_LABELS: Record<ExitActionKind, { name: string; effect: string }> = {
-  step: { name: 'Un pas', effect: 'Votre nain avance d’une carte vers la Sortie.' },
-  doubleStep: {
-    name: 'Deux pas',
-    effect:
-      'Votre nain avance de deux cartes vers la Sortie (s’il sort au premier pas, le second est perdu).',
-  },
-  allTogether: {
-    name: 'En avant tous !',
-    effect: 'Tous les nains encore dans la mine avancent d’une carte vers la Sortie.',
-  },
-  swap: {
-    name: 'Échange de places',
-    effect: 'Votre nain échange sa place avec un autre nain encore dans la mine.',
-  },
-  goldBonus: {
-    name: 'Trésor caché',
-    effect: 'Gardez la carte : elle vaut +3 pépites si votre nain atteint la Sortie.',
-  },
-};
+export const EXIT_LABELS: Record<ExitActionKind, { name: string; effect: string; short: string }> =
+  {
+    step: {
+      name: 'Un pas',
+      effect: 'Votre nain avance d’une carte vers la Sortie.',
+      short: '1 pas vers la Sortie',
+    },
+    doubleStep: {
+      name: 'Deux pas',
+      effect:
+        'Votre nain avance de deux cartes vers la Sortie (s’il sort au premier pas, le second est perdu).',
+      short: '2 pas vers la Sortie',
+    },
+    allTogether: {
+      name: 'En avant tous !',
+      effect: 'Tous les nains encore dans la mine avancent d’une carte vers la Sortie.',
+      short: 'Tous les nains : 1 pas',
+    },
+    swap: {
+      name: 'Échange de places',
+      effect: 'Votre nain échange sa place avec un autre nain encore dans la mine.',
+      short: 'Prenez la place d’un autre nain',
+    },
+    goldBonus: {
+      name: 'Trésor caché',
+      effect: 'Gardez la carte : elle vaut +3 pépites si votre nain atteint la Sortie.',
+      short: '+3 pépites si vous sortez',
+    },
+  };
 
 /** Couleur et symbole de chaque nain (lisibles aussi sans distinguer les couleurs). */
 export const DWARF_LOOKS = [

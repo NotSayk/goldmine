@@ -1,27 +1,37 @@
 import { describe, expect, it } from 'vitest';
-import { filterEventsFor, viewFor } from '../src';
+import { filterEventsFor, houseRules, viewFor } from '../src';
 import { DUAL_ACTION_DECKS, newGame, play, stackExit, stackExtraction } from './helpers';
 
 describe('vue filtrée (informations cachées)', () => {
   it('montre la carte visible Extraction mais jamais le contenu de la pioche Exit', () => {
     const { state } = newGame();
     const view = viewFor(state, 'p2');
-    expect(view.extraction).toEqual({ top: state.extractionDeck[0]!.kind, count: 58 });
+    expect(view.extraction).toEqual({
+      top: state.extractionDeck[0]!.kind,
+      count: 58,
+      remaining: { redDoor: 20, blueDoor: 20, noDoor: 10, dragon: 8 },
+    });
     expect(view.exit).toEqual({ deckCount: 16, discard: [] });
     const json = JSON.stringify(view);
     for (const card of state.exitDeck) expect(json).not.toContain(card.id);
     for (const card of state.extractionDeck) expect(json).not.toContain(`"${card.id}"`);
   });
 
-  it('cache la valeur des piles adverses, montre la sienne', () => {
+  it('montre l’or de chaque joueur à tous (règle maison) et les cartes restantes', () => {
     const { state } = newGame();
     stackExtraction(state, ['redDoor', 'noDoor']);
     const next = play(state, { type: 'drawExtraction' }).state;
-    const own = viewFor(next, 'p1').players[0]!.pile;
-    const seenByOther = viewFor(next, 'p2').players[0]!.pile;
-    expect(own).toEqual({ cardCount: 1, bonusCount: 0, gold: 2, cards: { redDoor: 1 } });
-    expect(seenByOther).toEqual({ cardCount: 1, bonusCount: 0, gold: null, cards: null });
-    expect(viewFor(next, null).players[0]!.pile.gold).toBeNull();
+    const pile = { cardCount: 1, bonusCount: 0, gold: 2, cards: { redDoor: 1 } };
+    expect(houseRules.pileValuesArePublic()).toBe(true);
+    expect(viewFor(next, 'p1').players[0]!.pile).toEqual(pile);
+    expect(viewFor(next, 'p2').players[0]!.pile).toEqual(pile);
+    expect(viewFor(next, null).players[0]!.pile).toEqual(pile);
+    expect(viewFor(next, 'p2').extraction.remaining).toEqual({
+      redDoor: 19,
+      blueDoor: 20,
+      noDoor: 10,
+      dragon: 8,
+    });
   });
 
   it('cache la carte Exit en attente de choix aux autres joueurs', () => {

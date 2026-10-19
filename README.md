@@ -82,7 +82,7 @@ Variables d'environnement (toutes facultatives) :
 | `PORT`         | `3000`                 | Port HTTP                                                                |
 | `HOST`         | `0.0.0.0`              | Interface d'écoute                                                       |
 | `GRACE_MS`     | `30000`                | Délai de grâce avant de pouvoir remplacer ou passer un joueur déconnecté |
-| `BOT_DELAY_MS` | `900`                  | Pause avant chaque coup d'un bot                                         |
+| `BOT_DELAY_MS` | `1800`                 | Pause avant chaque coup d'un bot (le temps de voir le coup précédent)    |
 | `STATIC_DIR`   | `packages/client/dist` | Dossier du client construit                                              |
 | `LOG`          | activé                 | `LOG=0` coupe les journaux HTTP                                          |
 
@@ -110,7 +110,8 @@ docs/
 ## Ce qui est garanti par les tests
 
 - **Moteur** : chaque carte et action, chaînes de dragons, fins de manche, décompte 3/2/1, égalités, manche 3, variante à 2 joueurs, rejet des actions illégales sans modifier l'état ; propriétés vérifiées par fast-check (conservation des cartes, 12 Grosses pépites au plus, 6 nains au plus, fin de partie garantie, rejouabilité à graine identique, vues sans fuite d'information).
-- **Serveur** : parties complètes à 2, 3, 4 et 6 clients WebSocket simulés, variante, joueur seul contre des bots, reconnexion (même vue qu'avant la coupure), délai de grâce, remplacement par un bot, tentatives de triche, absence de données cachées dans le trafic.
+- **Serveur** : parties complètes à 2, 3, 4 et 6 clients WebSocket simulés, variante, joueur seul contre des bots, reconnexion (même vue qu'avant la coupure), délai de grâce, remplacement par un bot, tentatives de triche, absence de données cachées dans le trafic (ordre des pioches, cartes Exit, graine).
+- **Ordre des cartes** : les pioches sont mélangées une seule fois par manche (et la défausse Exit dès que la pioche se vide) ; un test de propriété vérifie qu'aucune carte n'est jamais tirée au hasard au moment de la pioche.
 
 ## Questions ouvertes
 

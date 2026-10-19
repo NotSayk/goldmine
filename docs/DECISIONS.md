@@ -27,7 +27,7 @@ Chaque cas est isolé dans une fonction nommée et documentée de [`packages/eng
 - **Échange avec une seule cible possible** : appliqué directement, sans demander de choix (`swapNeedsExplicitTarget`). Échanger avec un nain sur la même carte est autorisé (sans effet).
 - **Carte Exit dont aucune action n'est jouable** (« Échange » seul alors qu'aucun autre nain n'est dans la mine) : défaussée sans effet, le tour se termine.
 - **Carte à deux actions identiques** : jouée sans demander de choix.
-- **Pioche Exit vide** : la défausse est remélangée au moment de piocher. Si la pioche et la défausse sont vides (toutes les cartes gardées comme Bonus), piocher une carte Exit est refusé (`EXIT_DECK_EMPTY`).
+- **Ordre des cartes fixé à l'avance** : les deux pioches sont mélangées une fois, à la mise en place de chaque manche ; ensuite, les cartes sortent uniquement par le dessus, dans cet ordre. Quand la pioche Exit se vide, la défausse est remélangée **dès la fin de l'action qui l'a vidée**, jamais au moment où un joueur pioche. Un test de propriété le vérifie sur des centaines de parties. Si la pioche et la défausse sont vides (toutes les cartes gardées comme Bonus), piocher une carte Exit est refusé (`EXIT_DECK_EMPTY`).
 - **Le Wagon** est traité comme une Mine quand le dragon le dépasse : il passe côté rouge et les nains présents sont éliminés.
 - **Nains encore dans la mine quand la pioche Extraction s'épuise** (cas 4) : ils ne sont pas sortis, ils sont traités comme éliminés (or perdu, pas de classement).
 - **Fin par le dragon** : quand il arrive devant la Sortie, tous les nains encore dans la mine ont forcément déjà été rattrapés (ils sont toujours à gauche du dragon).
@@ -45,7 +45,8 @@ Chaque cas est isolé dans une fonction nommée et documentée de [`packages/eng
 
 **Informations cachées et réseau**
 
-- La carte du dessus de la pioche Extraction est publique : la carte qu'un joueur prend est donc connue de tous, comme à la table. Le serveur n'envoie **jamais** la valeur ni le contenu des piles adverses (seulement le nombre de cartes) : la retenir relève de la mémoire des joueurs, comme dans le jeu physique.
+- **L'or de chaque joueur est visible de tous** (demande du commanditaire, écart assumé par rapport au livret où les cartes sont posées face cachée et où il faut s'en souvenir). Réglage en une ligne : `pileValuesArePublic` dans `houseRules.ts` ; s'il renvoie `false`, le serveur n'envoie plus que le nombre de cartes des piles adverses.
+- La carte du dessus de la pioche Extraction est publique : la carte qu'un joueur prend est donc connue de tous, comme à la table. Pour la même raison, le nombre de cartes Extraction restantes par type (affiché dans le mémo) est une information publique.
 - Le nombre de cartes Bonus d'or gardées par chaque joueur est public (on voit qu'il garde la carte, et sa valeur est fixe).
 - Une carte Exit à deux actions en attente de choix n'est visible que de son auteur ; elle devient publique quand l'action est jouée.
 - Les résultats de manche (or de chaque nain sorti) sont révélés au décompte.

@@ -4,15 +4,18 @@ import type { RoomView } from '@pepite/shared';
 import { BRANDING } from '@pepite/shared/branding';
 import { DwarfDisc } from '../assets/DwarfDisc';
 import { ActionBar } from '../components/ActionBar';
+import { CardMemo } from '../components/CardMemo';
 import { ChoiceDialog } from '../components/ChoiceDialog';
 import { Decks } from '../components/Decks';
 import { GameLog } from '../components/GameLog';
 import { Modal } from '../components/Modal';
 import { Players } from '../components/Players';
+import { Spotlight } from '../components/Spotlight';
 import { FinalStandings, RoundResultTable } from '../components/Results';
 import { TopBar } from '../components/TopBar';
 import { Track } from '../components/Track';
 import { dwarfLook, dwarfName } from '../i18n/fr';
+import type { Highlight } from '../spotlight';
 import { client, type Effect, type LogEntry } from '../store';
 
 function TurnBanner({ view, room }: { view: PlayerView; room: RoomView }) {
@@ -47,7 +50,16 @@ function TurnBanner({ view, room }: { view: PlayerView; room: RoomView }) {
   );
 }
 
-function RoundEndPanel({ view, isHost }: { view: PlayerView; isHost: boolean }) {
+function RoundEndPanel({
+  view,
+  isHost,
+  idle,
+}: {
+  view: PlayerView;
+  isHost: boolean;
+  /** Plus aucun coup à montrer : le classement peut s'ouvrir. */
+  idle: boolean;
+}) {
   // Monté avec une clé par manche : la fenêtre se rouvre à chaque fin de manche.
   const [open, setOpen] = useState(true);
   const result = view.roundResults[view.roundResults.length - 1];
@@ -69,7 +81,7 @@ function RoundEndPanel({ view, isHost }: { view: PlayerView; isHost: boolean }) 
         {nextButton}
       </section>
       <Modal
-        open={open}
+        open={open && idle}
         title={`Fin de la manche ${view.round}`}
         onClose={() => setOpen(false)}
         closeLabel="Voir la table"
@@ -122,12 +134,16 @@ export function GameScreen({
   log,
   effects,
   waiting,
+  highlights,
+  highlightMs,
 }: {
   view: PlayerView;
   room: RoomView;
   log: readonly LogEntry[];
   effects: readonly Effect[];
   waiting: boolean;
+  highlights: readonly Highlight[];
+  highlightMs: number;
 }) {
   const [confirmLeave, setConfirmLeave] = useState(false);
   const isHost = room.hostId === view.viewerId;
@@ -135,6 +151,11 @@ export function GameScreen({
     view.pending?.kind === 'chooseSwapTarget' && view.pending.playerId === view.viewerId
       ? view.pending.targets
       : [];
+  const highlight = highlights[0];
+  const highlightColor =
+    highlight?.dwarfId === null || highlight === undefined
+      ? null
+      : (view.dwarves[highlight.dwarfId]?.color ?? null);
   return (
     <>
       <TopBar
@@ -149,18 +170,28 @@ export function GameScreen({
         </button>
       </TopBar>
       <main className="game">
-        <div className="stack">
+        <div className="game__memo">
+          <CardMemo view={view} />
+        </div>
+        <div className="game__center stack">
           <TurnBanner view={view} room={room} />
-          <Track
+          <section className="board" aria-label="Table de jeu">
+            <Track
+              view={view}
+              effects={effects}
+              swapTargets={swapTargets}
+              onSwap={(dwarfId) =>
+                client.send({ type: 'action', action: { type: 'chooseSwapTarget', dwarfId } })
+              }
+            />
+            <Decks view={view} />
+          </section>
+          <RoundEndPanel
+            key={view.round}
             view={view}
-            effects={effects}
-            swapTargets={swapTargets}
-            onSwap={(dwarfId) =>
-              client.send({ type: 'action', action: { type: 'chooseSwapTarget', dwarfId } })
-            }
+            isHost={isHost}
+            idle={highlights.length === 0}
           />
-          <Decks view={view} />
-          <RoundEndPanel key={view.round} view={view} isHost={isHost} />
           {view.phase === 'finished' && <FinalPanel view={view} isHost={isHost} />}
           {view.phase === 'playing' && <ActionBar view={view} waiting={waiting} />}
         </div>
@@ -169,6 +200,7 @@ export function GameScreen({
           <GameLog entries={log} />
         </aside>
       </main>
+      <Spotlight highlight={highlight} durationMs={highlightMs} color={highlightColor} />
       <ChoiceDialog view={view} waiting={waiting} />
       <Modal open={confirmLeave} title="Quitter la partie ?" onClose={() => setConfirmLeave(false)}>
         <p>Un bot jouera à votre place jusqu’à la fin de la partie. Vous ne pourrez pas revenir.</p>

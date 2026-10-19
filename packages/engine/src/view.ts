@@ -1,6 +1,8 @@
 import { TOTAL_ROUNDS } from './constants';
 import { activeDwarf, validatePlayerAction } from './legal';
+import { EXTRACTION_KINDS } from './config/decks';
 import { pileValue } from './rules/cards';
+import { pileValuesArePublic } from './rules/houseRules';
 import type {
   DeckComposition,
   DwarfId,
@@ -18,7 +20,10 @@ import type {
   TrackCard,
 } from './types';
 
-/** Pile d'or vue par un joueur : la valeur n'est visible que par son propriétaire. */
+/**
+ * Pile d'or vue par un joueur. La valeur est visible de tous si
+ * `houseRules.pileValuesArePublic()`, sinon seulement de son propriétaire.
+ */
 export interface PileView {
   readonly cardCount: number;
   readonly bonusCount: number;
@@ -104,6 +109,11 @@ export interface PlayerView {
     /** Carte visible du dessus (publique). */
     readonly top: ExtractionKind | null;
     readonly count: number;
+    /**
+     * Cartes restantes par type. Information publique : chaque carte prise
+     * était visible sur le dessus de la pioche et les dragons sont rangés à la vue de tous.
+     */
+    readonly remaining: Readonly<Record<ExtractionKind, number>>;
   };
   readonly exit: {
     /** Seul le nombre de cartes de la pioche Exit est public. */
@@ -172,6 +182,15 @@ function pendingView(state: GameState, viewerId: PlayerId | null): PendingView |
   };
 }
 
+function countRemaining(state: GameState): Record<ExtractionKind, number> {
+  const counts = Object.fromEntries(EXTRACTION_KINDS.map((kind) => [kind, 0])) as Record<
+    ExtractionKind,
+    number
+  >;
+  for (const card of state.extractionDeck) counts[card.kind] += 1;
+  return counts;
+}
+
 /** Vue d'un joueur (ou d'un spectateur avec `null`) sur l'état de la partie. */
 export function viewFor(state: GameState, viewerId: PlayerId | null): PlayerView {
   const current = activeDwarf(state);
@@ -195,7 +214,7 @@ export function viewFor(state: GameState, viewerId: PlayerId | null): PlayerView
         bigNuggets: dwarves.reduce((sum, d) => sum + d.bigNuggets, 0),
         pile: pileView(
           state.piles[player.id] ?? { extraction: [], bonus: [] },
-          player.id === viewerId,
+          player.id === viewerId || pileValuesArePublic(),
         ),
       };
     }),
@@ -208,7 +227,7 @@ export function viewFor(state: GameState, viewerId: PlayerId | null): PlayerView
         status: dwarf.status,
         position: dwarf.position,
         ladderSlot: slot >= 0 ? slot : null,
-        secured: pileView(dwarf.secured, dwarf.ownerId === viewerId),
+        secured: pileView(dwarf.secured, dwarf.ownerId === viewerId || pileValuesArePublic()),
         bigNuggets: dwarf.bigNuggets,
       };
     }),
@@ -217,6 +236,7 @@ export function viewFor(state: GameState, viewerId: PlayerId | null): PlayerView
     extraction: {
       top: state.phase === 'playing' ? (state.extractionDeck[0]?.kind ?? null) : null,
       count: state.extractionDeck.length,
+      remaining: countRemaining(state),
     },
     exit: {
       deckCount: state.exitDeck.length,

@@ -6,6 +6,7 @@ import {
   createGame,
   createSeededRng,
   heuristicBot,
+  houseRules,
   randomBot,
   reduce,
   viewFor,
@@ -50,11 +51,13 @@ function checkView(state: GameState, viewerId: string): void {
   for (const card of [...state.exitDeck, ...state.extractionDeck]) {
     expect(json).not.toContain(`"${card.id}"`);
   }
-  for (const player of view.players) {
-    if (player.id !== viewerId) expect(player.pile.gold).toBeNull();
-  }
-  for (const dwarf of view.dwarves) {
-    if (dwarf.ownerId !== viewerId) expect(dwarf.secured.gold).toBeNull();
+  if (!houseRules.pileValuesArePublic()) {
+    for (const player of view.players) {
+      if (player.id !== viewerId) expect(player.pile.gold).toBeNull();
+    }
+    for (const dwarf of view.dwarves) {
+      if (dwarf.ownerId !== viewerId) expect(dwarf.secured.gold).toBeNull();
+    }
   }
   if (view.pending?.kind === 'chooseExitAction' && view.pending.playerId !== viewerId) {
     expect(view.pending.options).toBeNull();
@@ -145,6 +148,55 @@ describe('propriétés (fast-check)', () => {
         expect(state.finalResult!.winners.length).toBeGreaterThan(0);
       }),
       { numRuns: 300 },
+    );
+  });
+
+  it('l’ordre des pioches est fixé à l’avance : aucune carte n’est tirée au hasard en pioche', () => {
+    const ids = (cards: readonly { id: string }[]): string[] => cards.map((c) => c.id);
+    const isSuffix = (deck: string[], order: string[]): boolean =>
+      deck.every((id, i) => order[order.length - deck.length + i] === id);
+    fc.assert(
+      fc.property(arbitraryGame, (game) => {
+        const rng = createSeededRng(game.seed);
+        const botRng = createSeededRng(game.seed + 1);
+        const players = makePlayers(game.players);
+        let state = createGame(
+          {
+            players,
+            firstPlayerId: 'p1',
+            doubleDraw: game.doubleDraw && game.players === 2,
+            ...(game.dual ? { decks: DUAL_ACTION_DECKS } : {}),
+          },
+          rng,
+        ).state;
+        // Ordre complet décidé à la mise en place (puis à chaque remélange de la défausse).
+        let extractionOrder = ids(state.extractionDeck);
+        let exitOrder = ids(state.exitDeck);
+        while (state.phase !== 'finished') {
+          let action: GameAction = { type: 'startNextRound' };
+          if (state.phase === 'playing') {
+            const owner = state.dwarves[state.currentDwarf!]!.ownerId;
+            action = { ...game.policy(viewFor(state, owner), botRng)!, playerId: owner };
+          }
+          const result = reduce(state, action, rng);
+          if (!result.ok) throw new Error(result.error.code);
+          state = result.state;
+          const types = result.events.map((e) => e.type);
+          if (types.includes('RoundStarted')) {
+            extractionOrder = ids(state.extractionDeck);
+            exitOrder = ids(state.exitDeck);
+          } else if (types.includes('ExitDeckReshuffled')) {
+            exitOrder = ids(state.exitDeck);
+          }
+          // Les cartes ne sortent que par le dessus, dans l'ordre décidé à l'avance.
+          expect(isSuffix(ids(state.extractionDeck), extractionOrder)).toBe(true);
+          expect(isSuffix(ids(state.exitDeck), exitOrder)).toBe(true);
+          if (state.phase === 'playing' && state.exitDeck.length === 0) {
+            expect(state.exitDiscard).toHaveLength(0);
+          }
+        }
+      }),
+      { numRuns: 80 },
     );
   });
 

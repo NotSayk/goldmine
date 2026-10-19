@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import type { GameEvent, PlayerView } from '@pepite/engine';
 import type { ClientMessage, RoomView, ServerMessage } from '@pepite/shared';
 import { ERROR_MESSAGES, describeEvent } from './i18n/fr';
+import { buildHighlights, highlightDuration, type Highlight } from './spotlight';
 
 export type ConnectionState = 'connecting' | 'open' | 'reconnecting';
 
@@ -36,11 +37,16 @@ export interface AppState {
   readonly notice: Notice | null;
   /** Une intention a été envoyée, la réponse du serveur est attendue. */
   readonly waiting: boolean;
+  /** Coups à montrer au premier plan, dans l'ordre (le premier est affiché). */
+  readonly highlights: readonly Highlight[];
+  /** Durée d'affichage du coup en cours, en millisecondes. */
+  readonly highlightMs: number;
 }
 
 const SESSION_KEY = 'pepite.session';
 const LOG_LIMIT = 60;
 const EFFECT_MS = 1200;
+const HIGHLIGHT_LIMIT = 8;
 
 function readStorage(key: string): string | null {
   try {
@@ -71,7 +77,10 @@ class GameClient {
     effects: [],
     notice: null,
     waiting: false,
+    highlights: [],
+    highlightMs: 0,
   };
+  private highlightTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly listeners = new Set<() => void>();
   private socket: WebSocket | null = null;
   private retries = 0;
@@ -125,6 +134,31 @@ class GameClient {
     this.set({ notice: null });
   }
 
+  /** Passe au coup suivant (clic sur la carte mise en avant). */
+  dismissHighlight(): void {
+    if (this.highlightTimer) clearTimeout(this.highlightTimer);
+    this.highlightTimer = null;
+    this.set({ highlights: this.state.highlights.slice(1) });
+    this.pumpHighlights();
+  }
+
+  /** Affiche les coups l'un après l'autre, plus vite quand la file s'allonge. */
+  private pumpHighlights(): void {
+    if (this.highlightTimer || this.state.highlights.length === 0) return;
+    const duration = highlightDuration(this.state.highlights.length);
+    this.set({ highlightMs: duration });
+    this.highlightTimer = setTimeout(() => {
+      this.highlightTimer = null;
+      this.set({ highlights: this.state.highlights.slice(1) });
+      this.pumpHighlights();
+    }, duration);
+  }
+
+  private clearHighlights(): void {
+    if (this.highlightTimer) clearTimeout(this.highlightTimer);
+    this.highlightTimer = null;
+  }
+
   private receive(message: ServerMessage): void {
     switch (message.type) {
       case 'welcome': {
@@ -137,11 +171,12 @@ class GameClient {
       }
       case 'room': {
         const wasInRoom = this.state.room !== null;
+        if (message.room === null || message.room.status === 'lobby') this.clearHighlights();
         this.set({
           room: message.room,
           playerId: message.you,
           ...(message.room === null || message.room.status === 'lobby'
-            ? { view: null, log: [], effects: [] }
+            ? { view: null, log: [], effects: [], highlights: [] }
             : {}),
         });
         // Un lien d'invitation (?salon=CODE) reste dans l'adresse tant qu'on n'a pas rejoint.
@@ -186,7 +221,9 @@ class GameClient {
       waiting: false,
       log: [...this.state.log, ...entries].slice(-LOG_LIMIT),
       effects: [...this.state.effects, ...effects],
+      highlights: queueHighlights(this.state.highlights, buildHighlights(events, view)),
     });
+    this.pumpHighlights();
     if (effects.length > 0) {
       const ids = new Set(effects.map((e) => e.id));
       setTimeout(
@@ -195,6 +232,16 @@ class GameClient {
       );
     }
   }
+}
+
+/** Ajoute des coups à la file en gardant celui affiché ; les plus anciens en attente sautent. */
+function queueHighlights(
+  queue: readonly Highlight[],
+  added: readonly Highlight[],
+): readonly Highlight[] {
+  const merged = [...queue, ...added];
+  if (merged.length <= HIGHLIGHT_LIMIT) return merged;
+  return [merged[0]!, ...merged.slice(-(HIGHLIGHT_LIMIT - 1))];
 }
 
 function effectFor(event: GameEvent, view: PlayerView): Effect | null {

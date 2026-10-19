@@ -21,7 +21,7 @@ const MESSAGES: Record<ErrorCode, string> = {
   ACTION_IMPOSSIBLE: 'Cette action est impossible pour le moment.',
   INVALID_SWAP_TARGET: 'Ce nain ne peut pas être ciblé par l’échange.',
   EXTRACTION_DECK_EMPTY: 'La pioche Extraction est vide.',
-  EXIT_DECK_EMPTY: 'La pioche et la défausse Exit sont vides.',
+  EXIT_DECK_EMPTY: 'Plus aucune carte Exit à piocher (pioche et défausse vides).',
 };
 
 export function gameError(code: ErrorCode, message: string = MESSAGES[code]): GameError {
@@ -55,9 +55,8 @@ export function validatePlayerAction(
       return null;
     case 'drawExit':
       if (pending) return gameError('CHOICE_PENDING');
-      if (state.exitDeck.length === 0 && state.exitDiscard.length === 0) {
-        return gameError('EXIT_DECK_EMPTY');
-      }
+      // La défausse est remélangée dès que la pioche se vide : pioche vide = défausse vide.
+      if (state.exitDeck.length === 0) return gameError('EXIT_DECK_EMPTY');
       return null;
     case 'chooseExitAction':
       if (pending?.kind !== 'chooseExitAction') return gameError('NO_CHOICE_PENDING');

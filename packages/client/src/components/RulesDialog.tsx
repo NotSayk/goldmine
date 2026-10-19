@@ -94,11 +94,13 @@ export function RulesDialog({ open, onClose }: { open: boolean; onClose: () => v
           leur or. Si l’un est éliminé, l’autre garde l’or. Si l’un sort, il emporte l’or amassé et
           son équipier repart de zéro.
         </p>
-        <h3>Informations cachées</h3>
+        <h3>Ce que l’on voit</h3>
         <p>
-          La carte Extraction du dessus est visible de tous. Les cartes Exit sont tirées à l’aveugle
-          et l’or des autres joueurs reste caché (seul le nombre de cartes se voit) jusqu’au
-          décompte.
+          La carte Extraction du dessus et l’or de chaque joueur sont visibles de tous. Les cartes
+          Exit sont tirées à l’aveugle. Les deux pioches sont mélangées une seule fois en début de
+          manche : l’ordre des cartes est fixé à l’avance, rien n’est tiré au hasard au moment où
+          l’on pioche. Le mémo des cartes (à gauche sur grand écran) indique combien de cartes de
+          chaque type restent dans la pioche Extraction.
         </p>
       </div>
     </Modal>

@@ -41,9 +41,6 @@ export function Decks({ view }: { view: PlayerView }) {
           {view.exit.deckCount > 0 ? <CardBack /> : <div className="card-empty">Vide</div>}
         </div>
         <div className="deck__count">{plural(view.exit.deckCount, 'carte')}</div>
-        {view.exit.deckCount === 0 && view.exit.discard.length > 0 && (
-          <div className="deck__hint">Défausse remélangée à la prochaine pioche</div>
-        )}
       </div>
       <div className="deck">
         <div className="deck__label">Défausse Exit</div>

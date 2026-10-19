@@ -110,3 +110,13 @@ export function addsGoldBeforeMoving(): boolean {
 export function swapNeedsExplicitTarget(targetCount: number): boolean {
   return targetCount > 1;
 }
+
+/**
+ * Décision C : visibilité de l'or des autres joueurs.
+ * Le livret pose les cartes Extraction face cachée (jeu de mémoire). À la
+ * demande du commanditaire, l'or de chacun est visible de tous en ligne.
+ * Retourner `false` pour revenir aux piles cachées (seul le nombre de cartes reste public).
+ */
+export function pileValuesArePublic(): boolean {
+  return true;
+}

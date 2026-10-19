@@ -186,18 +186,20 @@ describe('B. cartes Exit', () => {
     expect(eventsOfType(events, 'GoldBonusKept')).toHaveLength(1);
   });
 
-  it('pioche Exit vide : la défausse est remélangée', () => {
+  it('pioche Exit vidée : la défausse est remélangée aussitôt, avant la pioche suivante', () => {
     const { state, rng } = newGame();
     stackExit(state, [['step']]);
     state.exitDiscard = state.exitDeck.splice(1);
-    const first = play(state, { type: 'drawExit' }, rng).state;
-    expect(first.exitDeck).toHaveLength(0);
-    expect(first.exitDiscard).toHaveLength(16);
-    const { state: next, events } = play(first, { type: 'drawExit' }, rng);
+    const { state: next, events } = play(state, { type: 'drawExit' }, rng);
+    // La dernière carte vient d'être jouée : la nouvelle pioche est déjà mélangée.
     expect(eventsOfType(events, 'ExitDeckReshuffled')).toEqual([
       { type: 'ExitDeckReshuffled', count: 16 },
     ]);
-    expect(next.exitDeck).toHaveLength(15);
+    expect(next.exitDeck).toHaveLength(16);
+    expect(next.exitDiscard).toHaveLength(0);
+    const order = next.exitDeck.map((c) => c.id);
+    const after = play(next, { type: 'drawExit' }, rng).state;
+    expect(after.exitDeck.map((c) => c.id)).toEqual(order.slice(1));
   });
 });
 
