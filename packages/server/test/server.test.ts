@@ -227,20 +227,34 @@ describe('salons', () => {
 });
 
 describe('apparence et réactions', () => {
-  it('chacun choisit chapeau et barbe dans le salon, visibles de tous', async () => {
+  it('chacun choisit couleur, chapeau, barbe et teint dans le salon, visibles de tous', async () => {
     const [host, guest] = await lobby(2);
     expect(host!.room!.players.map((p) => p.look)).toEqual([
-      { hat: 0, beard: 1 },
-      { hat: 1, beard: 2 },
+      { color: 0, hat: 0, beard: 1, beardColor: 1, skin: 0 },
+      { color: 1, hat: 1, beard: 2, beardColor: 2, skin: 1 },
     ]);
-    guest!.send({ type: 'setLook', hat: 2, beard: 0 });
-    await waitUntil(() => host!.room?.players[1]?.look.hat === 2);
-    expect(host!.room!.players[1]!.look).toEqual({ hat: 2, beard: 0 });
-    guest!.send({ type: 'setLook', hat: 3, beard: 0 });
+    const look = { color: 4, hat: 3, beard: 3, beardColor: 4, skin: 2 };
+    guest!.send({ type: 'setLook', ...look });
+    await waitUntil(() => host!.room?.players[1]?.look.color === 4);
+    expect(host!.room!.players[1]!.look).toEqual(look);
+    // Une couleur par joueur : celle de l'hôte est prise.
+    guest!.send({ type: 'setLook', color: 0 });
+    await guest!.expectError('COLOR_TAKEN');
+    guest!.send({ type: 'setLook', hat: 5 });
     await guest!.expectError('INVALID_MESSAGE');
+    // Un seul élément à la fois : le reste ne change pas.
+    guest!.send({ type: 'setLook', skin: 3 });
+    await waitUntil(() => host!.room?.players[1]?.look.skin === 3);
+    expect(host!.room!.players[1]!.look).toEqual({ ...look, skin: 3 });
+    // Un nouveau venu prend la première couleur libre.
+    host!.send({ type: 'addBot' });
+    await waitUntil(() => host!.room?.players.length === 3);
+    expect(host!.room!.players[2]!.look.color).toBe(1);
     host!.send({ type: 'startGame' });
-    await waitUntil(() => guest!.room?.status === 'playing');
-    guest!.send({ type: 'setLook', hat: 0, beard: 0 });
+    await waitUntil(() => guest!.room?.status === 'playing' && guest!.view !== null);
+    // Les nains de la partie portent les couleurs choisies.
+    expect(guest!.view!.dwarves.map((d) => d.color)).toEqual([0, 4, 1]);
+    guest!.send({ type: 'setLook', ...look });
     await guest!.expectError('GAME_IN_PROGRESS');
   });
 

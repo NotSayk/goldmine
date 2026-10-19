@@ -82,6 +82,14 @@ export const DWARF_LOOKS = [
 
 export type DwarfSymbol = (typeof DWARF_LOOKS)[number]['symbol'];
 
+/** Noms des éléments de l'apparence, dans l'ordre des indices du protocole. */
+export const LOOK_NAMES = {
+  hat: ['Casque de mineur', 'Capuche', 'Casque à cornes', 'Bonnet', 'Couronne'],
+  beard: ['Longue', 'Tressée', 'Courte', 'Moustache'],
+  beardColor: ['Blanche', 'Rousse', 'Brune', 'Noire', 'Blonde'],
+  skin: ['Très clair', 'Clair', 'Mat', 'Foncé'],
+} as const;
+
 export function dwarfLook(color: number): (typeof DWARF_LOOKS)[number] {
   return DWARF_LOOKS[color % DWARF_LOOKS.length]!;
 }
@@ -102,6 +110,7 @@ export const ERROR_MESSAGES: Partial<Record<ServerErrorCode, string>> = {
   RATE_LIMITED: 'Doucement ! Trop d’actions en peu de temps.',
   GRACE_NOT_EXPIRED: 'Laissez-lui encore un peu de temps pour revenir.',
   INVALID_MESSAGE: 'Requête refusée par le serveur.',
+  COLOR_TAKEN: 'Cette couleur est déjà prise par un autre joueur.',
 };
 
 /** Raison lisible pour laquelle un bouton d'action est désactivé. */

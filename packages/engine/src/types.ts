@@ -64,6 +64,8 @@ export interface DwarfState {
 export interface PlayerInfo {
   readonly id: PlayerId;
   readonly name: string;
+  /** Couleur choisie pour son (premier) nain, de 0 à 5 ; sinon la première libre. */
+  readonly color?: number;
 }
 
 export interface DeckComposition {

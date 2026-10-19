@@ -206,7 +206,9 @@ Sont chargés à la demande (`import()`) : les particules d'ambiance, le moteur 
 ### Réactions rapides et apparence
 
 - Sept réactions (bravo, rire, oh non, ça chauffe, de l'or, salut, et « Culé ! » avec l'emoji 🫃🏿 demandé par les joueurs, seul emoji du système utilisé), envoyées comme intentions `emote`, validées par zod et **limitées par le serveur** (rafale de 3, puis une toutes les 2 s, par joueur), relayées à tout le salon. Masquables dans les réglages.
-- Apparence des nains : 3 chapeaux et 3 barbes, choisis dans le salon (intention `setLook`, refusée pendant la partie), visibles de tous.
+- Apparence des nains, choisie dans le salon (intention `setLook`, refusée pendant la partie), visible de tous : **couleur** (6, chacune avec son symbole pour le daltonisme), **chapeau** (casque de mineur, capuche, casque à cornes, bonnet, couronne), **barbe** (longue, tressée, courte, moustache), **couleur de barbe** (5) et **teint** (4), plus un bouton « Au hasard ». Les vignettes montrent chaque variante sur son propre nain.
+- **Une couleur par joueur** : le serveur refuse une couleur déjà prise (`COLOR_TAKEN`) et les pastilles prises sont barrées et désactivées. Un nouveau venu (humain ou bot) prend la première couleur libre, avec une apparence par défaut propre à cette couleur. La couleur choisie est transmise au moteur (`PlayerInfo.color`, validée : de 0 à 5, sans doublon) ; dans la variante à 2 joueurs, le second nain prend une couleur libre.
+- **Son propre nain se repère d'un coup d'œil** : un contour lumineux suit toute sa silhouette (corps, tête, chapeau, barbe), une flèche dorée flotte au-dessus de sa tête et un anneau doré reste au sol. Le contour est dessiné dans le jeton lui-même (formes repeintes en épais derrière le personnage), sans filtre CSS, donc sans coût pendant les animations. Il est aussi affiché dans la liste des joueurs et dans le salon.
 
 ### Performance (mesurée avec `npm run perf`, Chromium 141 sans écran ni carte graphique)
 

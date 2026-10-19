@@ -123,7 +123,7 @@ docs/
 
 On joue en touchant directement la pioche Extraction (creuser) ou la pioche Exit (fuir). Chaque coup est mis en scène sur la zone des pioches, sans jamais cacher la piste : la carte piochée vole depuis la pioche, marque une pause de suspense puis se retourne ; le dragon déclenche un travelling, un tremblement et un souffle de flammes ; les nains bondissent de carte en carte. Les coups des bots défilent au même rythme que ceux des joueurs. On peut toujours jouer sans attendre la fin d'une animation, et la passer (clic, bouton « Passer », touche Échap).
 
-Le menu **Réglages** (roue dentée) propose : thème (mine ou contraste élevé), animations réduites, vitesse des cinématiques, qualité des effets (basse, moyenne, élevée ou automatique), vibrations et affichage des réactions des autres joueurs. Dans le salon, chacun choisit le chapeau et la barbe de ses nains. Pas de son pour l'instant.
+Le menu **Réglages** (roue dentée) propose : thème (mine ou contraste élevé), animations réduites, vitesse des cinématiques, qualité des effets (basse, moyenne, élevée ou automatique), vibrations et affichage des réactions des autres joueurs. Dans le salon, chacun personnalise son nain : couleur (une par joueur), chapeau, barbe, couleur de barbe et teint. En jeu, votre nain est entouré d'un contour lumineux, avec une flèche au-dessus de sa tête. Pas de son pour l'instant.
 
 ## Ce qui est garanti par les tests
 

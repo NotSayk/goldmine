@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ErrorCode, ExitActionKind, GameEvent, PlayerId, PlayerView } from '@pepite/engine';
-import { EMOTES, LOOK_VARIANTS, type DwarfLook, type Emote } from './cosmetics';
+import { EMOTES, LOOK_OPTIONS, type DwarfLook, type Emote } from './cosmetics';
 
 export const ROOM_CODE_LENGTH = 5;
 /** Alphabet des codes de salon, sans caractères ambigus (0/O, 1/I). */
@@ -20,11 +20,12 @@ const roomCode = z
 const sessionToken = z.string().regex(/^[A-Za-z0-9_-]{16,64}$/);
 const playerId = z.string().regex(/^[A-Za-z0-9_-]{1,40}$/);
 
-const lookIndex = z
-  .number()
-  .int()
-  .min(0)
-  .max(LOOK_VARIANTS - 1);
+const lookIndex = (options: number) =>
+  z
+    .number()
+    .int()
+    .min(0)
+    .max(options - 1);
 
 /** Intentions de jeu (le joueur est déduit de la session, jamais du message). */
 export const playerActionSchema = z.discriminatedUnion('type', [
@@ -54,7 +55,15 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('replaceWithBot'), playerId }),
   z.strictObject({ type: z.literal('skipPlayer'), playerId }),
   z.strictObject({ type: z.literal('backToLobby') }),
-  z.strictObject({ type: z.literal('setLook'), hat: lookIndex, beard: lookIndex }),
+  // Seuls les éléments changés : le serveur les applique à l'apparence actuelle.
+  z.strictObject({
+    type: z.literal('setLook'),
+    color: lookIndex(LOOK_OPTIONS.color).optional(),
+    hat: lookIndex(LOOK_OPTIONS.hat).optional(),
+    beard: lookIndex(LOOK_OPTIONS.beard).optional(),
+    beardColor: lookIndex(LOOK_OPTIONS.beardColor).optional(),
+    skin: lookIndex(LOOK_OPTIONS.skin).optional(),
+  }),
   z.strictObject({ type: z.literal('emote'), emote: z.enum(EMOTES) }),
   z.strictObject({ type: z.literal('ping') }),
 ]);
@@ -141,7 +150,8 @@ export type ServerErrorCode =
   | 'PLAYER_NOT_FOUND'
   | 'PLAYER_CONNECTED'
   | 'GRACE_NOT_EXPIRED'
-  | 'NOT_PLAYERS_TURN';
+  | 'NOT_PLAYERS_TURN'
+  | 'COLOR_TAKEN';
 
 /** Côté de la pièce : pile = première option (Creuser), face = seconde (Fuir). */
 export type CoinSide = 'heads' | 'tails';

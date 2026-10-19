@@ -50,9 +50,11 @@ async function capture(device, motion) {
   await wait(600);
   await shot('1-accueil');
   await createRoom(page, 'Alice', 3);
+  await page.getByRole('group', { name: 'Couleur' }).getByRole('button', { name: 'Prune' }).click();
+  await wait(150);
   await page
     .getByRole('group', { name: 'Chapeau' })
-    .getByRole('button', { name: 'Capuche' })
+    .getByRole('button', { name: 'Couronne' })
     .click();
   await page.getByRole('button', { name: 'Bravo !' }).click();
   await wait(500);

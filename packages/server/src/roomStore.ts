@@ -14,7 +14,7 @@ export interface RoomPlayer {
   botControlled: boolean;
   /** Humain parti définitivement pendant la partie. */
   left: boolean;
-  /** Chapeau et barbe choisis pour ses nains (cosmétique). */
+  /** Couleur, chapeau, barbe et teint choisis pour ses nains (cosmétique). */
   look: DwarfLook;
 }
 

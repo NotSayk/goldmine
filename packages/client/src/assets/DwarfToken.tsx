@@ -1,11 +1,20 @@
-import type { DwarfLook } from '@pepite/shared';
+import { defaultLook, type DwarfLook } from '@pepite/shared/cosmetics';
 import { dwarfLook, type DwarfSymbol } from '../i18n/fr';
 
 export type DwarfMood = 'idle' | 'joy' | 'panic' | 'dead';
 
 const INK = '#14161c';
-const SKIN = '#f0c39b';
-const BEARDS = ['#ddd5c4', '#c4652e', '#5a3a22'];
+/** Teints, du plus clair au plus foncé, avec la couleur du nez assortie. */
+export const SKIN_TONES = [
+  { skin: '#f0c39b', nose: '#d9957a' },
+  { skin: '#d9a477', nose: '#bf7f5a' },
+  { skin: '#a8714b', nose: '#8a5434' },
+  { skin: '#6e4529', nose: '#55321c' },
+] as const;
+/** Couleurs de barbe : blanche, rousse, brune, noire, blonde. */
+export const BEARD_COLORS = ['#ddd5c4', '#c4652e', '#5a3a22', '#2c2522', '#e3b65a'] as const;
+/** Les chapeaux de mineur portent une lampe frontale. */
+const HATS_WITH_LAMP = new Set([0, 1, 2]);
 
 /** Symbol de couleur (lisible sans distinguer les couleurs), au centre du torse. */
 function Symbol({ symbol, ink }: { symbol: DwarfSymbol; ink: string }) {
@@ -38,7 +47,48 @@ function Symbol({ symbol, ink }: { symbol: DwarfSymbol; ink: string }) {
 }
 
 function Hat({ hat }: { hat: number }) {
-  switch (hat % 3) {
+  switch (hat) {
+    case 3:
+      // Bonnet de laine à revers et pompon
+      return (
+        <g className="token__hat">
+          <path
+            d="M12.2 11.4 Q11.6 3.4 20 3 Q28.4 3.4 27.8 11.4 Z"
+            fill="#b8322a"
+            stroke={INK}
+            strokeWidth="1.3"
+          />
+          <path d="M15.6 4.6 V9.4 M20 3.4 V9.4 M24.4 4.6 V9.4" stroke="#86211b" strokeWidth="0.9" />
+          <rect
+            x="11"
+            y="8.8"
+            width="18"
+            height="3.6"
+            rx="1.7"
+            fill="#eadfc6"
+            stroke={INK}
+            strokeWidth="1.1"
+          />
+          <circle cx="20" cy="2.6" r="2.4" fill="#eadfc6" stroke={INK} strokeWidth="1" />
+        </g>
+      );
+    case 4:
+      // Couronne d'or sertie
+      return (
+        <g className="token__hat">
+          <path
+            d="M12.2 11.8 L11.4 3.6 L15.6 7.4 L20 1.6 L24.4 7.4 L28.6 3.6 L27.8 11.8 Z"
+            fill="#f2c94c"
+            stroke={INK}
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+          />
+          <path d="M12.3 10.2 H27.7" stroke="#b8860b" strokeWidth="1.3" />
+          <circle cx="20" cy="7.8" r="1.4" fill="#d6304a" stroke={INK} strokeWidth="0.6" />
+          <circle cx="15.4" cy="9" r="0.9" fill="#3fa7d6" stroke={INK} strokeWidth="0.5" />
+          <circle cx="24.6" cy="9" r="0.9" fill="#3fa7d6" stroke={INK} strokeWidth="0.5" />
+        </g>
+      );
     case 1:
       // Capuche pointue avec lampe frontale sur bandeau
       return (
@@ -96,9 +146,28 @@ function Hat({ hat }: { hat: number }) {
   }
 }
 
-function Beard({ beard }: { beard: number }) {
-  const color = BEARDS[beard % 3];
-  switch (beard % 3) {
+function Beard({ beard, color }: { beard: number; color: string }) {
+  switch (beard) {
+    case 3:
+      // Moustache en guidon, menton rasé
+      return (
+        <g className="token__beard">
+          <path
+            d="M18 19.7 Q20 20.7 22 19.7"
+            fill="none"
+            stroke={INK}
+            strokeWidth="0.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M13.4 16.4 Q14.6 19 17.4 17.9 Q19 17.2 20 17.6 Q21 17.2 22.6 17.9 Q25.4 19 26.6 16.4 Q25.8 18.4 23.2 16.6 Q21.4 15.6 20 16.4 Q18.6 15.6 16.8 16.6 Q14.2 18.4 13.4 16.4 Z"
+            fill={color}
+            stroke={INK}
+            strokeWidth="0.9"
+            strokeLinejoin="round"
+          />
+        </g>
+      );
     case 1:
       // Tressée, fourchue
       return (
@@ -165,11 +234,25 @@ function Eyes({ mood }: { mood: DwarfMood }) {
   }
 }
 
+/** Contour du personnage (corps, tête, chapeau, barbe), dessiné en épais derrière lui. */
+function Silhouette({ hat, beard, className }: { hat: number; beard: number; className: string }) {
+  return (
+    <g className={className} aria-hidden>
+      <circle cx="20" cy="27" r="12.4" />
+      <circle cx="20" cy="13.5" r="7.2" />
+      <Beard beard={beard} color="none" />
+      <Hat hat={hat} />
+      {HATS_WITH_LAMP.has(hat) && <circle cx="14.2" cy="8.6" r="2.1" />}
+    </g>
+  );
+}
+
 /**
- * Jeton-personnage d'un nain (dessin original) : casque et lampe, barbe,
+ * Jeton-personnage d'un nain (dessin original) : chapeau, barbe, teint et
  * corps à la couleur du nain avec son symbole. Tourné vers la gauche, vers
  * la Sortie ; tous les symboles sont symétriques, le jeton peut donc être
- * retourné pour regarder à droite.
+ * retourné pour regarder à droite. `you` l'entoure d'un contour lumineux :
+ * c'est le nain du joueur qui regarde.
  */
 export function DwarfToken({
   color,
@@ -177,6 +260,7 @@ export function DwarfToken({
   mood = 'idle',
   size = 32,
   label,
+  you = false,
   className = '',
 }: {
   color: number;
@@ -184,14 +268,15 @@ export function DwarfToken({
   mood?: DwarfMood;
   size?: number;
   label?: string;
+  you?: boolean;
   className?: string;
 }) {
   const palette = dwarfLook(color);
-  const hat = look?.hat ?? color % 3;
-  const beard = look?.beard ?? (color + 1) % 3;
+  const { hat, beard, beardColor, skin } = look ?? defaultLook(color);
+  const tone = SKIN_TONES[skin] ?? SKIN_TONES[0];
   return (
     <svg
-      className={`token token--${mood} ${className}`}
+      className={`token token--${mood}${you ? ' token--you' : ''} ${className}`}
       width={size}
       height={size}
       viewBox="0 0 40 40"
@@ -200,6 +285,12 @@ export function DwarfToken({
       aria-hidden={label ? undefined : true}
     >
       <g className="token__figure">
+        {you && (
+          <>
+            <Silhouette hat={hat} beard={beard} className="token__outline token__outline--glow" />
+            <Silhouette hat={hat} beard={beard} className="token__outline" />
+          </>
+        )}
         {/* Corps : disque à la couleur du nain, avec son symbole */}
         <circle cx="20" cy="27" r="12.4" fill={palette.color} stroke={INK} strokeWidth="1.6" />
         <path
@@ -211,21 +302,23 @@ export function DwarfToken({
         />
         <Symbol symbol={palette.symbol} ink={palette.ink} />
         {/* Tête */}
-        <circle cx="20" cy="13.5" r="7.2" fill={SKIN} stroke={INK} strokeWidth="1.2" />
-        <Beard beard={beard} />
-        <circle cx="18.6" cy="16.6" r="1.6" fill="#d9957a" stroke={INK} strokeWidth="0.6" />
+        <circle cx="20" cy="13.5" r="7.2" fill={tone.skin} stroke={INK} strokeWidth="1.2" />
+        <Beard beard={beard} color={BEARD_COLORS[beardColor] ?? BEARD_COLORS[0]} />
+        <circle cx="18.6" cy="16.6" r="1.6" fill={tone.nose} stroke={INK} strokeWidth="0.6" />
         <Eyes mood={mood} />
         <Hat hat={hat} />
-        {/* Lampe frontale, sur tous les chapeaux */}
-        <circle
-          className="token__lamp"
-          cx="14.2"
-          cy="8.6"
-          r="2.1"
-          fill="#fff4c2"
-          stroke={INK}
-          strokeWidth="0.9"
-        />
+        {/* Lampe frontale, sur les chapeaux de mineur */}
+        {HATS_WITH_LAMP.has(hat) && (
+          <circle
+            className="token__lamp"
+            cx="14.2"
+            cy="8.6"
+            r="2.1"
+            fill="#fff4c2"
+            stroke={INK}
+            strokeWidth="0.9"
+          />
+        )}
         {mood === 'panic' && (
           <path
             className="token__sweat"

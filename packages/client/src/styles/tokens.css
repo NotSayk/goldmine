@@ -60,6 +60,9 @@
   --success: #8fdc97;
   --success-soft: rgba(127, 216, 138, 0.14);
   --focus: #ffd96e;
+  /* Contour de son propre nain */
+  --you: #fffbe6;
+  --you-glow: #ffd96e;
 
   /* Matières */
   --stone-1: #10151f;
@@ -158,6 +161,8 @@
   --success: #9dff9d;
   --success-soft: #0d330d;
   --focus: #ffff00;
+  --you: #ffffff;
+  --you-glow: #00e5ff;
   --shadow: none;
   --shadow-lg: 0 0 0 2px #ffffff;
   --bevel: none;

@@ -133,3 +133,46 @@ describe('mise en place', () => {
     expect(state.currentDwarf).toBe(2);
   });
 });
+
+describe('couleurs choisies', () => {
+  it('donne à chaque nain la couleur choisie, et les premières libres aux autres', () => {
+    const players = makePlayers(3).map((p, i) => (i === 1 ? { ...p, color: 0 } : p));
+    const { state } = createGame(
+      { players: [players[0]!, players[1]!, { ...players[2]!, color: 4 }], firstPlayerId: 'p1' },
+      createSeededRng('couleurs'),
+    );
+    expect(state.dwarves.map((d) => d.color)).toEqual([1, 0, 4]);
+  });
+
+  it('variante : le second nain prend une couleur libre', () => {
+    const [a, b] = makePlayers(2);
+    const { state } = createGame(
+      {
+        players: [
+          { ...a!, color: 3 },
+          { ...b!, color: 1 },
+        ],
+        firstPlayerId: 'p1',
+        doubleDraw: true,
+      },
+      createSeededRng('couleurs'),
+    );
+    expect(state.dwarves.map((d) => d.color)).toEqual([3, 0, 1, 2]);
+  });
+
+  it('refuse deux fois la même couleur ou une couleur inconnue', () => {
+    const [a, b] = makePlayers(2);
+    expect(
+      validateSetup({
+        players: [
+          { ...a!, color: 2 },
+          { ...b!, color: 2 },
+        ],
+        firstPlayerId: 'p1',
+      }),
+    ).toContain('Deux joueurs ont la même couleur.');
+    expect(validateSetup({ players: [{ ...a!, color: 9 }, b!], firstPlayerId: 'p1' })).toContain(
+      'Les couleurs vont de 0 à 5.',
+    );
+  });
+});

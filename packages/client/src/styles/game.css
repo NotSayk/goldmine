@@ -298,7 +298,57 @@
   filter: drop-shadow(0 0 4px var(--gold)) drop-shadow(0 0 1px var(--gold));
 }
 
-/* Ses propres nains : un anneau doré au sol. */
+/* Ses propres nains : contour lumineux autour du personnage (dessiné dans le
+   jeton), flèche « vous » au-dessus de la tête et anneau doré au sol. */
+.token--you {
+  overflow: visible;
+}
+
+.token__outline * {
+  fill: var(--you);
+  stroke: var(--you);
+  stroke-width: 4.4px;
+  stroke-linejoin: round;
+}
+
+.token__outline--glow {
+  opacity: 0.5;
+}
+
+.token__outline--glow * {
+  fill: var(--you-glow);
+  stroke: var(--you-glow);
+  stroke-width: 9px;
+}
+
+.disc__you {
+  position: absolute;
+  left: 50%;
+  bottom: 104%;
+  width: 52%;
+  min-width: 9px;
+  translate: -50% 0;
+  pointer-events: none;
+  animation: you-bob 1.6s ease-in-out infinite;
+}
+
+.disc__you svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.8));
+}
+
+@keyframes you-bob {
+  50% {
+    transform: translateY(-22%);
+  }
+}
+
+:root[data-quality='low'] .disc__you {
+  animation: none;
+}
+
 .disc--mine::after {
   content: '';
   position: absolute;
@@ -1283,6 +1333,95 @@ button.disc--target {
   grid-template-columns: auto 1fr;
   gap: 16px;
   align-items: center;
+}
+
+.look-picker__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.look-picker__head h2 {
+  margin: 0;
+}
+
+.look-options,
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.look-option {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 72px;
+  min-height: 44px;
+  padding: 6px 8px 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: rgba(5, 8, 14, 0.5);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition:
+    background var(--t-fast) ease,
+    border-color var(--t-fast) ease;
+}
+
+.look-option:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.look-option[aria-pressed='true'] {
+  border-color: var(--gold);
+  background: var(--gold-soft);
+  color: var(--text);
+  font-weight: 800;
+  box-shadow: 0 0 0 1px var(--gold) inset;
+}
+
+.swatch {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 2px solid rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+  transition: transform var(--t-fast) ease;
+}
+
+.swatch:hover:not(:disabled) {
+  transform: scale(1.08);
+}
+
+.swatch[aria-pressed='true'] {
+  outline: 3px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+
+/* Couleur prise par un autre joueur : barrée. */
+.swatch:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+  background-image: linear-gradient(
+    135deg,
+    transparent 45%,
+    rgba(0, 0, 0, 0.85) 45%,
+    rgba(0, 0, 0, 0.85) 55%,
+    transparent 55%
+  ) !important;
+}
+
+:root[data-theme='contrast'] .swatch[aria-pressed='true'] {
+  outline-color: var(--focus);
 }
 
 .look-picker__preview {

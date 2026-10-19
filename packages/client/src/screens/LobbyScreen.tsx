@@ -1,50 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import type { RoomView } from '@pepite/shared';
-import { LOOK_VARIANTS, type DwarfLook } from '@pepite/shared/cosmetics';
 import { DwarfToken } from '../assets/DwarfToken';
+import { LookPicker } from '../components/LookPicker';
 import { TopBar } from '../components/TopBar';
 import { EmoteBar, EmoteBubbleView } from '../components/Emotes';
 import { client, type EmoteBubble } from '../store';
 
 const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '[::1]']);
-
-const HATS = ['Casque de mineur', 'Capuche', 'Casque à cornes'];
-const BEARDS = ['Longue', 'Tressée', 'Courte'];
-
-/** Choix du chapeau et de la barbe de ses nains (cosmétique, visible de tous). */
-function LookPicker({ look, color }: { look: DwarfLook; color: number }) {
-  const choose = (patch: Partial<DwarfLook>): void =>
-    client.send({ type: 'setLook', ...look, ...patch });
-  const row = (label: string, names: readonly string[], value: number, key: keyof DwarfLook) => (
-    <div className="field" role="group" aria-label={label}>
-      <span className="field__label">{label}</span>
-      <div className="segmented">
-        {Array.from({ length: LOOK_VARIANTS }, (_, i) => (
-          <button
-            key={i}
-            type="button"
-            aria-pressed={value === i}
-            onClick={() => choose({ [key]: i })}
-          >
-            {names[i]}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-  return (
-    <section className="panel look-picker" aria-label="Votre nain">
-      <div className="look-picker__preview" aria-hidden>
-        <DwarfToken color={color} look={look} size={96} />
-      </div>
-      <div className="stack">
-        <h2>Votre nain</h2>
-        {row('Chapeau', HATS, look.hat, 'hat')}
-        {row('Barbe', BEARDS, look.beard, 'beard')}
-      </div>
-    </section>
-  );
-}
 
 /**
  * Adresse à partager. Sur « localhost », les autres joueurs ne peuvent pas
@@ -174,9 +136,14 @@ export function LobbyScreen({
             Joueurs ({count}/{room.maxPlayers})
           </h2>
           <ul className="player-list">
-            {room.players.map((player, index) => (
+            {room.players.map((player) => (
               <li key={player.id} className="player-item">
-                <DwarfToken color={index} look={player.look} size={40} />
+                <DwarfToken
+                  color={player.look.color}
+                  look={player.look}
+                  size={40}
+                  you={player.id === playerId}
+                />
                 <span className="player-item__name">
                   {player.name}
                   {player.id === playerId && ' (vous)'}
@@ -216,7 +183,7 @@ export function LobbyScreen({
           )}
         </section>
 
-        {me && <LookPicker look={me.look} color={Math.max(0, room.players.indexOf(me))} />}
+        {me && <LookPicker look={me.look} players={room.players} playerId={me.id} />}
 
         <section className="panel stack" aria-label="Réglages de la partie">
           <h2>Réglages</h2>

@@ -55,6 +55,11 @@ export function validateSetup(setup: GameSetup): string[] {
   }
   const dwarfCount = count * (setup.doubleDraw ? DOUBLE_DRAW_DWARVES_PER_PLAYER : 1);
   if (dwarfCount > MAX_DWARVES) problems.push(`Au plus ${MAX_DWARVES} nains en jeu.`);
+  const colors = setup.players.flatMap((p) => (p.color === undefined ? [] : [p.color]));
+  if (colors.some((c) => !Number.isInteger(c) || c < 0 || c >= MAX_DWARVES)) {
+    problems.push(`Les couleurs vont de 0 à ${MAX_DWARVES - 1}.`);
+  }
+  if (new Set(colors).size !== colors.length) problems.push('Deux joueurs ont la même couleur.');
   problems.push(...validateDecks(setup.decks ?? DEFAULT_DECKS));
   return problems;
 }
@@ -157,12 +162,20 @@ export function createGame(setup: GameSetup, rng: Rng): { state: GameState; even
   const doubleDraw = setup.doubleDraw ?? false;
   const perPlayer = doubleDraw ? DOUBLE_DRAW_DWARVES_PER_PLAYER : 1;
   const dwarves: DwarfState[] = [];
+  // Couleurs choisies d'abord ; les autres nains prennent les premières libres.
+  const taken = new Set(setup.players.flatMap((p) => (p.color === undefined ? [] : [p.color])));
+  const nextFree = (): number => {
+    let color = 0;
+    while (taken.has(color)) color += 1;
+    taken.add(color);
+    return color;
+  };
   for (const player of setup.players) {
     for (let i = 0; i < perPlayer; i++) {
       dwarves.push({
         id: dwarves.length,
         ownerId: player.id,
-        color: dwarves.length,
+        color: i === 0 && player.color !== undefined ? player.color : nextFree(),
         status: 'mine',
         position: WAGON_POSITION,
         secured: emptyPile(),

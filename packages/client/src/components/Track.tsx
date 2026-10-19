@@ -117,11 +117,12 @@ function TrackDwarf({
           ? 'sur le Wagon'
           : `sur la carte ${dwarf.position}`;
   const label = `${name} — nain ${look.name}, ${where}`;
+  const mine = dwarf.ownerId === view.viewerId;
   const className = [
     'disc',
     `disc--${mood}`,
     dwarf.id === view.currentDwarfId && view.phase === 'playing' ? 'disc--active' : '',
-    dwarf.ownerId === view.viewerId ? 'disc--mine' : '',
+    mine ? 'disc--mine' : '',
     target ? 'disc--target' : '',
   ].join(' ');
   const token = (
@@ -131,7 +132,21 @@ function TrackDwarf({
         look={looks.get(dwarf.ownerId)}
         mood={mood}
         label={target ? undefined : label}
+        you={mine}
       />
+      {mine && (
+        <span className="disc__you" aria-hidden>
+          <svg viewBox="0 0 12 9">
+            <path
+              d="M1 1.2 H11 L6 8 Z"
+              fill="var(--you-glow)"
+              stroke="#14161c"
+              strokeWidth="1.2"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+      )}
       {mood === 'dead' && (
         <span className="disc__burn" aria-hidden>
           <Flame />

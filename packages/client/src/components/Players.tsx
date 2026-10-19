@@ -67,6 +67,7 @@ export function Players({
                     mood={d.status === 'eliminated' ? 'dead' : d.status === 'exit' ? 'joy' : 'idle'}
                     size={32}
                     label={`Nain ${dwarfLook(d.color).name}`}
+                    you={isYou}
                   />
                 ))}
               </span>
