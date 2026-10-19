@@ -239,20 +239,8 @@ function Gallery({ burned }: { burned: boolean }) {
         d="M14 77 V37 Q14 25 30 25 Q46 25 46 37 V77 Z"
         fill={burned ? 'url(#card-tunnel-red)' : 'url(#card-tunnel-blue)'}
       />
-      {/* Rails et traverses qui s'enfoncent */}
-      <path
-        d="M20.5 72 H39.5 M22.8 64 H37.2 M24.6 57.5 H35.4 M26 52.5 H34"
-        stroke={burned ? '#21100b' : '#4e3016'}
-        strokeWidth="1.5"
-      />
-      <path
-        d="M21 77 L28.4 47 M39 77 L31.6 47"
-        stroke={burned ? '#3b1a12' : '#8a93a6'}
-        strokeWidth="1.3"
-      />
       {/* Sol */}
       <rect x="-10" y="77" width="80" height="37" fill="#000" fillOpacity="0.3" />
-      <path d="M5 77.5 H55" stroke={STROKE} strokeWidth="1.2" />
       {/* Boisage */}
       <rect x="10.5" y="27" width="5" height="51" fill={post} stroke={STROKE} strokeWidth="1.1" />
       <rect x="44.5" y="27" width="5" height="51" fill={post} stroke={STROKE} strokeWidth="1.1" />
@@ -323,14 +311,62 @@ function Gallery({ burned }: { burned: boolean }) {
           <path d="M28.1 33.3 H31.9" stroke={STROKE} strokeWidth="0.5" />
         </>
       )}
+      <Rails burned={burned} />
     </>
+  );
+}
+
+/** Traverses tous les 7,5 : leur motif se poursuit d'une carte à la suivante. */
+const SLEEPERS = Array.from({ length: 10 }, (_, k) => -3.75 + 7.5 * k);
+
+/**
+ * Voie ferrée vue de côté, à la même hauteur sur toutes les cartes : posées
+ * côte à côte sur la piste, les cartes forment une seule voie continue, du
+ * dragon jusqu'au butoir de la Sortie. Elle déborde du cadre 60 × 84 pour
+ * toucher les bords de la carte.
+ */
+function Rails({
+  burned = false,
+  from = -10,
+  ballast,
+}: {
+  burned?: boolean;
+  /** Début de la voie (à gauche) ; elle va toujours jusqu'au bord droit. */
+  from?: number;
+  ballast?: string;
+}) {
+  return (
+    <g>
+      <path
+        d={`M${from} 71.6 H70 V78 H${from} Z`}
+        fill={ballast ?? (burned ? '#2a0f08' : '#141c2b')}
+        fillOpacity="0.6"
+      />
+      <path d={`M${from} 78 H70`} stroke={STROKE} strokeWidth="1" />
+      {SLEEPERS.filter((x) => x > from + 1).map((x) => (
+        <rect
+          key={x}
+          x={x - 1.4}
+          y="71.2"
+          width="2.8"
+          height="6.4"
+          rx="0.5"
+          fill={burned ? '#24130d' : 'url(#card-wood-h)'}
+          stroke={STROKE}
+          strokeWidth="0.5"
+        />
+      ))}
+      <path d={`M${from} 72.8 H70`} stroke={burned ? '#4a3430' : '#7d8597'} strokeWidth="1.2" />
+      <path d={`M${from} 76.2 H70`} stroke={burned ? '#5c403a' : '#b3bccd'} strokeWidth="1.6" />
+      <path d={`M${from} 77.1 H70`} stroke="#000" strokeOpacity="0.45" strokeWidth="0.6" />
+    </g>
   );
 }
 
 /** Cristaux sur la paroi de gauche et pépite incrustée à droite (face bleue). */
 function WallTreasures() {
   return (
-    <>
+    <g transform="translate(0 -6.4)">
       <g stroke={STROKE} strokeWidth="0.7" strokeLinejoin="round">
         <path d="M2.5 77 L4.6 69 L6.6 77 Z" fill="url(#card-crystal)" />
         <path d="M5.4 77 L7.6 64.5 L10 77 Z" fill="url(#card-crystal)" />
@@ -339,14 +375,15 @@ function WallTreasures() {
       <Nugget x={54.6} y={71} scale={0.42} />
       <Sparkle x={8.4} y={62} size={0.7} />
       <Sparkle x={56.8} y={66.6} size={0.6} />
-    </>
+    </g>
   );
 }
 
 /** Wagonnet sur les rails, plein d'or (vide et noirci sur la face rouge). */
 function Cart({ burned }: { burned: boolean }) {
   return (
-    <>
+    // Les roues reposent sur le rail avant.
+    <g transform="translate(0 2.4)">
       {!burned && (
         <>
           <Nugget x={23.5} y={50.5} scale={0.6} />
@@ -376,7 +413,7 @@ function Cart({ burned }: { burned: boolean }) {
           <circle cx={cx} cy="70" r="1.1" fill={burned ? '#6b5148' : '#a3acbd'} />
         </g>
       ))}
-    </>
+    </g>
   );
 }
 
@@ -437,6 +474,36 @@ function ExitScene() {
         strokeOpacity="0.55"
         strokeWidth="0.7"
       />
+      {/* Fin de la voie : un butoir, puis le chemin vers le jour */}
+      <Rails from={37} ballast="#5b4a30" />
+      <path
+        d="M33.4 78 L36.6 67.6 H39.4 L37.6 78 Z"
+        fill="url(#card-wood-h)"
+        stroke={STROKE}
+        strokeWidth="0.8"
+        strokeLinejoin="round"
+      />
+      <rect
+        x="36.4"
+        y="66"
+        width="3.4"
+        height="12"
+        rx="0.6"
+        fill="url(#card-wood-h)"
+        stroke={STROKE}
+        strokeWidth="0.9"
+      />
+      <rect
+        x="35"
+        y="67.2"
+        width="6.2"
+        height="3.4"
+        rx="0.8"
+        fill="#c8372d"
+        stroke={STROKE}
+        strokeWidth="0.8"
+      />
+      <path d="M35.8 68.9 H40.4" stroke="#fff" strokeWidth="0.9" strokeDasharray="1.1 1.1" />
     </>
   );
 }
