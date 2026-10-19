@@ -1755,45 +1755,99 @@ button.disc--target:focus-visible {
 /* ---------- Face des cartes Exit (défausse, carte mise en scène) ---------- */
 
 .exit-face {
+  position: relative;
   container-type: inline-size;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  border: 2px solid var(--card-ink);
+  background:
+    var(--grain),
+    repeating-conic-gradient(
+      from 0deg at 50% 46%,
+      rgba(223, 246, 250, 0.07) 0deg 9deg,
+      transparent 9deg 30deg
+    ),
+    radial-gradient(circle at 50% 46%, #2f8d9c 0%, #1c5a66 60%, #0d343c 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 0 16px rgba(0, 0, 0, 0.45);
+  color: #f4f1e6;
+  text-align: center;
+}
+
+/* Filet argenté intérieur. */
+.exit-face::before {
+  content: '';
+  position: absolute;
+  inset: 4.5%;
+  border: 1px solid rgba(214, 238, 244, 0.55);
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.exit-face__inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4cqw;
+  height: 100%;
+  padding: 10cqw 8cqw;
+}
+
+.exit-face__action {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 4cqw;
   width: 100%;
-  height: 100%;
-  padding: 9cqw 7cqw;
-  border-radius: 8px;
-  border: 2px solid var(--card-ink);
-  background: var(--grain), linear-gradient(160deg, #24727f, var(--exit-back));
-  color: #f4f1e6;
-  text-align: center;
-}
-
-.exit-face__action {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3cqw;
-  width: 100%;
   padding: 6cqw 3cqw;
   border-radius: 7cqw;
-  background: rgba(255, 255, 255, 0.11);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
+  border: 1px solid rgba(214, 238, 244, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
 .exit-face--single .exit-face__action {
   flex: 1;
 }
 
-.exit-face__action svg {
-  width: 42cqw;
-  height: auto;
+/* Pictogramme dans un médaillon cerclé d'argent. */
+.exit-face__medal {
+  display: grid;
+  place-items: center;
+  width: 50cqw;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #2f8d9c, #123f48 75%);
+  border: max(1.5px, 1.8cqw) solid #b6d0d9;
+  box-shadow:
+    0 0 0 max(1px, 0.8cqw) #0d343c,
+    0 2cqw 4cqw rgba(0, 0, 0, 0.35);
 }
 
-.exit-face--double .exit-face__action svg {
-  width: 28cqw;
+/* Carte à deux actions : tout est plus compact pour tenir dans la carte. */
+.exit-face--double .exit-face__inner {
+  gap: 2.5cqw;
+  padding: 7cqw;
+}
+
+.exit-face--double .exit-face__action {
+  gap: 2cqw;
+  padding: 3.5cqw 3cqw;
+}
+
+.exit-face--double .exit-face__medal {
+  width: 23cqw;
+}
+
+.exit-face__medal svg {
+  width: 72%;
+  height: auto;
 }
 
 .exit-face__name {
@@ -1801,23 +1855,48 @@ button.disc--target:focus-visible {
   font-weight: 800;
   font-size: max(7px, 12.5cqw);
   line-height: 1.1;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
 }
 
 .exit-face--double .exit-face__name {
-  font-size: max(6px, 10.5cqw);
+  font-size: max(6px, 9.5cqw);
 }
 
 .exit-face__or {
-  font-size: max(6px, 10cqw);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 3cqw;
+  width: 72%;
+  font-size: max(6px, 8.5cqw);
   font-style: italic;
-  opacity: 0.85;
+  opacity: 0.9;
+}
+
+.exit-face__or::before,
+.exit-face__or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(214, 238, 244, 0.5);
 }
 
 .exit-face__action--chosen {
   background: var(--gold-metal);
+  border-color: #7a4f00;
   color: #2a1a00;
   box-shadow: 0 0 14px var(--gold-glow);
   animation: spot-pop 500ms var(--ease-spring) calc(var(--reveal-delay, 0ms) + 200ms) both;
+}
+
+.exit-face__action--chosen .exit-face__medal {
+  background: radial-gradient(circle at 40% 35%, #fff2b8, #e0a52a 75%);
+  border-color: #7a4f00;
+  box-shadow: 0 0 0 max(1px, 0.8cqw) #3d2700;
+}
+
+.exit-face__action--chosen .exit-face__name {
+  text-shadow: none;
 }
 
 .exit-face__action--dim {
@@ -1867,44 +1946,6 @@ button.disc--target:focus-visible {
   box-shadow: 0 0 18px var(--gold-glow);
   pointer-events: none;
   animation: ready-pulse 1.6s ease-in-out infinite;
-}
-
-.deck__verb {
-  position: absolute;
-  z-index: 2;
-  left: 50%;
-  bottom: 8%;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-family: var(--font-display);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  background: var(--gold-metal);
-  color: #2a1a00;
-  border: 1px solid #7a4f00;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
-  transform: translateX(-50%) translateY(6px);
-  opacity: 0;
-  transition:
-    opacity var(--t-med) ease,
-    transform var(--t-med) var(--ease-spring);
-  pointer-events: none;
-}
-
-.deck__verb--exit {
-  background: linear-gradient(180deg, #1f7484 0%, #124b57 100%);
-  color: #f2fbff;
-  border-color: #0b3640;
-}
-
-.deck__card--playable .deck__verb {
-  opacity: 1;
-  transform: translateX(-50%);
 }
 
 .actions--hint {

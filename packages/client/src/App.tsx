@@ -1,3 +1,4 @@
+import { CardDefs } from './assets/Cards';
 import { IconClose } from './assets/Icons';
 import { useMemo } from 'react';
 import { LooksContext } from './looks';
@@ -15,6 +16,7 @@ export function App() {
   );
   return (
     <LooksContext.Provider value={looks}>
+      <CardDefs />
       <div className="app">
         {state.connection !== 'open' && (
           <div className="connection-banner" role="status">

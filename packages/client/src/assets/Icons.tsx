@@ -133,24 +133,6 @@ export function IconCrown(props: IconProps) {
   );
 }
 
-export function IconPickaxe(props: IconProps) {
-  return (
-    <Icon {...props}>
-      <path d="M5 21 L15 9" strokeWidth="2.4" />
-      <path d="M8 5.5 Q14 2 20.5 7 Q15 5.5 11 9.5 Z" fill="currentColor" fillOpacity="0.3" />
-    </Icon>
-  );
-}
-
-export function IconRun(props: IconProps) {
-  return (
-    <Icon {...props}>
-      <path d="M4 21 V7 Q4 3.5 8 3.5 Q12 3.5 12 7 V21" />
-      <path d="M13 13 H21 M18 10 L21 13 L18 16" />
-    </Icon>
-  );
-}
-
 export function IconSound({ muted, ...props }: IconProps & { muted?: boolean }) {
   return (
     <Icon {...props}>

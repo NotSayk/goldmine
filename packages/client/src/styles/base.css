@@ -651,3 +651,12 @@ dialog[open]::backdrop {
     transform: scale(1.015);
   }
 }
+
+/* Dégradés partagés des cartes : présents dans la page, jamais affichés. */
+.card-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}

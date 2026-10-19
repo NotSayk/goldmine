@@ -51,7 +51,7 @@ export const EXIT_LABELS: Record<ExitActionKind, { name: string; effect: string;
       short: '2 cartes vers la Sortie',
     },
     allTogether: {
-      name: 'Tous ensemble !',
+      name: 'Tous ensemble\u202f!',
       effect:
         'Déplacez tous les disques Nain d’1 carte vers la gauche, en direction de la Sortie de la mine.',
       short: 'Tous les nains : 1 carte',

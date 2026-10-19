@@ -119,10 +119,11 @@ export async function step(page) {
       await inline.first().click({ timeout: 1000 });
       return 'choice';
     }
-    // Échange : on touche le nain voulu directement sur le plateau.
+    // Échange : on touche le nain voulu directement sur le plateau. Il pulse
+    // sans fin : on ne peut pas attendre qu'il soit immobile pour cliquer.
     const target = page.locator('button.disc--target');
     if (await target.count()) {
-      await target.first().click({ timeout: 1000 });
+      await target.first().click({ timeout: 1000, force: true });
       return 'choice';
     }
     const dialog = page.locator('dialog[open]');

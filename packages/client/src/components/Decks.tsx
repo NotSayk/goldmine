@@ -1,7 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { Availability, PlayerView } from '@pepite/engine';
 import { CardBack, ExitCardFace, ExtractionCardArt } from '../assets/Cards';
-import { IconPickaxe, IconRun } from '../assets/Icons';
 import { EXIT_LABELS, EXTRACTION_LABELS, plural } from '../i18n/fr';
 import type { LastDrawn } from '../store';
 import { Card3D } from './Card3D';
@@ -24,7 +23,7 @@ export interface DrawChoices {
   readonly onDraw: (deck: 'extraction' | 'exit') => void;
 }
 
-/** Pioche jouable : on la touche pour piocher (plus de boutons séparés). */
+/** Pioche jouable : on la touche pour piocher (anneau doré quand c'est à vous). */
 function DeckSlot({
   deck,
   draw,
@@ -54,10 +53,6 @@ function DeckSlot({
       title={playable ? `${verb} : ${label}` : label}
     >
       {children}
-      <span className={`deck__verb deck__verb--${deck}`} aria-hidden>
-        {deck === 'extraction' ? <IconPickaxe size={16} /> : <IconRun size={16} />}
-        {verb}
-      </span>
     </button>
   );
 }
