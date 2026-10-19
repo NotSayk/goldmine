@@ -169,10 +169,14 @@ describe('salons', () => {
 
   it('liste les salons publics ouverts, jamais les privés, complets ou commencés', async () => {
     const [open] = await lobby(2);
+    open!.send({ type: 'updateSettings', isPublic: true });
+    await waitUntil(() => open!.room?.settings.isPublic === true);
+    // Un salon est privé par défaut.
     const [hidden] = await lobby(1);
-    hidden!.send({ type: 'updateSettings', isPublic: false });
-    await waitUntil(() => hidden!.room?.settings.isPublic === false);
+    expect(hidden!.room?.settings.isPublic).toBe(false);
     const [started] = await lobby(2);
+    started!.send({ type: 'updateSettings', isPublic: true });
+    await waitUntil(() => started!.room?.settings.isPublic === true);
     started!.send({ type: 'startGame' });
     await waitUntil(() => started!.room?.status === 'playing');
     const visitor = await client();

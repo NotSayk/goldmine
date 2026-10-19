@@ -312,7 +312,7 @@ export class RoomManager {
       hostId: session.playerId,
       status: 'lobby',
       players: [this.humanPlayer(session, name, null)],
-      settings: { doubleDraw: false, firstPlayer: 'random', isPublic: true },
+      settings: { doubleDraw: false, firstPlayer: 'random', isPublic: false },
       game: null,
       rng: null,
       createdAt: this.now(),

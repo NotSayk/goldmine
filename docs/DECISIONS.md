@@ -63,7 +63,7 @@ Chaque cas est isolé dans une fonction nommée et documentée de [`packages/eng
 
 **Salons et connexions** (choix hors règles)
 
-- **Salons publics ou privés** : un salon est public par défaut et apparaît dans la liste « Salons ouverts » de l'accueil (salons en attente et pas complets, 20 au plus, les plus récents d'abord, rafraîchie toutes les 4 s) ; l'hôte peut le rendre privé, on n'y entre alors qu'avec le code ou le lien.
+- **Salons publics ou privés** : un salon est privé par défaut (on n'y entre qu'avec le code ou le lien) ; l'hôte peut le rendre public, il apparaît alors dans la liste « Salons ouverts » de l'accueil (salons en attente et pas complets, 20 au plus, les plus récents d'abord, rafraîchie toutes les 4 s).
 - Un joueur qui quitte une partie en cours est remplacé définitivement par un bot.
 - Après le délai de grâce (30 s par défaut), l'hôte peut **remplacer** un joueur déconnecté par un bot (il reprend la main à sa reconnexion) ou **passer son tour** (action système `skipTurn` du moteur ; une carte Exit en attente de choix est alors défaussée sans effet).
 - Si l'hôte reste déconnecté au-delà du délai de grâce, le premier humain connecté devient hôte.

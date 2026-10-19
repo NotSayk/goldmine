@@ -23,7 +23,7 @@ npm run dev
 - le serveur de jeu (port **3000**, rechargé à chaque modification) ;
 - le client Vite (port **5173**), qui relaie `/ws` vers le serveur.
 
-Ouvrez <http://localhost:5173>, créez un salon et partagez le code (ou le lien `?salon=CODE`). Les salons publics apparaissent aussi dans la liste « Salons ouverts » de l'accueil ; l'hôte peut rendre le sien privé. Pour tester seul : ajoutez des bots dans le salon, ou ouvrez plusieurs fenêtres de navigation privée.
+Ouvrez <http://localhost:5173>, créez un salon et partagez le code (ou le lien `?salon=CODE`). Un salon est privé par défaut (on n'y entre qu'avec le code ou le lien) ; l'hôte peut le rendre public pour qu'il apparaisse dans la liste « Salons ouverts » de l'accueil. Pour tester seul : ajoutez des bots dans le salon, ou ouvrez plusieurs fenêtres de navigation privée.
 
 ## Scripts
 
