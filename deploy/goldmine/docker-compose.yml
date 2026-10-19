@@ -1,0 +1,15 @@
+# À lancer depuis ~/apps/goldmine, où ce dépôt est cloné dans ./src
+services:
+  goldmine:
+    build:
+      context: ./src
+      dockerfile: deploy/goldmine/Dockerfile
+    restart: unless-stopped
+    mem_limit: 512m
+    environment:
+      PORT: "3000"
+      HOST: "0.0.0.0"
+    networks: [web]
+networks:
+  web:
+    external: true
