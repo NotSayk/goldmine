@@ -36,12 +36,13 @@ export interface DirectorOptions {
   readonly maxSpeed: number;
 }
 
-const DEFAULT_OPTIONS: DirectorOptions = { maxQueue: 8, maxSpeed: 3 };
+const DEFAULT_OPTIONS: DirectorOptions = { maxQueue: 8, maxSpeed: 2.2 };
 
 /**
- * Réalisateur : joue les séquences une par une. Chaque séquence est passable
- * (`skip`), la file peut être vidée (`skipAll`) et s'accélère quand elle
- * s'allonge ou quand c'est au joueur de jouer. Le réalisateur ne touche jamais
+ * Réalisateur : joue les séquences une par une, au même rythme pour tous les
+ * coups (joueurs ou bots). Chaque séquence est passable (`skip`), la file peut
+ * être vidée (`skipAll`) et ne s'accélère que si elle s'allonge vraiment
+ * (connexion lente, retour après une coupure). Le réalisateur ne touche jamais
  * à l'état du jeu : il ne fait qu'ordonner des effets.
  */
 export class Director {
@@ -54,7 +55,6 @@ export class Director {
   } | null = null;
   private readonly listeners = new Set<() => void>();
   private baseSpeed = 1;
-  private urgent = false;
   private snapshotCache: DirectorSnapshot = { current: null, durationMs: 0, speed: 1, queued: 0 };
   private readonly options: DirectorOptions;
 
@@ -69,11 +69,6 @@ export class Director {
   /** Vitesse de base (réglage « animations rapides »). */
   setBaseSpeed(speed: number): void {
     this.baseSpeed = Math.max(0.25, speed);
-  }
-
-  /** Vrai quand c'est au joueur : les séquences des autres sont raccourcies. */
-  setUrgent(urgent: boolean): void {
-    this.urgent = urgent;
   }
 
   enqueue(sequences: readonly Sequence[]): void {
@@ -108,12 +103,11 @@ export class Director {
     return () => this.listeners.delete(listener);
   }
 
-  /** Accélération selon la longueur de la file et l'urgence. */
+  /** Accélération seulement si la file déborde (les bots attendent déjà la fin des animations). */
   private speedFor(): number {
     const backlog = this.queue.length;
-    const backlogFactor = backlog >= 4 ? 2 : backlog >= 2 ? 1.4 : 1;
-    const urgency = this.urgent ? 1.7 : 1;
-    return Math.min(this.options.maxSpeed, this.baseSpeed * backlogFactor * urgency);
+    const backlogFactor = backlog >= 5 ? 1.6 : backlog >= 3 ? 1.25 : 1;
+    return Math.min(this.options.maxSpeed, this.baseSpeed * backlogFactor);
   }
 
   private trim(): void {

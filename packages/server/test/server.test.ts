@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { houseRules, type PlayerView } from '@pepite/engine';
 import { startServer, type RunningServer } from '../src/app';
+import { animationMs } from '@pepite/shared';
 import { createSecureRng } from '../src/secureRng';
 import { TestClient, waitUntil } from './client';
 
@@ -16,6 +17,7 @@ beforeEach(async () => {
     host: '127.0.0.1',
     graceMs: 150,
     botDelayMs: 0,
+    paceAnimations: false,
     sweepIntervalMs: 20,
     // Les clients simulés jouent sans pause : la limite de débit est testée à part.
     rateLimit: { burst: 10_000, perSecond: 10_000 },
@@ -233,6 +235,38 @@ describe('apparence et réactions', () => {
   });
 });
 
+describe('rythme', () => {
+  it('un bot attend que le coup précédent ait été montré avant de jouer', async () => {
+    const paced = await startServer({
+      port: 0,
+      host: '127.0.0.1',
+      logger: false,
+      botDelayMs: 50,
+      turnTimeMs: 0,
+    });
+    const human = await new TestClient(paced.url).connect();
+    human.send({ type: 'createRoom', name: 'Alice' });
+    await waitUntil(() => human.room !== null);
+    human.send({ type: 'addBot' });
+    await waitUntil(() => human.room?.players.length === 2);
+    human.send({ type: 'updateSettings', firstPlayer: human.playerId! });
+    await waitUntil(() => human.room?.settings.firstPlayer === human.playerId);
+    human.send({ type: 'startGame' });
+    await waitUntil(() => human.view?.legal.yourTurn === true, 15_000);
+    human.send({ type: 'action', action: { type: 'drawExtraction' } });
+    const reply = await human.waitFor((m) => m.type === 'game' && m.events.length > 0);
+    const shownAt = Date.now();
+    const expected = animationMs(reply.type === 'game' ? reply.events : []);
+    await human.waitFor(
+      (m) => m.type === 'game' && m.events.some((e) => e.type === 'CardDrawn'),
+      expected + 5_000,
+    );
+    expect(Date.now() - shownAt).toBeGreaterThanOrEqual(expected - 50);
+    await human.disconnect();
+    await paced.close();
+  });
+});
+
 describe('triche', () => {
   it('refuse une action hors de son tour, sans rien changer', async () => {
     const [host, guest] = await lobby(2);
@@ -343,7 +377,13 @@ describe('déconnexion et reconnexion', () => {
 
 describe('chrono du tour', () => {
   it('joue à pile ou face pour un joueur trop lent, et tout le monde le voit', async () => {
-    const fast = await startServer({ port: 0, host: '127.0.0.1', logger: false, turnTimeMs: 300 });
+    const fast = await startServer({
+      port: 0,
+      host: '127.0.0.1',
+      logger: false,
+      turnTimeMs: 300,
+      paceAnimations: false,
+    });
     const host = await new TestClient(fast.url).connect();
     const guest = await new TestClient(fast.url).connect();
     clients.push(host, guest);

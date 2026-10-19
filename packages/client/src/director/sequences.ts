@@ -1,6 +1,7 @@
 import type { ExitActionKind, ExtractionKind, GameEvent, PlayerView } from '@pepite/engine';
 import type { AutoPlay, CoinSide } from '@pepite/shared';
 import { BRANDING } from '@pepite/shared/branding';
+import { DRAW_FLIP_AT, DRAW_MS, DRAW_REVEAL_AT, PACE } from '@pepite/shared/pacing';
 import {
   EXIT_LABELS,
   EXTRACTION_LABELS,
@@ -121,12 +122,15 @@ export interface Sequence {
 export type Highlight = Sequence;
 export type HighlightVisual = SequenceVisual;
 
-// Chronologie d'une pioche : vol (0-500), suspense identique pour toutes les cartes
-// (500-900), retournement (900-1150), puis la carte est montrée.
-export const FLY_MS = 500;
-export const SUSPENSE_MS = 400;
-export const FLIP_AT = FLY_MS + SUSPENSE_MS;
-export const REVEAL_AT = FLIP_AT + 250;
+// Chronologie d'une pioche (rythme partagé avec le serveur, qui fait attendre les
+// bots) : vol, suspense identique pour toutes les cartes, retournement, lecture.
+export const FLY_MS = PACE.flyMs;
+export const SUSPENSE_MS = PACE.suspenseMs;
+export const FLIP_AT = DRAW_FLIP_AT;
+export const REVEAL_AT = DRAW_REVEAL_AT;
+
+/** Durée du lancer de pièce (le temps restant laisse lire le résultat). */
+export const COIN_FLIP_MS = 2200;
 
 let nextId = 1;
 
@@ -135,7 +139,7 @@ type Draft = { -readonly [K in keyof Sequence]: Sequence[K] } & {
   cues: Cue[];
 };
 
-const DRAGON_STEP_MS = 450;
+const DRAGON_STEP_MS = PACE.dragonStepMs;
 
 /**
  * Regroupe les événements d'un coup en séquences. Les textes décrivent ce qui
@@ -196,7 +200,7 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
           detail: `On mélange les pioches… ${first} commence.`,
           visual: { kind: 'round', round: event.round },
           tone: 'info',
-          duration: 1800,
+          duration: PACE.roundMs,
           important: true,
           cues: [
             { at: 0, type: 'reveal' },
@@ -216,7 +220,7 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
             detail: `${label.effect}.`,
             visual: { kind: 'extraction', card: event.card },
             tone: 'info',
-            duration: 2100,
+            duration: DRAW_MS,
             targetPlayerId: owner,
             flight: 'extraction',
             cues: [
@@ -246,10 +250,10 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
             ? { kind: 'exit', actions: event.card, chosen: null }
             : { kind: 'exitBack' },
           tone: 'info',
-          duration: played ? 2000 : 1300,
+          duration: played ? DRAW_MS : PACE.exitPendingMs,
           flight: 'exit',
           cues: played
-            ? [...drawCues(), { at: 1700, type: 'sound', sound: 'dissolve' }]
+            ? [...drawCues(), { at: DRAW_MS - 400, type: 'sound', sound: 'dissolve' }]
             : [
                 { at: 0, type: 'sound', sound: 'draw' },
                 { at: 0, type: 'reveal' },
@@ -269,10 +273,10 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
                 detail: '',
                 visual: { kind: 'exitBack' },
                 tone: 'info',
-                duration: 1600,
+                duration: PACE.exitChosenMs,
                 cues: [
                   { at: 0, type: 'reveal' },
-                  { at: 1300, type: 'sound', sound: 'dissolve' },
+                  { at: PACE.exitChosenMs - 400, type: 'sound', sound: 'dissolve' },
                 ],
               });
         target.title = say(event.dwarfId, 'jouez', 'joue');
@@ -302,7 +306,7 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
         }
         return;
       case 'DwarfMoveBlocked':
-        draft?.extra.push('Collé au dragon : il reste sur place.');
+        draft?.extra.push(`Bloqué par ${BRANDING.dragonName} : il reste sur place.`);
         return;
       case 'DwarvesSwapped':
         draft?.extra.push(`Échange avec ${dwarfLabel(view, event.targetId)}.`);
@@ -329,7 +333,7 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
         if (draft && draft.visual.kind !== 'dragon' && draft.visual.kind !== 'eliminated') {
           draft.extra.push(text);
           draft.tone = 'success';
-          draft.cues.push(...exitCues(revealTime(draft) + 350));
+          draft.cues.push(...exitCues(revealTime(draft) + 700));
         } else {
           start({
             dwarfId: event.dwarfId,
@@ -338,7 +342,7 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
             detail: text,
             visual: { kind: 'exited' },
             tone: 'success',
-            duration: 1800,
+            duration: PACE.exitedMs,
             cues: [{ at: 0, type: 'reveal' }, ...exitCues(150)],
           });
         }
@@ -351,7 +355,7 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
           const at = Math.min(step * DRAGON_STEP_MS, 2 * DRAGON_STEP_MS);
           draft.visual = { kind: 'dragon', steps: step + 1 };
           draft.title = `Dragon révélé : ${BRANDING.dragonName} avance de ${step + 1} cartes !`;
-          draft.duration = Math.min(draft.duration + DRAGON_STEP_MS, 3200);
+          draft.duration = Math.min(draft.duration + DRAGON_STEP_MS, PACE.dragonMaxMs);
           draft.cues.push(
             { at, type: 'shake', strength: Math.min(3, 1 + step * 0.7) },
             { at, type: 'flameSweep', from: event.from, to: event.to },
@@ -370,14 +374,14 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
           dwarfId: null,
           title: `Dragon révélé : ${BRANDING.dragonName} avance !`,
           name: 'Dragon',
-          detail: 'La galerie dépassée brûle.',
+          detail: 'La carte Mine dépassée est retournée sur sa face rouge.',
           visual: { kind: 'dragon', steps: 1 },
           tone: 'danger',
-          duration: 1900,
+          duration: PACE.dragonMs,
           important: true,
           cues: [
             { at: 0, type: 'reveal' },
-            { at: 0, type: 'camera', position: event.to, duration: 1500 },
+            { at: 0, type: 'camera', position: event.to, duration: PACE.dragonMs - 500 },
             { at: 0, type: 'sound', sound: 'roar' },
             { at: 120, type: 'shake', strength: 1 },
             { at: 150, type: 'flameSweep', from: event.from, to: event.to },
@@ -422,7 +426,7 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
           visual: { kind: 'eliminated', colors: [color] },
           tone: 'danger',
           dramatic: true,
-          duration: 2800,
+          duration: PACE.eliminationMs,
           important: true,
           cues: [
             { at: 0, type: 'reveal' },
@@ -442,7 +446,7 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
           detail: 'Joueur absent.',
           visual: { kind: 'skipped' },
           tone: 'info',
-          duration: 1200,
+          duration: PACE.skippedMs,
           cues: [{ at: 0, type: 'reveal' }],
         });
         return;
@@ -508,7 +512,7 @@ export function buildAutoPlaySequence(autoPlay: AutoPlay, view: PlayerView): Seq
     title,
     extra: [],
     tone: 'info' as const,
-    duration: 2600,
+    duration: PACE.coinMs,
     important: false,
     targetPlayerId: null,
     flight: null,
@@ -519,7 +523,7 @@ export function buildAutoPlaySequence(autoPlay: AutoPlay, view: PlayerView): Seq
       name: 'Échange au hasard',
       detail: `Avec ${dwarfLabel(view, autoPlay.targetId)}.`,
       visual: { kind: 'coin', heads: '?', tails: '?', side: null },
-      duration: 1600,
+      duration: PACE.skippedMs,
       cues: [{ at: 0, type: 'sound', sound: 'coin' }],
     };
   }
@@ -539,7 +543,7 @@ export function buildAutoPlaySequence(autoPlay: AutoPlay, view: PlayerView): Seq
     cues: autoPlay.coin
       ? [
           { at: 0, type: 'sound', sound: 'coin' },
-          { at: 1600, type: 'sound', sound: 'coinLand' },
+          { at: COIN_FLIP_MS, type: 'sound', sound: 'coinLand' },
         ]
       : [],
   };

@@ -93,8 +93,8 @@ interface Frame {
 const SESSION_KEY = 'pepite.session';
 const LOG_LIMIT = 60;
 /** Retard maximal de la table sur le serveur, quoi qu'il arrive aux animations. */
-const MAX_BOARD_LAG_MS = 9000;
-const FAST_SPEED = 1.6;
+const MAX_BOARD_LAG_MS = 14_000;
+const FAST_SPEED = 1.5;
 const EMOTE_MS = 2600;
 
 function readStorage(key: string): string | null {
@@ -121,11 +121,9 @@ function screenOf(state: AppState): Screen {
 }
 
 /** Repères joués selon les réglages : sans mouvement, seuls le son et la vibration restent. */
-function acceptsCue(cue: Cue, urgent: boolean): boolean {
+function acceptsCue(cue: Cue): boolean {
   if (cue.type === 'sound' || cue.type === 'vibrate' || cue.type === 'reveal') return true;
-  if (reducedMotion()) return false;
-  // Version courte quand c'est à vous de jouer : pas de travelling.
-  return !(urgent && cue.type === 'camera');
+  return !reducedMotion();
 }
 
 function playCue(cue: Cue): void {
@@ -194,18 +192,16 @@ class GameClient {
   /** Arrêt des repères de la séquence en cours. */
   private readonly stopCues = new Map<number, () => void>();
   private watchdog: ReturnType<typeof setInterval> | null = null;
-  private urgent = false;
 
   private readonly director = new Director({
     onStart: (sequence, speed) => {
-      const urgent = this.urgent;
       this.stopCues.set(
         sequence.id,
         runCues(
           sequence,
           speed,
           {
-            accepts: (cue) => acceptsCue(cue, urgent),
+            accepts: acceptsCue,
             onCue: (cue) => {
               if (cue.type === 'reveal') this.revealUpTo(this.frameOf.get(sequence.id));
               else playCue(cue);
@@ -425,8 +421,6 @@ class GameClient {
     };
     this.frames.push(frame);
     for (const sequence of sequences) this.frameOf.set(sequence.id, frame.id);
-    this.urgent = view.legal.yourTurn;
-    this.director.setUrgent(this.urgent);
     this.set({ view, waiting: false, ...(this.state.boardView ? {} : { boardView: view }) });
     this.director.enqueue(sequences);
     this.flushFrames();

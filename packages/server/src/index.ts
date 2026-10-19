@@ -19,6 +19,7 @@ const server = await startServer({
   graceMs: numberFromEnv('GRACE_MS', DEFAULT_OPTIONS.graceMs),
   botDelayMs: numberFromEnv('BOT_DELAY_MS', DEFAULT_OPTIONS.botDelayMs),
   turnTimeMs: numberFromEnv('TURN_TIME_MS', DEFAULT_OPTIONS.turnTimeMs),
+  paceAnimations: process.env.PACE_ANIMATIONS !== '0',
   logger: process.env.LOG !== '0',
 });
 

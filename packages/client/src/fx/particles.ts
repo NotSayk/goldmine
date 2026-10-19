@@ -40,6 +40,8 @@ interface Particle {
 }
 
 const GRAVITY = 0.0018;
+/** Les pépites rebondissent d'abord sous la carte, puis filent vers la pile. */
+const HOMING_AT = 1300;
 const CONFETTI_COLORS = [
   '#f2b632',
   '#ffe08a',
@@ -105,7 +107,7 @@ export function createParticles(
           vx: rand(-0.28, 0.28),
           vy: -rand(0.45, 0.8),
           size: effect === 'bigGold' ? rand(9, 12) : rand(5, 7.5),
-          life: target ? 2600 : 1900,
+          life: target ? 3400 : 2400,
           shape: nuggetShape(),
         };
       case 'sparks': {
@@ -227,10 +229,10 @@ export function createParticles(
     switch (p.effect) {
       case 'gold':
       case 'bigGold': {
-        const homing = p.target !== null && p.age > 900;
+        const homing = p.target !== null && p.age > HOMING_AT;
         if (homing && p.target) {
           // Vol vers la pile : de plus en plus vite, en rapetissant.
-          const pull = Math.min(1, ((p.age - 900) / 700) ** 2);
+          const pull = Math.min(1, ((p.age - HOMING_AT) / 900) ** 2);
           p.x += (p.target.x - p.x) * Math.min(1, dt * 0.004 + pull * 0.2);
           p.y += (p.target.y - p.y) * Math.min(1, dt * 0.004 + pull * 0.2);
           p.size *= 0.992;

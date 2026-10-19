@@ -8,60 +8,65 @@ import type {
 import type { ServerErrorCode } from '@pepite/shared';
 import { BRANDING } from '@pepite/shared/branding';
 
-/** Noms et effets des cartes (noms originaux, propres à cette version). */
+/** Noms et effets des cartes, tels que dans le livret de règles. */
 export const EXTRACTION_LABELS: Record<
   ExtractionKind,
   { name: string; effect: string; short: string }
 > = {
   redDoor: {
-    name: 'Filon profond',
-    effect: '2 pépites, puis 1 pas vers le dragon',
-    short: '+2 pépites · 1 pas vers le dragon',
+    name: 'Un dragon aux œufs d’or',
+    effect: `2 pépites d’or et 1 porte rouge : déplacez votre disque Nain d’1 carte vers la droite, en direction de la carte ${BRANDING.dragonName}`,
+    short: `2 pépites d’or · 1 carte vers ${BRANDING.dragonName}`,
   },
   blueDoor: {
-    name: 'Galerie de sortie',
-    effect: '1 pépite, puis 1 pas vers la Sortie',
-    short: '+1 pépite · 1 pas vers la Sortie',
+    name: 'Il est l’or, monseignor !',
+    effect:
+      '1 pépite d’or et 1 porte bleue : déplacez votre disque Nain d’1 carte vers la gauche, en direction de la carte Sortie de la mine',
+    short: '1 pépite d’or · 1 carte vers la Sortie',
   },
   noDoor: {
-    name: 'Petite veine',
-    effect: '1 pépite, vous restez sur place',
-    short: '+1 pépite · sur place',
+    name: 'D’l’or, j’adore !',
+    effect: '1 pépite d’or sans porte : votre nain reste sur place',
+    short: '1 pépite d’or · reste sur place',
   },
   dragon: {
-    name: 'Dragon',
-    effect: `${BRANDING.dragonName} avance d’une carte vers la Sortie`,
-    short: 'Révélé : le dragon avance d’une carte',
+    name: 'Un dragon ! UN DRAGON !',
+    effect: `${BRANDING.dragonName} se déplace immédiatement d’1 carte vers la gauche, en direction de la Sortie de la mine, tout en crachant du feu`,
+    short: `${BRANDING.dragonName} avance d’1 carte`,
   },
 };
 
 export const EXIT_LABELS: Record<ExitActionKind, { name: string; effect: string; short: string }> =
   {
     step: {
-      name: 'Un pas',
-      effect: 'Votre nain avance d’une carte vers la Sortie.',
-      short: '1 pas vers la Sortie',
+      name: 'Petit pas',
+      effect:
+        'Déplacez votre disque Nain d’1 carte vers la gauche, en direction de la Sortie de la mine.',
+      short: '1 carte vers la Sortie',
     },
     doubleStep: {
-      name: 'Deux pas',
+      name: 'Double pas',
       effect:
-        'Votre nain avance de deux cartes vers la Sortie (s’il sort au premier pas, le second est perdu).',
-      short: '2 pas vers la Sortie',
+        'Déplacez votre disque Nain de 2 cartes vers la gauche, en direction de la Sortie de la mine. Si le 1er pas suffit pour atteindre la Sortie de la mine, ignorez le 2e pas.',
+      short: '2 cartes vers la Sortie',
     },
     allTogether: {
-      name: 'En avant tous !',
-      effect: 'Tous les nains encore dans la mine avancent d’une carte vers la Sortie.',
-      short: 'Tous les nains : 1 pas',
+      name: 'Tous ensemble !',
+      effect:
+        'Déplacez tous les disques Nain d’1 carte vers la gauche, en direction de la Sortie de la mine.',
+      short: 'Tous les nains : 1 carte',
     },
     swap: {
-      name: 'Échange de places',
-      effect: 'Votre nain échange sa place avec un autre nain encore dans la mine.',
-      short: 'Prenez la place d’un autre nain',
+      name: 'Échange inter-nain-tional',
+      effect:
+        'Échangez votre disque Nain contre celui de n’importe quel autre nain présent dans la mine.',
+      short: 'Échangez votre place avec un nain',
     },
     goldBonus: {
-      name: 'Trésor caché',
-      effect: 'Gardez la carte : elle vaut +3 pépites si votre nain atteint la Sortie.',
-      short: '+3 pépites si vous sortez',
+      name: 'Bonus d’or',
+      effect:
+        'Placez cette carte face cachée dans votre pile de pépites : si votre nain atteint la Sortie de la mine, ajoutez 3 pépites d’or à votre résultat à la fin de la manche.',
+      short: '+3 pépites d’or à la sortie',
     },
   };
 
@@ -215,8 +220,8 @@ export function describeEvent(event: GameEvent, view: PlayerView): string | null
     case 'GoldBonusKept':
       return say(
         event.dwarfId,
-        'gardez un Trésor caché (+3 à la sortie).',
-        'garde un Trésor caché (+3 à la sortie).',
+        'gardez un Bonus d’or (+3 à la sortie).',
+        'garde un Bonus d’or (+3 à la sortie).',
       );
     case 'DwarfMoved':
       return event.to === 0
@@ -239,7 +244,7 @@ export function describeEvent(event: GameEvent, view: PlayerView): string | null
       return say(event.dwarfId, `atteignez la Sortie (${slot}).`, `atteint la Sortie (${slot}).`);
     }
     case 'DragonMoved':
-      return `${BRANDING.dragonName} avance et brûle ${event.burnedCardId === 'wagon' ? 'le Wagon' : 'une galerie'} !`;
+      return `${BRANDING.dragonName} avance et retourne ${event.burnedCardId === 'wagon' ? 'le Wagon' : 'une carte Mine'} sur sa face rouge !`;
     case 'DwarfEliminated': {
       if (event.cause === 'stranded') {
         return say(

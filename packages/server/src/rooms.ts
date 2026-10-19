@@ -17,6 +17,8 @@ import {
   EMOTE_BURST,
   EMOTE_PER_SECOND,
   LOOK_VARIANTS,
+  PACE,
+  animationMs,
   ROOM_CODE_ALPHABET,
   ROOM_CODE_LENGTH,
   parseClientMessage,
@@ -50,6 +52,8 @@ export interface RoomManagerOptions {
   idleRoomTtlMs: number;
   /** Temps pour jouer un tour (joueurs humains), 0 pour désactiver le chrono. */
   turnTimeMs: number;
+  /** Bots et chrono attendent la fin des animations du coup précédent (désactivé en test). */
+  paceAnimations?: boolean;
   /** Limitation de débit par connexion : rafale maximale et messages par seconde. */
   rateLimit: { burst: number; perSecond: number };
   now?: () => number;
@@ -108,6 +112,8 @@ export class RoomManager {
     { key: string; deadline: number; timer: ReturnType<typeof setTimeout> }
   >();
   private readonly lastStatuses = new Map<string, string>();
+  /** Fin prévue des animations du dernier coup, par salon (rythme des bots et du chrono). */
+  private readonly animationEnds = new Map<string, number>();
   /** Débit des réactions, par joueur. */
   private readonly emoteBuckets = new WeakMap<RoomPlayer, TokenBucket>();
   private readonly botRng: Rng = createSeededRng(randomBytes(16).toString('hex'));
@@ -471,6 +477,7 @@ export class RoomManager {
     room.status = 'playing';
     this.touch(room);
     this.broadcastRoom(room);
+    this.noteAnimation(room, events);
     this.updateTurnClock(room);
     this.broadcastGame(room, events);
     this.scheduleBot(room);
@@ -536,9 +543,21 @@ export class RoomManager {
     if (result.state.phase === 'finished') room.status = 'finished';
     this.touch(room);
     if (room.status !== statusBefore) this.broadcastRoom(room);
+    this.noteAnimation(room, result.events, autoPlay !== undefined);
     this.updateTurnClock(room);
     this.broadcastGame(room, result.events, autoPlay);
     this.scheduleBot(room);
+  }
+
+  /** Retient quand les joueurs auront fini de voir ce coup. */
+  private noteAnimation(room: Room, events: readonly GameEvent[], autoPlay = false): void {
+    this.animationEnds.set(room.code, this.now() + animationMs(events, autoPlay));
+  }
+
+  /** Temps d'animation encore à voir chez les joueurs. */
+  private animationLeft(room: Room): number {
+    if (this.options.paceAnimations === false) return 0;
+    return Math.max(0, (this.animationEnds.get(room.code) ?? 0) - this.now());
   }
 
   // -------------------------------------------------------------------------
@@ -568,7 +587,9 @@ export class RoomManager {
     }
     const now = this.now();
     const key = `${game.round}:${game.turn}`;
-    let deadline = existing?.key === key ? existing.deadline : now + total;
+    // Le chrono ne mange pas le temps des animations du coup précédent.
+    let deadline =
+      existing?.key === key ? existing.deadline : now + total + this.animationLeft(room);
     if (game.pending) deadline = Math.max(deadline, now + Math.min(MIN_CHOICE_MS, total));
     if (existing?.key === key && existing.deadline === deadline) return false;
     if (existing) clearTimeout(existing.timer);
@@ -610,12 +631,21 @@ export class RoomManager {
     return player && (player.isBot || player.botControlled) ? player : null;
   }
 
+  /**
+   * Un bot joue une fois le coup précédent montré à tous (même rythme qu'un
+   * joueur), et jamais avant `botDelayMs` ; `botDelayMs` à 0 le fait jouer
+   * aussitôt (tests).
+   */
   private scheduleBot(room: Room): void {
     if (this.botTimers.has(room.code) || !this.botActor(room)) return;
+    const delay =
+      this.options.botDelayMs <= 0
+        ? 0
+        : Math.max(this.options.botDelayMs, this.animationLeft(room) + PACE.botThinkMs);
     const timer = setTimeout(() => {
       this.botTimers.delete(room.code);
       this.playBot(room.code);
-    }, this.options.botDelayMs);
+    }, delay);
     this.botTimers.set(room.code, timer);
   }
 
@@ -680,6 +710,7 @@ export class RoomManager {
     this.botTimers.delete(room.code);
     this.clearTurnClock(room.code);
     this.lastStatuses.delete(room.code);
+    this.animationEnds.delete(room.code);
     for (const player of room.players) {
       const session = player.sessionToken ? this.sessions.get(player.sessionToken) : undefined;
       if (session?.roomCode === room.code) session.roomCode = null;

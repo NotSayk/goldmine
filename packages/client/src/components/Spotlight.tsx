@@ -1,11 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import type { PlayerView } from '@pepite/engine';
 import type { DwarfLook } from '@pepite/shared';
+import { PACE } from '@pepite/shared/pacing';
 import { CardBack, ExitActionIcon, ExtractionCardArt } from '../assets/Cards';
 import { DragonHead, Flame } from '../assets/Dragon';
 import { DwarfToken } from '../assets/DwarfToken';
 import { IconSkip, IconSkull, IconSparkle } from '../assets/Icons';
 import {
+  COIN_FLIP_MS,
   FLIP_AT,
   FLY_MS,
   REVEAL_AT,
@@ -18,9 +20,9 @@ import { reducedMotion } from '../preferences';
 import { client } from '../store';
 import { Card3D, type CardFinish } from './Card3D';
 
-const FLIP_MS = 260;
+const FLIP_MS = PACE.flipMs;
 /** Départ de la carte vers la pile ou la défausse, avant la fin de la séquence. */
-const LEAVE_MS = 440;
+const LEAVE_MS = 650;
 
 type Layout = 'card' | 'banner' | 'dramatic';
 
@@ -136,7 +138,7 @@ function StagedCard({
             { transform: 'translateY(-24px) scale(0.85)', opacity: 0 },
             { transform: 'none', opacity: 1 },
           ],
-          { duration: s(260), easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' },
+          { duration: s(380), easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' },
         ),
       );
     }
@@ -317,7 +319,7 @@ function CardVisual({
             style={
               {
                 '--coin-end': visual.side === 'tails' ? '1980deg' : '1800deg',
-                '--coin-dur': `${Math.round(1700 / speed)}ms`,
+                '--coin-dur': `${Math.round(COIN_FLIP_MS / speed)}ms`,
               } as CSSProperties
             }
           >

@@ -36,10 +36,10 @@ describe('journal en français', () => {
       goldLost: 4,
     } as const;
     expect(describeEvent(caught, viewFor(state, 'a'))).toBe(
-      'Braisard vous rattrape : votre or est perdu (4 pépites).',
+      'Dragobert vous rattrape : votre or est perdu (4 pépites).',
     );
     expect(describeEvent(caught, viewFor(state, 'b'))).toBe(
-      'Braisard rattrape Alice : son or est perdu (4 pépites).',
+      'Dragobert rattrape Alice : son or est perdu (4 pépites).',
     );
     const drawn = {
       type: 'CardDrawn',
@@ -49,10 +49,10 @@ describe('journal en français', () => {
       gold: 2,
     } as const;
     expect(describeEvent(drawn, viewFor(state, 'a'))).toBe(
-      'Vous creusez : Filon profond (+2 pépites).',
+      'Vous creusez : Un dragon aux œufs d’or (+2 pépites).',
     );
     expect(describeEvent(drawn, viewFor(state, 'b'))).toBe(
-      'Alice creuse : Filon profond (+2 pépites).',
+      'Alice creuse : Un dragon aux œufs d’or (+2 pépites).',
     );
   });
 });

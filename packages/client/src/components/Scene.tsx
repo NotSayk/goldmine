@@ -113,14 +113,7 @@ function MineBackdrop() {
             <stop offset="1" stopColor="#400a05" stopOpacity="0" />
           </radialGradient>
           <filter id="mine-heat-haze" x="-5%" y="-5%" width="110%" height="110%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.012 0.06" numOctaves="2" seed="4">
-              <animate
-                attributeName="baseFrequency"
-                dur="4s"
-                values="0.012 0.06;0.016 0.08;0.012 0.06"
-                repeatCount="indefinite"
-              />
-            </feTurbulence>
+            <feTurbulence type="fractalNoise" baseFrequency="0.012 0.06" numOctaves="2" seed="4" />
             <feDisplacementMap
               in="SourceGraphic"
               scale="14"
@@ -156,22 +149,17 @@ function MineBackdrop() {
             <stop offset="0.5" stopColor="#7a4e26" />
             <stop offset="1" stopColor="#3a2410" />
           </linearGradient>
-          <radialGradient id="mine-crystal-glow">
-            <stop offset="0" stopColor="#7ae3ff" stopOpacity="0.55" />
-            <stop offset="1" stopColor="#7ae3ff" stopOpacity="0" />
-          </radialGradient>
         </defs>
         {/* Étais */}
         <rect x="4" y="20" width="22" height="380" fill="url(#mine-wood)" />
         {/* Cristaux qui luisent */}
-        <g className="crystal-cluster">
-          <circle className="crystal-glow" cx="62" cy="372" r="70" fill="url(#mine-crystal-glow)" />
+        <g>
           <path d="M30 400 L42 338 L56 400 Z" fill="#5ccbe6" />
           <path d="M50 400 L68 318 L84 400 Z" fill="#8fe9ff" />
           <path d="M76 400 L88 352 L100 400 Z" fill="#4bb5d1" />
           <path d="M68 318 L74 360 L62 360 Z" fill="#e6fbff" opacity="0.7" />
         </g>
-        <g className="crystal-cluster crystal-cluster--late">
+        <g>
           <circle
             className="crystal-glow"
             cx="330"
@@ -194,23 +182,7 @@ function MineBackdrop() {
             <stop offset="0" stopColor="#8a5a2c" />
             <stop offset="1" stopColor="#3e2814" />
           </linearGradient>
-          <linearGradient id="mine-shaft" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#ffd98a" stopOpacity="0.22" />
-            <stop offset="1" stopColor="#ffd98a" stopOpacity="0" />
-          </linearGradient>
-          <radialGradient id="mine-lantern">
-            <stop offset="0" stopColor="#ffe3a0" stopOpacity="0.9" />
-            <stop offset="0.3" stopColor="#ffb547" stopOpacity="0.35" />
-            <stop offset="1" stopColor="#ffb547" stopOpacity="0" />
-          </radialGradient>
         </defs>
-        {/* Faisceaux de la lanterne */}
-        <path className="light-shaft" d="M70 52 L300 400 L120 400 Z" fill="url(#mine-shaft)" />
-        <path
-          className="light-shaft light-shaft--2"
-          d="M70 52 L470 400 L340 400 Z"
-          fill="url(#mine-shaft)"
-        />
         {/* Poutre et stalactites */}
         <rect x="0" y="0" width="640" height="16" fill="url(#mine-beam)" />
         <path
@@ -219,8 +191,46 @@ function MineBackdrop() {
         />
         {/* Lanterne suspendue */}
         <path d="M70 16 V34" stroke="#2a2f3a" strokeWidth="2" />
-        <circle className="lantern-glow" cx="70" cy="46" r="64" fill="url(#mine-lantern)" />
         <path d="M62 36 H78 L76 56 H64 Z" fill="#ffcf6b" stroke="#2a1a08" strokeWidth="2" />
+      </svg>
+
+      {/*
+        Lueurs dans des calques à part : seule leur opacité varie, ce que le
+        navigateur anime sans redessiner le décor.
+      */}
+      <svg
+        className="backdrop__layer backdrop__mid backdrop__glow backdrop__glow--crystals"
+        viewBox="0 0 640 400"
+        preserveAspectRatio="xMinYMax slice"
+      >
+        <defs>
+          <radialGradient id="mine-crystal-glow">
+            <stop offset="0" stopColor="#7ae3ff" stopOpacity="0.55" />
+            <stop offset="1" stopColor="#7ae3ff" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <circle cx="62" cy="372" r="70" fill="url(#mine-crystal-glow)" />
+        <circle cx="330" cy="388" r="54" fill="url(#mine-crystal-glow)" />
+      </svg>
+      <svg
+        className="backdrop__layer backdrop__near backdrop__glow backdrop__glow--lantern"
+        viewBox="0 0 640 400"
+        preserveAspectRatio="xMinYMin slice"
+      >
+        <defs>
+          <linearGradient id="mine-shaft" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#ffd98a" stopOpacity="0.2" />
+            <stop offset="1" stopColor="#ffd98a" stopOpacity="0" />
+          </linearGradient>
+          <radialGradient id="mine-lantern">
+            <stop offset="0" stopColor="#ffe3a0" stopOpacity="0.9" />
+            <stop offset="0.3" stopColor="#ffb547" stopOpacity="0.35" />
+            <stop offset="1" stopColor="#ffb547" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <path d="M70 52 L300 400 L120 400 Z" fill="url(#mine-shaft)" />
+        <path d="M70 52 L470 400 L340 400 Z" fill="url(#mine-shaft)" />
+        <circle cx="70" cy="46" r="64" fill="url(#mine-lantern)" />
       </svg>
     </div>
   );

@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, type CSSProperties, type RefObject } from 'react';
 import type { DwarfView, PlayerView, TrackCard } from '@pepite/engine';
 import { BRANDING } from '@pepite/shared/branding';
+import { PACE } from '@pepite/shared/pacing';
 import { Flame } from '../assets/Dragon';
 import { DwarfToken, type DwarfMood } from '../assets/DwarfToken';
 import { TrackCardArt } from '../assets/Cards';
@@ -10,7 +11,7 @@ import { reducedMotion } from '../preferences';
 import { Card3D } from './Card3D';
 
 const COLUMNS = 9;
-const HOP_MS = 320;
+const HOP_MS = PACE.hopMs;
 
 interface Spot {
   /** En pourcentage de la piste. */
@@ -32,13 +33,13 @@ function spotStyle(spot: Spot): CSSProperties {
 function cardLabel(card: TrackCard, index: number): string {
   switch (card.kind) {
     case 'exit':
-      return 'Sortie';
+      return 'Sortie de la mine';
     case 'dragon':
-      return `Dragon ${BRANDING.dragonName}`;
+      return `Carte ${BRANDING.dragonName}`;
     case 'wagon':
-      return card.burned ? `Wagon brûlé (carte ${index})` : `Wagon (carte ${index})`;
+      return card.burned ? `Wagon, face rouge (carte ${index})` : `Wagon (carte ${index})`;
     case 'mine':
-      return card.burned ? `Galerie brûlée (carte ${index})` : `Galerie (carte ${index})`;
+      return card.burned ? `Mine, face rouge (carte ${index})` : `Mine (carte ${index})`;
   }
 }
 

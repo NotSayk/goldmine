@@ -1,4 +1,5 @@
 import type { PlayerView } from '@pepite/engine';
+import { BRANDING } from '@pepite/shared/branding';
 import { IconPickaxe, IconRun } from '../assets/Icons';
 import { EXTRACTION_LABELS, plural, reasonText } from '../i18n/fr';
 import { client } from '../store';
@@ -35,7 +36,7 @@ export function ActionBar({
           {top
             ? `${EXTRACTION_LABELS[top].name} : ${EXTRACTION_LABELS[top].effect}`
             : view.extraction.count > 0
-              ? 'Carte cachée : de l’or… et peut-être un pas vers la Sortie ou vers le dragon'
+              ? `Carte cachée : de l’or… et peut-être 1 carte vers la Sortie ou vers ${BRANDING.dragonName}`
               : 'Pioche vide'}
         </span>
       </button>
@@ -50,7 +51,7 @@ export function ActionBar({
           <IconRun size={22} /> Fuir
         </span>
         <span className="action-btn__sub">
-          Carte Exit cachée : avancer, échanger ou garder un trésor
+          Carte Exit cachée : avancer, échanger ou garder un Bonus d’or
         </span>
       </button>
       <p className="actions__note" id="action-note" aria-live="polite">

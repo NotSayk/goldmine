@@ -105,7 +105,7 @@ export function Players({
                   </span>
                 )}
                 {player.pile.bonusCount > 0 && (
-                  <span className="stat" title="Trésors cachés (+3 chacun à la sortie)">
+                  <span className="stat" title="Bonus d’or (+3 chacun à la sortie)">
                     <IconChest size={16} /> {player.pile.bonusCount}
                   </span>
                 )}

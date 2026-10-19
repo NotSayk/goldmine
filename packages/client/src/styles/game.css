@@ -86,8 +86,17 @@
   color: var(--gold-text);
   box-shadow:
     0 0 0 1px rgba(242, 182, 50, 0.4),
-    0 0 26px rgba(242, 182, 50, 0.25),
     var(--bevel);
+}
+
+/* Halo qui respire : seule l'opacité d'un calque varie. */
+.turn-banner--you::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: 0 0 34px rgba(242, 182, 50, 0.45);
+  pointer-events: none;
   animation: glow 2.2s ease-in-out infinite;
 }
 
@@ -98,11 +107,12 @@
 }
 
 @keyframes glow {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
   50% {
-    box-shadow:
-      0 0 0 1px rgba(242, 182, 50, 0.6),
-      0 0 38px rgba(242, 182, 50, 0.4),
-      var(--bevel);
+    opacity: 1;
   }
 }
 
@@ -156,7 +166,7 @@
   left: calc(var(--i) * 100% / 9);
   width: calc(100% / 9);
   padding: 0 2px;
-  transition: left 650ms var(--ease-in-out);
+  transition: left 900ms var(--ease-in-out);
 }
 
 .track-card__face {
@@ -302,10 +312,9 @@ button.disc--target {
   }
 }
 
-/* Repos : respiration, clignement des yeux, lampe qui vacille. */
-.token__figure {
-  transform-box: view-box;
-  transform-origin: 20px 39px;
+/* Repos : respiration (animation composée du jeton entier) et clignement des yeux. */
+.disc .token {
+  transform-origin: 50% 95%;
   animation: breathe 2.8s ease-in-out infinite;
 }
 
@@ -315,11 +324,7 @@ button.disc--target {
   animation: blink 4.6s ease-in-out infinite;
 }
 
-.token__lamp {
-  animation: lamp-blink 2.4s ease-in-out infinite;
-}
-
-.disc:nth-of-type(2n) .token__figure {
+.disc:nth-of-type(2n) .token {
   animation-delay: -1.3s;
 }
 
@@ -343,6 +348,7 @@ button.disc--target {
 }
 
 .disc--dead .token {
+  animation: none;
   filter: grayscale(1) brightness(0.4) sepia(0.45);
   transform: rotate(-24deg) translateY(6%);
   transition:
@@ -378,9 +384,8 @@ button.disc--target {
   pointer-events: none;
 }
 
-:root[data-quality='low'] .token__figure,
-:root[data-quality='low'] .token__eye,
-:root[data-quality='low'] .token__lamp {
+:root[data-quality='low'] .disc--idle .token,
+:root[data-quality='low'] .token__eye {
   animation: none;
 }
 
@@ -398,16 +403,6 @@ button.disc--target {
   }
   97% {
     scale: 1 0.1;
-  }
-}
-
-@keyframes lamp-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.75;
   }
 }
 
@@ -581,8 +576,7 @@ button.disc--target {
   padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
   margin: 0 -4px;
   border-radius: var(--radius);
-  background: rgba(14, 19, 30, 0.92);
-  backdrop-filter: blur(8px);
+  background: rgba(14, 19, 30, 0.97);
   border: 1px solid var(--border);
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45);
 }
@@ -649,7 +643,7 @@ button.disc--target {
 
 .action-btn--exit {
   border-color: #0b3640;
-  background: linear-gradient(180deg, #49c3d8 0%, #1f7b8c 55%, #145564 100%);
+  background: linear-gradient(180deg, #1f7484 0%, #1a6574 55%, #124b57 100%);
   color: #f2fbff;
   box-shadow:
     0 4px 0 #0b3640,
@@ -1249,12 +1243,12 @@ button.disc--target {
 
 /* Distribution de la piste en cascade, à chaque manche. */
 .track-card .card3d {
-  animation: deal 560ms var(--ease-out) calc(160ms + var(--i) * 75ms) both;
+  animation: deal 720ms var(--ease-out) calc(200ms + var(--i) * 120ms) both;
 }
 
 /* Galerie brûlée : elle se retourne côté rouge juste après le passage des flammes. */
 .track-card[data-burned='true'] .card3d {
-  animation: burn-flip 760ms var(--ease-out) 260ms both;
+  animation: burn-flip 1000ms var(--ease-out) 450ms both;
 }
 
 @keyframes deal {

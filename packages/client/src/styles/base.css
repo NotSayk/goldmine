@@ -18,6 +18,21 @@ body {
   font-family: var(--font);
   font-size: 16px;
   line-height: 1.45;
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/*
+ * Fond de page fixe sur son propre calque (plutôt que background-attachment:
+ * fixed, qui force à tout redessiner pendant le défilement).
+ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background:
     radial-gradient(900px 520px at 50% -160px, rgba(242, 182, 50, 0.1), transparent 70%),
     radial-gradient(
@@ -26,12 +41,9 @@ body {
       transparent 70%
     ),
     var(--rock-noise), linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 60%);
-  background-attachment: fixed;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-:root[data-theme='contrast'] body {
+:root[data-theme='contrast'] body::before {
   background: #000;
 }
 

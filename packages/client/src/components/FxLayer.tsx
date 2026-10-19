@@ -20,7 +20,7 @@ function shake(strength: number): void {
     });
   }
   frames.push({ transform: 'none' });
-  scene.animate(frames, { duration: 380 + strength * 90, easing: 'ease-out' });
+  scene.animate(frames, { duration: 480 + strength * 110, easing: 'ease-out' });
 }
 
 /** Travelling : la caméra s'approche du dragon, puis revient. */
@@ -67,30 +67,31 @@ function transient(
   animation.oncancel = () => element.remove();
 }
 
-/** Souffle de flammes qui balaie les galeries que le dragon vient de brûler. */
+/** Souffle de flammes qui balaie les cartes Mine que le dragon vient de retourner. */
 function flameSweep(layer: HTMLElement, from: number, to: number): void {
   const a = trackCard(from)?.getBoundingClientRect();
   const b = trackCard(to)?.getBoundingClientRect();
   if (!a || !b) return;
-  const left = Math.min(a.left, b.left) - a.width * 0.3;
-  const right = Math.max(a.right, b.right) + a.width * 0.1;
+  // Le jet part de la gueule du dragon (à droite) et balaie la piste vers la Sortie.
+  const right = Math.max(a.right, b.right);
+  const left = Math.min(a.left, b.left) - a.width * 1.2;
   transient(
     layer,
     'fx-flame',
-    { left, top: a.top - a.height * 0.25, width: right - left, height: a.height * 1.3 },
+    { left, top: a.top + a.height * 0.15, width: right - left, height: a.height * 0.7 },
     [
-      { opacity: 0, transform: 'translateX(35%) scaleY(0.3)' },
-      { opacity: 1, transform: 'translateX(5%) scaleY(1.1)', offset: 0.3 },
-      { opacity: 0.9, transform: 'translateX(-6%) scaleY(0.95)', offset: 0.7 },
-      { opacity: 0, transform: 'translateX(-14%) scaleY(0.5)' },
+      { opacity: 0, transform: 'scaleX(0.05) scaleY(0.6)' },
+      { opacity: 1, transform: 'scaleX(0.7) scaleY(1)', offset: 0.25 },
+      { opacity: 1, transform: 'scaleX(1) scaleY(1.1)', offset: 0.55 },
+      { opacity: 0, transform: 'scaleX(1.05) scaleY(0.5) translateX(-6%)' },
     ],
-    { duration: 900, easing: 'ease-out' },
+    { duration: 1300, easing: 'cubic-bezier(.2,.7,.3,1)' },
   );
 }
 
 /** Faisceaux de lumière du jour qui jaillissent de la Sortie. */
 function daylight(layer: HTMLElement, x: number, y: number): void {
-  const size = Math.min(window.innerWidth, 420);
+  const size = Math.min(window.innerWidth * 0.8, 300);
   transient(
     layer,
     'fx-daylight',
@@ -100,7 +101,7 @@ function daylight(layer: HTMLElement, x: number, y: number): void {
       { opacity: 1, transform: 'scale(1) rotate(20deg)', offset: 0.35 },
       { opacity: 0, transform: 'scale(1.25) rotate(45deg)' },
     ],
-    { duration: 1500, easing: 'ease-out' },
+    { duration: 2000, easing: 'ease-out' },
   );
 }
 

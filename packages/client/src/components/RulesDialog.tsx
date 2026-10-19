@@ -9,7 +9,7 @@ import { Modal } from './Modal';
 const EXTRACTION_ORDER: ExtractionKind[] = ['redDoor', 'blueDoor', 'noDoor'];
 const EXIT_ORDER: ExitActionKind[] = ['step', 'doubleStep', 'allTogether', 'swap', 'goldBonus'];
 
-/** Aide au jeu : résumé des règles, rédigé pour cette version. */
+/** Aide au jeu : résumé des règles, avec les noms des cartes du livret. */
 export function RulesDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Modal open={open} title="Comment jouer" onClose={onClose}>
@@ -17,8 +17,8 @@ export function RulesDialog({ open, onClose }: { open: boolean; onClose: () => v
         <p>
           Chaque joueur guide un nain dans une mine. Tout le monde part du <strong>Wagon</strong>,
           au milieu de la piste. À gauche, la <strong>Sortie</strong> ; à droite, le dragon{' '}
-          <strong>{BRANDING.dragonName}</strong>, qui avance vers la Sortie en brûlant les galeries.
-          La partie dure <strong>3 manches</strong>.
+          <strong>{BRANDING.dragonName}</strong>, qui avance vers la Sortie en retournant les cartes
+          Mine sur leur face rouge. La partie dure <strong>3 manches</strong>.
         </p>
         <h3>À votre tour : creuser ou fuir</h3>
         <ul>
@@ -49,11 +49,11 @@ export function RulesDialog({ open, onClose }: { open: boolean; onClose: () => v
           <DragonHead size={40} />
           <span>
             Après chaque carte creusée, la carte suivante de la pioche est retournée si c’est un
-            dragon : {BRANDING.dragonName} avance d’une carte, la galerie dépassée devient rouge et
-            les nains qui s’y trouvaient sont éliminés, avec leur or. Leur pion reste, grisé, sur la
-            galerie brûlée. Plusieurs dragons à la suite le font avancer plusieurs fois. S’il arrive
-            juste devant la Sortie, la manche s’arrête aussitôt. Un nain collé au dragon ne peut pas
-            avancer vers lui (il prend quand même l’or).
+            dragon : {BRANDING.dragonName} avance d’une carte, la carte Mine dépassée est retournée
+            sur sa face rouge et les nains qui s’y trouvaient sont éliminés, avec leur or. Leur pion
+            reste, noirci, sur la carte retournée. Plusieurs dragons à la suite le font avancer
+            plusieurs fois. S’il arrive juste devant la Sortie, la manche s’arrête aussitôt. Un nain
+            collé au dragon ne peut pas avancer vers lui (il prend quand même l’or).
           </span>
         </p>
         <h3>Cartes Exit</h3>

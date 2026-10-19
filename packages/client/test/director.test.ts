@@ -122,19 +122,19 @@ describe('réalisateur', () => {
     expect(dropped).toHaveLength(2);
   });
 
-  it('accélère quand la file s’allonge et quand c’est au joueur, sans dépasser le plafond', () => {
+  it('garde le même rythme pour tous les coups, n’accélère que si la file déborde', () => {
+    const many = (n: number) => Array.from({ length: n }, () => sequence());
     const calm = setup();
-    calm.director.enqueue([sequence()]);
+    calm.director.enqueue(many(3));
     const busy = setup();
-    busy.director.enqueue([sequence(), sequence(), sequence(), sequence(), sequence()]);
-    const urgent = setup();
-    urgent.director.setUrgent(true);
-    urgent.director.setBaseSpeed(1.6);
-    urgent.director.enqueue([sequence(), sequence(), sequence(), sequence(), sequence()]);
+    busy.director.enqueue(many(5));
+    const flooded = setup();
+    flooded.director.setBaseSpeed(1.5);
+    flooded.director.enqueue(many(8));
     expect(calm.speeds[0]).toBe(1);
-    expect(busy.speeds[0]).toBe(2);
-    expect(urgent.speeds[0]).toBe(3);
-    expect(busy.director.snapshot().durationMs).toBe(500);
+    expect(busy.speeds[0]).toBe(1.25);
+    expect(busy.director.snapshot().durationMs).toBe(800);
+    expect(flooded.speeds[0]).toBe(2.2);
   });
 });
 

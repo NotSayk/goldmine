@@ -23,6 +23,8 @@ export interface ServerOptions {
   maxConnectionsPerIp: number;
   /** Temps pour jouer un tour (joueurs humains), 0 pour désactiver. */
   turnTimeMs: number;
+  /** Bots et chrono attendent la fin des animations du coup précédent. */
+  paceAnimations: boolean;
   rateLimit: { burst: number; perSecond: number };
   logger: boolean;
   store?: RoomStore;
@@ -35,13 +37,14 @@ export const DEFAULT_OPTIONS: ServerOptions = {
   host: '0.0.0.0',
   staticDir: null,
   graceMs: 30_000,
-  // Laisse le temps de voir chaque coup des bots au premier plan.
+  // Pause minimale avant chaque coup d'un bot (il attend aussi la fin des animations).
   botDelayMs: 1800,
   idleRoomTtlMs: 30 * 60_000,
   sweepIntervalMs: 1_000,
   heartbeatMs: 30_000,
   maxConnectionsPerIp: 20,
   turnTimeMs: 45_000,
+  paceAnimations: true,
   rateLimit: { burst: 30, perSecond: 15 },
   logger: false,
 };

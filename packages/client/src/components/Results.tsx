@@ -10,8 +10,8 @@ import { useLooks } from '../looks';
 import { reducedMotion } from '../preferences';
 
 /** Écart entre deux révélations, et pause avant le premier (ralenti). */
-const STEP_MS = 520;
-const SUSPENSE_MS = 650;
+const STEP_MS = 800;
+const SUSPENSE_MS = 1000;
 
 /** Délai de révélation d'une ligne : du dernier au premier, le premier après une pause. */
 function revealDelay(index: number, count: number): number {
@@ -64,7 +64,7 @@ export function RoundResultTable({ view, result }: { view: PlayerView; result: R
                 Or
               </th>
               <th scope="col" className="num">
-                Trésors
+                Bonus d’or
               </th>
               <th scope="col" className="num">
                 Total
@@ -249,7 +249,7 @@ export function FinalStandings({
               Or
             </th>
             <th scope="col" className="num">
-              Trésors
+              Bonus d’or
             </th>
             <th scope="col" className="num">
               <BigNugget size={16} label="Grosses pépites" />

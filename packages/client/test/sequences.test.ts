@@ -7,6 +7,7 @@ import {
   buildSequences as buildHighlights,
   type Cue,
 } from '../src/director/sequences';
+import { PACE } from '@pepite/shared/pacing';
 
 const { state } = createGame(
   {
@@ -32,7 +33,7 @@ describe('séquences du réalisateur', () => {
     expect(highlight).toMatchObject({
       dwarfId: 0,
       title: 'Alice creuse',
-      name: 'Galerie de sortie',
+      name: 'Il est l’or, monseignor !',
       visual: { kind: 'extraction', card: 'blueDoor' },
       extra: ['Alice atteint la Sortie (place 1).'],
       tone: 'success',
@@ -56,13 +57,13 @@ describe('séquences du réalisateur', () => {
     const highlights = buildHighlights(events, viewFor(state, 'a'));
     expect(highlights.map((h) => h.visual.kind)).toEqual(['extraction', 'dragon', 'eliminated']);
     expect(highlights[1]).toMatchObject({
-      title: 'Dragon révélé : Braisard avance de 2 cartes !',
+      title: 'Dragon révélé : Dragobert avance de 2 cartes !',
       visual: { kind: 'dragon', steps: 2 },
       tone: 'danger',
     });
     expect(highlights[2]).toMatchObject({
       title: 'Le nain de Bruno est éliminé !',
-      name: 'Rattrapé par Braisard sur la carte 7',
+      name: 'Rattrapé par Dragobert sur la carte 7',
       detail: '5 pépites perdues !',
       dramatic: true,
     });
@@ -79,7 +80,7 @@ describe('séquences du réalisateur', () => {
     ];
     expect(buildHighlights(played, viewFor(state, 'a'))[0]).toMatchObject({
       title: 'Bruno joue',
-      name: 'Deux pas',
+      name: 'Double pas',
       visual: { kind: 'exit', actions: ['doubleStep'], chosen: 'doubleStep' },
     });
     const pendingOwn: GameEvent[] = [
@@ -126,7 +127,7 @@ describe('séquences du réalisateur', () => {
     }));
     const [dragon] = buildHighlights(events, viewFor(state, 'a'));
     expect(dragon?.visual).toEqual({ kind: 'dragon', steps: 5 });
-    expect(dragon?.duration).toBeLessThanOrEqual(3200);
+    expect(dragon?.duration).toBeLessThanOrEqual(PACE.dragonMaxMs);
     const shakes = (dragon?.cues ?? []).flatMap((c) => (c.type === 'shake' ? [c.strength] : []));
     expect(shakes.length).toBe(5);
     expect(Math.max(...shakes)).toBeLessThanOrEqual(3);
@@ -188,8 +189,8 @@ describe('temps écoulé : pile ou face', () => {
     );
     expect(highlight.visual).toEqual({
       kind: 'coin',
-      heads: 'Un pas',
-      tails: 'Trésor caché',
+      heads: 'Petit pas',
+      tails: 'Bonus d’or',
       side: 'tails',
     });
   });

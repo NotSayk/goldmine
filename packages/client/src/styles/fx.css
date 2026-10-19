@@ -64,25 +64,17 @@
   filter: url(#mine-heat-haze);
 }
 
-.crystal-glow {
+.backdrop__glow--crystals {
   animation: crystal-pulse 3.4s ease-in-out infinite;
 }
 
-.crystal-cluster--late .crystal-glow {
-  animation-delay: -1.7s;
-}
-
-.lantern-glow {
+.backdrop__glow--lantern {
   animation: lantern-flicker 3s ease-in-out infinite;
 }
 
-.light-shaft {
-  mix-blend-mode: screen;
-  animation: shaft 8s ease-in-out infinite alternate;
-}
-
-.light-shaft--2 {
-  animation-delay: -4s;
+/* Air chaud : la distorsion est fixe, c'est le calque qui ondule (animation composée). */
+:root[data-quality='high']:not([data-motion='reduced']) .backdrop__heat {
+  animation: haze-wobble 2.6s ease-in-out infinite alternate;
 }
 
 .scene__particles {
@@ -133,11 +125,10 @@
   pointer-events: none;
   background: radial-gradient(
     circle,
-    rgba(255, 228, 160, 0.5) 0%,
-    rgba(255, 200, 110, 0.18) 35%,
+    rgba(255, 228, 160, 0.34) 0%,
+    rgba(255, 200, 110, 0.12) 35%,
     transparent 68%
   );
-  mix-blend-mode: screen;
   transition:
     left 600ms var(--ease-in-out),
     top 600ms var(--ease-in-out);
@@ -145,14 +136,13 @@
 }
 
 :root[data-quality='low'] .track__lamp {
-  mix-blend-mode: normal;
-  background: radial-gradient(circle, rgba(255, 228, 160, 0.22) 0%, transparent 60%);
+  animation: none;
 }
 
 @keyframes crystal-pulse {
   0%,
   100% {
-    opacity: 0.45;
+    opacity: 0.4;
   }
   50% {
     opacity: 1;
@@ -175,12 +165,12 @@
   }
 }
 
-@keyframes shaft {
+@keyframes haze-wobble {
   from {
-    opacity: 0.55;
+    scale: 1 1;
   }
   to {
-    opacity: 1;
+    scale: 1.015 1.03;
   }
 }
 
@@ -197,33 +187,43 @@
 /* ---------- Effets de cinématique ---------- */
 
 .fx-flame {
-  transform-origin: 100% 60%;
+  transform-origin: 100% 50%;
   mix-blend-mode: screen;
+  filter: blur(0.6px);
 }
 
+/* Jet de flammes : trois langues étirées, plus chaudes près de la gueule du dragon. */
 .fx-flame span {
   position: absolute;
-  inset: 0;
-  border-radius: 55% 45% 40% 60% / 60% 55% 45% 40%;
-  background: radial-gradient(
-    ellipse at 88% 58%,
-    #fff6c8 0%,
-    #ffd34d 16%,
+  left: 0;
+  right: 0;
+  top: 22%;
+  height: 56%;
+  border-radius: 50% 45% 45% 50% / 50%;
+  background: linear-gradient(
+    to left,
+    rgba(255, 250, 220, 0.95) 0%,
+    #ffd34d 14%,
     #ff8a1f 38%,
-    rgba(232, 85, 31, 0.65) 58%,
-    transparent 74%
+    rgba(232, 85, 31, 0.75) 66%,
+    transparent 100%
   );
-  animation: flame-lick 150ms ease-in-out infinite alternate;
+  animation: flame-lick 140ms ease-in-out infinite alternate;
 }
 
 .fx-flame span:nth-child(2) {
-  inset: 12% 6% 8% 22%;
-  opacity: 0.85;
+  top: 8%;
+  height: 40%;
+  left: 18%;
+  opacity: 0.8;
   animation-delay: -70ms;
 }
 
 .fx-flame span:nth-child(3) {
-  inset: 28% 0 4% 46%;
+  top: 52%;
+  height: 38%;
+  left: 30%;
+  opacity: 0.7;
   animation-duration: 110ms;
 }
 
