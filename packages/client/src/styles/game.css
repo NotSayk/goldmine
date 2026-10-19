@@ -1903,7 +1903,7 @@ button.disc--target:focus-visible {
 
 .emote-bar__button:disabled {
   opacity: 0.45;
-  cursor: wait;
+  cursor: default;
 }
 
 .player-card,
