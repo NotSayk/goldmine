@@ -163,6 +163,9 @@ function playCue(cue: Cue): void {
     case 'flameSweep':
       emitFx({ type: 'flameSweep', from: cue.from, to: cue.to });
       return;
+    case 'dragonRoar':
+      emitFx({ type: 'dragonRoar', duration: cue.duration });
+      return;
     case 'reveal':
       return;
   }

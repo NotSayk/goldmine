@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, type CSSProperties, type RefObject } from 'rea
 import type { DwarfView, PlayerView, TrackCard } from '@pepite/engine';
 import { BRANDING } from '@pepite/shared/branding';
 import { PACE } from '@pepite/shared/pacing';
-import { Flame } from '../assets/Dragon';
+import { DragonCardArt, Flame, type DragonGaze } from '../assets/Dragon';
 import { DwarfToken, type DwarfMood } from '../assets/DwarfToken';
 import { ExitActionIcon, TrackCardArt } from '../assets/Cards';
 import { dwarfLook, dwarfName } from '../i18n/fr';
@@ -14,6 +14,8 @@ const COLUMNS = 9;
 /** Silhouette d'un nain (tête et corps du jeton) : emplacement de l'échelle de la Sortie. */
 const SLOT_SILHOUETTE = 'M13.44 16.48 A7.2 7.2 0 1 1 26.56 16.48 A12.4 12.4 0 1 1 13.44 16.48 Z';
 const HOP_MS = PACE.hopMs;
+/** Position du dragon à partir de laquelle il enrage (1 ou 2 cartes avant la Sortie). */
+const DRAGON_ENRAGED_AT = 3;
 
 interface Spot {
   /** En pourcentage de la piste. */
@@ -206,6 +208,10 @@ export function Track({
   // La lampe frontale éclaire le nain dont c'est le tour.
   const active = view.currentDwarfId === null ? undefined : view.dwarves[view.currentDwarfId];
   const lamp = view.phase === 'playing' && active?.status === 'mine' ? spotOf(active) : null;
+  // Dragobert suit des yeux le nain qui joue, et enrage à 1 ou 2 cartes de la Sortie.
+  const gaze: DragonGaze =
+    lamp && active ? (view.dragonPosition - active.position <= 2 ? 'near' : 'far') : null;
+  const enraged = view.phase === 'playing' && view.dragonPosition <= DRAGON_ENRAGED_AT;
 
   return (
     <div
@@ -227,7 +233,11 @@ export function Track({
         >
           <Card3D finish={card.kind === 'dragon' ? 'dragon' : 'plain'}>
             <div className="track-card__face" role="img" aria-label={cardLabel(card, index)}>
-              <TrackCardArt kind={card.kind} burned={card.burned} />
+              {card.kind === 'dragon' ? (
+                <DragonCardArt enraged={enraged} gaze={gaze} />
+              ) : (
+                <TrackCardArt kind={card.kind} burned={card.burned} />
+              )}
               {card.kind !== 'exit' && card.kind !== 'dragon' && (
                 <span className="track-card__index" aria-hidden>
                   {index}

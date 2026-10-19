@@ -109,6 +109,11 @@ describe('séquences du réalisateur', () => {
     });
     expect(draw?.cues.some((cue) => cue.type === 'burst')).toBe(false);
     expect(dragon?.visual).toEqual({ kind: 'dragon', steps: 1 });
+    // Dragobert rugit sur la piste dès que la carte est lisible, puis quand il avance.
+    const roar = (cues: readonly Cue[] | undefined): Cue | undefined =>
+      cues?.find((cue) => cue.type === 'dragonRoar');
+    expect(roar(draw?.cues)?.at).toBeGreaterThanOrEqual(REVEAL_AT);
+    expect(roar(dragon?.cues)?.at).toBe(0);
   });
 
   it('marque la même pause de suspense pour une bonne ou une mauvaise carte', () => {

@@ -1,9 +1,8 @@
 import { Fragment, type ReactNode } from 'react';
 import type { ExitActionKind, ExtractionKind, TrackCardKind } from '@pepite/engine';
 import { EXIT_LABELS } from '../i18n/fr';
-import { DragonHead } from './Dragon';
-
-const STROKE = '#14161c';
+import { Nugget, Rails, STROKE, Sparkle } from './cardParts';
+import { DragonBust, DragonCardArt } from './Dragon';
 
 /**
  * Dégradés, motifs et découpes partagés par toutes les cartes, déclarés une
@@ -151,6 +150,34 @@ export function CardDefs() {
         >
           <rect width="4" height="8" fill="#ffffff" fillOpacity="0.06" />
         </pattern>
+        {/* Dragobert */}
+        <linearGradient id="dragon-scale" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#9a6ad2" />
+          <stop offset="0.55" stopColor="#6a3fa3" />
+          <stop offset="1" stopColor="#3f2268" />
+        </linearGradient>
+        <linearGradient id="dragon-belly" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffd796" />
+          <stop offset="1" stopColor="#e2853a" />
+        </linearGradient>
+        <linearGradient id="dragon-wing" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#5a3290" />
+          <stop offset="1" stopColor="#2a1446" />
+        </linearGradient>
+        <linearGradient id="dragon-horn" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#fff7de" />
+          <stop offset="1" stopColor="#c8b48a" />
+        </linearGradient>
+        <linearGradient id="dragon-lair" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#3b1636" />
+          <stop offset="0.6" stopColor="#261028" />
+          <stop offset="1" stopColor="#160712" />
+        </linearGradient>
+        <radialGradient id="dragon-fire">
+          <stop offset="0" stopColor="#ffcf6b" stopOpacity="0.95" />
+          <stop offset="0.35" stopColor="#ff6a1f" stopOpacity="0.6" />
+          <stop offset="1" stopColor="#6a0e05" stopOpacity="0" />
+        </radialGradient>
         <linearGradient id="card-silver" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#f4fbff" />
           <stop offset="0.5" stopColor="#b6d0d9" />
@@ -158,49 +185,6 @@ export function CardDefs() {
         </linearGradient>
       </defs>
     </svg>
-  );
-}
-
-/** Pépite placée dans les illustrations de cartes. */
-function Nugget({ x, y, scale = 1 }: { x: number; y: number; scale?: number }) {
-  return (
-    <g transform={`translate(${x} ${y}) scale(${scale})`}>
-      <path
-        d="M-7 4 L-5 -3 L0 -6 L6 -4 L8 2 L5 6 L-3 7 Z"
-        fill="url(#card-gold)"
-        stroke="var(--gold-ink)"
-        strokeWidth="1.4"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M-3.5 -2 L0 -4 L3 -3"
-        fill="none"
-        stroke="#fffbe6"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-    </g>
-  );
-}
-
-/** Éclat de lumière à quatre branches. */
-function Sparkle({ x, y, size = 1 }: { x: number; y: number; size?: number }) {
-  return (
-    <path
-      transform={`translate(${x} ${y}) scale(${size})`}
-      d="M0 -3 Q0.4 -0.4 3 0 Q0.4 0.4 0 3 Q-0.4 0.4 -3 0 Q-0.4 -0.4 0 -3 Z"
-      fill="#fff8d6"
-    />
-  );
-}
-
-/** Fond plein : le cadre de la carte est dessiné en CSS (taille variable selon l'écran). */
-function Frame({ fill, children }: { fill: string; children: ReactNode }) {
-  return (
-    <>
-      <rect x="0" y="0" width="60" height="84" fill={fill} />
-      {children}
-    </>
   );
 }
 
@@ -313,53 +297,6 @@ function Gallery({ burned }: { burned: boolean }) {
       )}
       <Rails burned={burned} />
     </>
-  );
-}
-
-/** Traverses tous les 7,5 : leur motif se poursuit d'une carte à la suivante. */
-const SLEEPERS = Array.from({ length: 10 }, (_, k) => -3.75 + 7.5 * k);
-
-/**
- * Voie ferrée vue de côté, à la même hauteur sur toutes les cartes : posées
- * côte à côte sur la piste, les cartes forment une seule voie continue, du
- * dragon jusqu'au butoir de la Sortie. Elle déborde du cadre 60 × 84 pour
- * toucher les bords de la carte.
- */
-function Rails({
-  burned = false,
-  from = -10,
-  ballast,
-}: {
-  burned?: boolean;
-  /** Début de la voie (à gauche) ; elle va toujours jusqu'au bord droit. */
-  from?: number;
-  ballast?: string;
-}) {
-  return (
-    <g>
-      <path
-        d={`M${from} 71.6 H70 V78 H${from} Z`}
-        fill={ballast ?? (burned ? '#2a0f08' : '#141c2b')}
-        fillOpacity="0.6"
-      />
-      <path d={`M${from} 78 H70`} stroke={STROKE} strokeWidth="1" />
-      {SLEEPERS.filter((x) => x > from + 1).map((x) => (
-        <rect
-          key={x}
-          x={x - 1.4}
-          y="71.2"
-          width="2.8"
-          height="6.4"
-          rx="0.5"
-          fill={burned ? '#24130d' : 'url(#card-wood-h)'}
-          stroke={STROKE}
-          strokeWidth="0.5"
-        />
-      ))}
-      <path d={`M${from} 72.8 H70`} stroke={burned ? '#4a3430' : '#7d8597'} strokeWidth="1.2" />
-      <path d={`M${from} 76.2 H70`} stroke={burned ? '#5c403a' : '#b3bccd'} strokeWidth="1.6" />
-      <path d={`M${from} 77.1 H70`} stroke="#000" strokeOpacity="0.45" strokeWidth="0.6" />
-    </g>
   );
 }
 
@@ -512,6 +449,7 @@ function ExitScene() {
  * Carte de la piste : Mine (recto bleu / verso rouge), Wagon, Sortie ou dragon.
  */
 export function TrackCardArt({ kind, burned }: { kind: TrackCardKind; burned: boolean }) {
+  if (kind === 'dragon') return <DragonCardArt />;
   return (
     <svg viewBox="0 0 60 84" preserveAspectRatio="xMidYMid meet" aria-hidden className="card-art">
       {kind === 'exit' && <ExitScene />}
@@ -526,14 +464,6 @@ export function TrackCardArt({ kind, burned }: { kind: TrackCardKind; burned: bo
           <Gallery burned={burned} />
           <Cart burned={burned} />
         </>
-      )}
-      {kind === 'dragon' && (
-        <Frame fill="var(--dragon-card)">
-          <path d="M4 80 Q30 60 56 80 Z" fill="var(--mine-red-deep)" opacity="0.5" />
-          <g transform="translate(2 16)">
-            <DragonHead size={56} />
-          </g>
-        </Frame>
       )}
     </svg>
   );
@@ -622,7 +552,17 @@ function MoveArrow({ direction }: { direction: 'left' | 'right' }) {
  * Carte Extraction sur parchemin : une scène de mine encadrée (portes,
  * rochers, déplacement du nain en haut) et, sur une plaque, l'or gagné.
  */
-function ExtractionFace({ gold, children }: { gold: 1 | 2; children: ReactNode }) {
+function ExtractionFace({
+  plaque,
+  fire = false,
+  children,
+}: {
+  /** Contenu de la plaque du bas : l'or gagné. */
+  plaque: ReactNode;
+  /** Scène éclairée par le feu du dragon plutôt que par une lanterne. */
+  fire?: boolean;
+  children: ReactNode;
+}) {
   return (
     <>
       <rect
@@ -655,7 +595,11 @@ function ExtractionFace({ gold, children }: { gold: 1 | 2; children: ReactNode }
       />
       <rect x="8" y="8" width="44" height="48" rx="3" fill="url(#card-scene)" />
       <g clipPath="url(#card-extraction-window)">
-        <rect x="8" y="8" width="44" height="48" fill="url(#card-scene-glow)" />
+        {fire ? (
+          <ellipse cx="34" cy="50" rx="34" ry="30" fill="url(#dragon-fire)" />
+        ) : (
+          <rect x="8" y="8" width="44" height="48" fill="url(#card-scene-glow)" />
+        )}
         <path d="M8 52 H52 V56 H8 Z" fill="#05080f" fillOpacity="0.55" />
         {children}
       </g>
@@ -684,24 +628,52 @@ function ExtractionFace({ gold, children }: { gold: 1 | 2; children: ReactNode }
         strokeWidth="0.6"
         strokeLinecap="round"
       />
-      {gold === 2 ? (
-        <>
-          <Nugget x={23.5} y={68.6} scale={0.72} />
-          <Nugget x={36.5} y={68.6} scale={0.72} />
-        </>
-      ) : (
-        <Nugget x={30} y={68.6} scale={0.78} />
-      )}
+      {plaque}
     </>
   );
 }
+
+const ONE_NUGGET = <Nugget x={30} y={68.6} scale={0.78} />;
+const TWO_NUGGETS = (
+  <>
+    <Nugget x={23.5} y={68.6} scale={0.72} />
+    <Nugget x={36.5} y={68.6} scale={0.72} />
+  </>
+);
+
+/** Plaque de la carte Dragon : pas d'or (pépite barrée), mais le feu du dragon. */
+const NO_GOLD_FIRE = (
+  <>
+    <Nugget x={23.5} y={68.6} scale={0.62} />
+    <path
+      d="M19.6 64.6 L27.4 72.6 M27.4 64.6 L19.6 72.6"
+      stroke={STROKE}
+      strokeWidth="3"
+      strokeLinecap="round"
+    />
+    <path
+      d="M19.6 64.6 L27.4 72.6 M27.4 64.6 L19.6 72.6"
+      stroke="#ff5a3c"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+    />
+    <path
+      d="M36.5 74 Q31.6 72.4 32.6 68.2 Q33.8 69.8 35 69.2 Q34 65.4 37.4 62.6 Q37.6 66 39.8 67.2 Q42 71.6 36.5 74 Z"
+      fill="var(--flame-outer)"
+      stroke={STROKE}
+      strokeWidth="0.7"
+      strokeLinejoin="round"
+    />
+    <path d="M36.6 73 Q34.6 72 35.4 70.2 Q36.6 71 37.2 70 Q38.8 72 36.6 73 Z" fill="#ffd36b" />
+  </>
+);
 
 /** Face d'une carte Extraction (pioche visible). */
 export function ExtractionCardArt({ kind }: { kind: ExtractionKind }) {
   return (
     <svg viewBox="0 0 60 84" aria-hidden className="card-art">
       {kind === 'redDoor' && (
-        <ExtractionFace gold={2}>
+        <ExtractionFace plaque={TWO_NUGGETS}>
           <Boulder x={10} />
           <Door color="red" x={30} />
           <MoveArrow direction="right" />
@@ -709,7 +681,7 @@ export function ExtractionCardArt({ kind }: { kind: ExtractionKind }) {
         </ExtractionFace>
       )}
       {kind === 'blueDoor' && (
-        <ExtractionFace gold={1}>
+        <ExtractionFace plaque={ONE_NUGGET}>
           <Door color="blue" x={10} />
           <Boulder x={31} />
           <MoveArrow direction="left" />
@@ -717,7 +689,7 @@ export function ExtractionCardArt({ kind }: { kind: ExtractionKind }) {
         </ExtractionFace>
       )}
       {kind === 'noDoor' && (
-        <ExtractionFace gold={1}>
+        <ExtractionFace plaque={ONE_NUGGET}>
           {/* Front de taille veiné d'or : le nain reste sur place */}
           <path
             d="M8 56 V35 L14 28.5 L22 30.5 L29 26 L37 29.5 L45 26.5 L52 32 V56 Z"
@@ -751,38 +723,20 @@ export function ExtractionCardArt({ kind }: { kind: ExtractionKind }) {
         </ExtractionFace>
       )}
       {kind === 'dragon' && (
-        <>
-          <rect
-            x="1.5"
-            y="1.5"
-            width="57"
-            height="81"
-            rx="6"
-            fill="var(--parchment)"
-            stroke={STROKE}
-            strokeWidth="2"
-          />
-          {/* Cadre gaufré et rivets */}
-          <rect
-            x="5"
-            y="5"
-            width="50"
-            height="74"
-            rx="3.5"
-            fill="none"
-            stroke="var(--parchment-deep)"
-            strokeWidth="1.2"
+        <ExtractionFace plaque={NO_GOLD_FIRE} fire>
+          {/* Dragobert crache son feu vers la Sortie */}
+          <path
+            d="M17.4 36.6 Q12 30.6 8.6 34 Q4.6 33.4 7.4 37.6 Q3.6 40.2 8.4 42 Q12.4 44 17.4 40.8 Z"
+            fill="var(--flame-outer)"
           />
           <path
-            d="M8 8 h0.01 M52 8 h0.01 M8 76 h0.01 M52 76 h0.01"
-            stroke="var(--gold-deep)"
-            strokeWidth="2.6"
-            strokeLinecap="round"
+            d="M17 37.6 Q13 34.6 11 36.4 Q9.4 37.8 11.2 39.6 Q13.6 41.2 17 39.8 Z"
+            fill="#ffd36b"
           />
-          <g transform="translate(4 8)">
-            <DragonHead size={52} />
+          <g transform="translate(14.5 16) scale(0.95)">
+            <DragonBust />
           </g>
-        </>
+        </ExtractionFace>
       )}
     </svg>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { useEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import type { Ambient } from '../fx/ambient';
 import { effectiveQuality, reducedMotion, usePreferences, type Quality } from '../preferences';
 
@@ -71,8 +71,36 @@ function AmbientLayer({ quality, heat }: { quality: Exclude<Quality, 'low'>; hea
   return <canvas ref={canvasRef} className="scene__particles" aria-hidden />;
 }
 
-/** Décor de la mine en trois plans (dessins originaux), purement décoratif. */
-function MineBackdrop() {
+/** Fissures de lave, de la plus proche du dragon à la plus proche de la Sortie. */
+const CRACKS = [
+  'M600 330 L572 342 L560 362 L536 370 L528 392 M560 362 L548 352',
+  'M600 250 L584 268 L590 292 L570 310 L574 334 M590 292 L604 300',
+  'M548 400 L540 380 L512 372 L500 352 L476 348 M512 372 L506 390',
+  'M470 400 L462 384 L436 380 L426 362 L398 358 L390 340 M436 380 L430 398',
+  'M380 400 L372 386 L344 382 L336 366 L310 364 M344 382 L352 396',
+  'M300 400 L292 384 L266 380 L258 366 L230 362 L222 348',
+];
+
+const clamp01 = (value: number): number => Math.max(0, Math.min(1, value));
+
+/**
+ * Décor de la mine (dessins originaux), purement décoratif. Le froid de la
+ * Sortie s'oppose au feu du dragon : à gauche, des rayons de jour qui pâlissent
+ * quand le dragon approche ; à droite, le feu vacille, des fissures de lave
+ * gagnent vers la gauche à chaque carte brûlée et un mur de flammes se lève
+ * quand la chaleur est forte. Une lanterne se balance, une flaque de lumière
+ * suit le nain dont c'est le tour, et le feu du dragon illumine tout le décor
+ * quand il avance (`.backdrop__flash`, animé par les effets).
+ */
+function MineBackdrop({
+  heat,
+  focus,
+  yourTurn,
+}: {
+  heat: number;
+  focus: number | null;
+  yourTurn: boolean;
+}) {
   return (
     <div className="backdrop" aria-hidden>
       <svg
@@ -138,6 +166,56 @@ function MineBackdrop() {
         </g>
       </svg>
 
+      <div className="backdrop__daylight">
+        <span />
+        <span />
+        <span />
+      </div>
+
+      <div className="backdrop__fire">
+        <span className="backdrop__fire-a" />
+        <span className="backdrop__fire-b" />
+      </div>
+
+      <svg className="backdrop__cracks" viewBox="0 0 600 400" preserveAspectRatio="xMaxYMax slice">
+        {CRACKS.map((d, i) => (
+          <g
+            key={d}
+            className="backdrop__crack"
+            style={{ opacity: heat >= (i + 1) / 7 - 0.01 ? 1 : 0 }}
+          >
+            <path className="backdrop__crack-glow" d={d} />
+            <path className="backdrop__crack-core" d={d} />
+          </g>
+        ))}
+      </svg>
+
+      <div className="backdrop__flames" style={{ opacity: clamp01((heat - 0.45) / 0.4) }}>
+        <div>
+          <svg viewBox="0 0 300 160" preserveAspectRatio="none">
+            <path
+              d="M0 160 Q20 110 34 128 Q40 80 62 112 Q74 60 92 104 Q110 70 124 112 Q140 50 160 100 Q178 64 192 110 Q210 40 230 96 Q248 70 262 112 Q280 60 300 90 V160 Z"
+              fill="#c2321a"
+              fillOpacity="0.75"
+            />
+          </svg>
+        </div>
+        <div>
+          <svg viewBox="0 0 300 160" preserveAspectRatio="none">
+            <path
+              d="M0 160 Q24 128 40 140 Q52 104 72 132 Q88 96 104 128 Q122 100 140 134 Q158 88 176 126 Q194 104 210 136 Q228 92 248 128 Q266 110 282 138 Q292 120 300 128 V160 Z"
+              fill="#ff8a2a"
+              fillOpacity="0.85"
+            />
+            <path
+              d="M0 160 Q30 146 48 152 Q66 132 86 150 Q108 136 126 152 Q148 128 168 150 Q190 138 210 154 Q232 132 254 150 Q276 140 300 150 V160 Z"
+              fill="#ffd36b"
+              fillOpacity="0.9"
+            />
+          </svg>
+        </div>
+      </div>
+
       <svg
         className="backdrop__layer backdrop__mid"
         viewBox="0 0 640 400"
@@ -189,9 +267,6 @@ function MineBackdrop() {
           d="M24 16 L34 44 L44 16 Z M130 16 L136 34 L144 16 Z M196 16 L206 52 L218 16 Z M290 16 L296 32 L304 16 Z M380 16 L390 46 L400 16 Z M470 16 L476 36 L484 16 Z M548 16 L558 50 L568 16 Z M610 16 L616 34 L624 16 Z"
           fill="#0c111b"
         />
-        {/* Lanterne suspendue */}
-        <path d="M70 16 V34" stroke="#2a2f3a" strokeWidth="2" />
-        <path d="M62 36 H78 L76 56 H64 Z" fill="#ffcf6b" stroke="#2a1a08" strokeWidth="2" />
       </svg>
 
       {/*
@@ -212,26 +287,31 @@ function MineBackdrop() {
         <circle cx="62" cy="372" r="70" fill="url(#mine-crystal-glow)" />
         <circle cx="330" cy="388" r="54" fill="url(#mine-crystal-glow)" />
       </svg>
-      <svg
-        className="backdrop__layer backdrop__near backdrop__glow backdrop__glow--lantern"
-        viewBox="0 0 640 400"
-        preserveAspectRatio="xMinYMin slice"
-      >
-        <defs>
-          <linearGradient id="mine-shaft" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#ffd98a" stopOpacity="0.2" />
-            <stop offset="1" stopColor="#ffd98a" stopOpacity="0" />
-          </linearGradient>
-          <radialGradient id="mine-lantern">
-            <stop offset="0" stopColor="#ffe3a0" stopOpacity="0.9" />
-            <stop offset="0.3" stopColor="#ffb547" stopOpacity="0.35" />
-            <stop offset="1" stopColor="#ffb547" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <path d="M70 52 L300 400 L120 400 Z" fill="url(#mine-shaft)" />
-        <path d="M70 52 L470 400 L340 400 Z" fill="url(#mine-shaft)" />
-        <circle cx="70" cy="46" r="64" fill="url(#mine-lantern)" />
-      </svg>
+
+      {/* Lanterne au bout de sa chaîne : elle se balance, son halo et son faisceau avec elle. */}
+      <div className="backdrop__lantern">
+        <div className="backdrop__lantern-swing">
+          <span className="backdrop__lantern-cone" />
+          <span className="backdrop__lantern-halo" />
+          <svg viewBox="0 0 24 64" width="24" height="64">
+            <path d="M12 0 V38" stroke="#2a2f3a" strokeWidth="2" strokeDasharray="3 1.6" />
+            <path d="M7 38 H17 L15.6 41 H8.4 Z" fill="#3a2a18" stroke="#1a1108" strokeWidth="1" />
+            <path d="M8 41 H16 L15 56 H9 Z" fill="#ffcf6b" stroke="#2a1a08" strokeWidth="1.6" />
+            <path d="M12 41 V56" stroke="#2a1a08" strokeWidth="1" />
+            <path d="M8.4 56 H15.6 L14 59 H10 Z" fill="#3a2a18" stroke="#1a1108" strokeWidth="1" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Flaque de lumière derrière le nain dont c'est le tour. */}
+      <div
+        className={`backdrop__spot${yourTurn ? ' backdrop__spot--yours' : ''}`}
+        style={
+          { '--focus': focus ?? 0.5, opacity: focus === null ? 0 : undefined } as CSSProperties
+        }
+      />
+      <div className="backdrop__dim" style={{ opacity: focus !== null && !yourTurn ? 1 : 0 }} />
+      <div className="backdrop__flash" />
     </div>
   );
 }
@@ -242,11 +322,17 @@ function MineBackdrop() {
  */
 export function Scene({
   heat,
+  focus = null,
+  yourTurn = false,
   children,
   table,
   overlay,
 }: {
   heat: number;
+  /** Position du nain dont c'est le tour, de 0 (Sortie) à 1 (dragon) ; `null` hors partie. */
+  focus?: number | null;
+  /** C'est à vous : la lumière est plus chaude et le décor ne s'assombrit pas. */
+  yourTurn?: boolean;
   /** La piste : la caméra s'en approche et elle tremble avec la mine. */
   children: ReactNode;
   /** Les pioches, posées sous la piste : ni zoom ni tremblement, on peut toujours les viser. */
@@ -262,7 +348,7 @@ export function Scene({
   return (
     <section ref={ref} className="board scene" aria-label="Table de jeu">
       <div className="scene__back" aria-hidden>
-        <MineBackdrop />
+        <MineBackdrop heat={heat} focus={focus} yourTurn={yourTurn} />
         {!still && quality !== 'low' && <AmbientLayer quality={quality} heat={heat} />}
       </div>
       <div className="scene__viewport">

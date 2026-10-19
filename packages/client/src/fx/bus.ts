@@ -11,7 +11,8 @@ export type FxEvent =
       readonly target?: Anchor;
     }
   | { readonly type: 'camera'; readonly position: number; readonly duration: number }
-  | { readonly type: 'flameSweep'; readonly from: number; readonly to: number };
+  | { readonly type: 'flameSweep'; readonly from: number; readonly to: number }
+  | { readonly type: 'dragonRoar'; readonly duration: number };
 
 type Listener = (event: FxEvent) => void;
 const listeners = new Set<Listener>();

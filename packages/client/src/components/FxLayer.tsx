@@ -97,6 +97,32 @@ function flameSweep(layer: HTMLElement, to: number): void {
   );
 }
 
+/** Le feu du dragon illumine un instant tout le décor de la mine. */
+function fireFlash(): void {
+  document
+    .querySelector('.backdrop__flash')
+    ?.animate([{ opacity: 0 }, { opacity: 1, offset: 0.18 }, { opacity: 0 }], {
+      duration: 1100,
+      easing: 'ease-out',
+    });
+}
+
+/**
+ * Dragobert rugit : gueule ouverte, yeux en feu, il se cabre et crache de la
+ * fumée (classe posée sur sa carte le temps du rugissement).
+ */
+let roarTimer: ReturnType<typeof setTimeout> | undefined;
+function roar(duration: number): void {
+  const dragon = document.querySelector('.dragobert');
+  if (!dragon) return;
+  // Retirer puis remettre la classe relance l'animation s'il rugissait déjà.
+  dragon.classList.remove('dragobert--roar');
+  void dragon.getBoundingClientRect();
+  dragon.classList.add('dragobert--roar');
+  clearTimeout(roarTimer);
+  roarTimer = setTimeout(() => dragon.classList.remove('dragobert--roar'), duration);
+}
+
 /** Faisceaux de lumière du jour qui jaillissent de la Sortie. */
 function daylight(layer: HTMLElement, x: number, y: number): void {
   const size = Math.min(window.innerWidth * 0.8, 300);
@@ -149,6 +175,10 @@ export function FxLayer() {
           return;
         case 'flameSweep':
           flameSweep(layer, event.to);
+          fireFlash();
+          return;
+        case 'dragonRoar':
+          roar(event.duration);
           return;
         case 'burst': {
           const point = anchorPoint(event.anchor);

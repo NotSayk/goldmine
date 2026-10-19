@@ -196,6 +196,13 @@ export function GameScreen({
       : [];
   const idle = sequence === null && queued === 0;
   const heat = heatOf(boardView.dragonPosition);
+  // La lumière du décor suit le nain dont c'est le tour (sur la table montrée).
+  const activeDwarf =
+    boardView.currentDwarfId === null ? undefined : boardView.dwarves[boardView.currentDwarfId];
+  const focus =
+    boardView.phase === 'playing' && activeDwarf?.status === 'mine'
+      ? (activeDwarf.position + 0.5) / 9
+      : null;
 
   // La chaleur teinte toute la page ; la qualité « auto » suit la fluidité.
   useEffect(() => {
@@ -229,6 +236,8 @@ export function GameScreen({
           <TurnBanner view={view} room={room} turnTimer={turnTimer} />
           <Scene
             heat={heat}
+            focus={focus}
+            yourTurn={view.legal.yourTurn}
             overlay={
               sequence && (
                 <Spotlight

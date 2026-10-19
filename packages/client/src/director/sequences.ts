@@ -90,6 +90,8 @@ export type Cue =
       readonly duration: number;
     }
   | { readonly at: number; readonly type: 'flameSweep'; readonly from: number; readonly to: number }
+  /** Dragobert rugit sur la piste : gueule ouverte, il se cabre et fume. */
+  | { readonly at: number; readonly type: 'dragonRoar'; readonly duration: number }
   | { readonly at: number; readonly type: 'vibrate'; readonly pattern: readonly number[] }
   /** Le plateau passe à la nouvelle vue (la carte vient d'être révélée). */
   | { readonly at: number; readonly type: 'reveal' };
@@ -229,6 +231,10 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
             flight: 'extraction',
             cues: [
               ...drawCues(),
+              // Une carte dragon : Dragobert, sur la piste, réagit avant d'avancer.
+              ...(dragon
+                ? ([{ at: REVEAL_AT + 150, type: 'dragonRoar', duration: 2400 }] satisfies Cue[])
+                : []),
               // Pas de pépites pour une carte dragon.
               ...(event.gold > 0
                 ? ([
@@ -391,6 +397,7 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
           cues: [
             { at: 0, type: 'reveal' },
             { at: 0, type: 'camera', position: event.to, duration: PACE.dragonMs - 500 },
+            { at: 0, type: 'dragonRoar', duration: PACE.dragonMs - 800 },
             { at: 0, type: 'sound', sound: 'roar' },
             { at: 120, type: 'shake', strength: 1 },
             { at: 150, type: 'flameSweep', from: event.from, to: event.to },
