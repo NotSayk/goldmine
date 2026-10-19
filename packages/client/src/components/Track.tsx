@@ -4,7 +4,7 @@ import { BRANDING } from '@pepite/shared/branding';
 import { PACE } from '@pepite/shared/pacing';
 import { Flame } from '../assets/Dragon';
 import { DwarfToken, type DwarfMood } from '../assets/DwarfToken';
-import { TrackCardArt } from '../assets/Cards';
+import { ExitActionIcon, TrackCardArt } from '../assets/Cards';
 import { dwarfLook, dwarfName } from '../i18n/fr';
 import { useLooks } from '../looks';
 import { reducedMotion } from '../preferences';
@@ -166,6 +166,9 @@ function TrackDwarf({
         title={`Échanger avec ${name}`}
       >
         {token}
+        <span className="disc__swap" aria-hidden>
+          <ExitActionIcon action="swap" size={12} />
+        </span>
       </button>
     );
   }

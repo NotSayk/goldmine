@@ -46,13 +46,21 @@
   z-index: 2;
 }
 
+/* La piste, rognée aux bords du plateau quand la caméra s'en approche. */
 .scene__viewport {
   position: relative;
   z-index: 1;
-  margin: -28px -12px -12px;
-  padding: 28px 12px 12px;
+  margin: -28px -12px 0;
+  padding: 28px 12px 10px;
   overflow: hidden;
-  border-radius: inherit;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+/* Les pioches restent immobiles : ni zoom, ni tremblement. */
+.scene__table {
+  position: relative;
+  z-index: 1;
+  margin-top: 2px;
 }
 
 /* Zone des pioches, juste sous la piste : le coup y est mis en scène sans cacher la piste. */

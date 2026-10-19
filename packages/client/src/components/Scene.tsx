@@ -243,10 +243,14 @@ function MineBackdrop() {
 export function Scene({
   heat,
   children,
+  table,
   overlay,
 }: {
   heat: number;
+  /** La piste : la caméra s'en approche et elle tremble avec la mine. */
   children: ReactNode;
+  /** Les pioches, posées sous la piste : ni zoom ni tremblement, on peut toujours les viser. */
+  table?: ReactNode;
   /** Coup mis en scène, posé sur la zone des pioches : la piste reste toujours visible. */
   overlay?: ReactNode;
 }) {
@@ -264,6 +268,7 @@ export function Scene({
       <div className="scene__viewport">
         <div className="scene__stage">{children}</div>
       </div>
+      {table && <div className="scene__table">{table}</div>}
       <div className="scene__front" aria-hidden>
         <div className="scene__vignette" />
       </div>

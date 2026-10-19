@@ -240,30 +240,32 @@ export function GameScreen({
                 />
               )
             }
+            table={
+              <Decks
+                view={boardView}
+                lastDrawn={lastDrawn}
+                draw={
+                  view.phase === 'playing' && !view.pending
+                    ? {
+                        extraction: view.legal.drawExtraction,
+                        exit: view.legal.drawExit,
+                        waiting,
+                        onDraw: (deck) =>
+                          client.send({
+                            type: 'action',
+                            action: { type: deck === 'extraction' ? 'drawExtraction' : 'drawExit' },
+                          }),
+                      }
+                    : undefined
+                }
+              />
+            }
           >
             <Track
               view={boardView}
               swapTargets={swapTargets}
               onSwap={(dwarfId) =>
                 client.send({ type: 'action', action: { type: 'chooseSwapTarget', dwarfId } })
-              }
-            />
-            <Decks
-              view={boardView}
-              lastDrawn={lastDrawn}
-              draw={
-                view.phase === 'playing' && !view.pending
-                  ? {
-                      extraction: view.legal.drawExtraction,
-                      exit: view.legal.drawExit,
-                      waiting,
-                      onDraw: (deck) =>
-                        client.send({
-                          type: 'action',
-                          action: { type: deck === 'extraction' ? 'drawExtraction' : 'drawExit' },
-                        }),
-                    }
-                  : undefined
               }
             />
           </Scene>

@@ -1,16 +1,15 @@
 import { useEffect, useRef } from 'react';
 import type { PlayerView } from '@pepite/engine';
 import { ExitActionIcon } from '../assets/Cards';
-import { DwarfToken } from '../assets/DwarfToken';
-import { EXIT_LABELS, dwarfLabel } from '../i18n/fr';
-import { useLooks } from '../looks';
+import { EXIT_LABELS } from '../i18n/fr';
 import { client } from '../store';
 import { TurnCountdown, type TurnTimer } from './TurnCountdown';
 
 /**
- * Choix demandé au joueur après une carte Exit (action à jouer ou nain à
- * échanger). Affiché à la place des boutons d'action, sans fenêtre : le
- * plateau reste visible, et les nains échangeables s'y touchent aussi.
+ * Choix demandé au joueur après une carte Exit, affiché sous le plateau, sans
+ * fenêtre. Pour une action à choisir : deux boutons. Pour un échange : pas de
+ * menu, on touche directement le nain voulu sur le plateau (ce sont des
+ * boutons, atteignables aussi au clavier).
  */
 export function ChoicePanel({
   view,
@@ -21,16 +20,19 @@ export function ChoicePanel({
   waiting: boolean;
   turnTimer: TurnTimer | null;
 }) {
-  const looks = useLooks();
   const ref = useRef<HTMLElement>(null);
   const pending = view.pending;
   const mine = pending !== null && pending.playerId === view.viewerId;
   const kind = mine ? pending.kind : null;
 
-  // Le focus va au premier choix possible, comme dans une fenêtre de dialogue.
+  // Le focus va au premier choix possible : bouton d'action, ou nain à échanger sur le plateau.
   useEffect(() => {
-    if (kind)
-      ref.current?.querySelector<HTMLButtonElement>('button.choice:not([disabled])')?.focus();
+    if (!kind) return;
+    const first =
+      kind === 'chooseSwapTarget'
+        ? document.querySelector<HTMLButtonElement>('button.disc--target')
+        : ref.current?.querySelector<HTMLButtonElement>('button.choice:not([disabled])');
+    first?.focus({ preventScroll: true });
   }, [kind]);
 
   if (!mine) return null;
@@ -40,7 +42,7 @@ export function ChoicePanel({
         <TurnCountdown timer={turnTimer} />
         <span role="status">
           {pending.kind === 'chooseSwapTarget'
-            ? 'Avec quel nain échanger votre place ? Touchez-le sur le plateau ou ci-dessous.'
+            ? 'Échange : touchez sur le plateau le nain avec lequel échanger votre place (ceux entourés en surbrillance).'
             : 'Votre carte Exit porte deux actions : choisissez-en une.'}
         </span>
       </p>
@@ -70,36 +72,6 @@ export function ChoicePanel({
               </span>
             </button>
           ))}
-        </div>
-      )}
-      {pending.kind === 'chooseSwapTarget' && (
-        <div className="choice-grid">
-          {pending.targets.map((id) => {
-            const dwarf = view.dwarves[id];
-            if (!dwarf) return null;
-            return (
-              <button
-                key={id}
-                type="button"
-                className="choice"
-                disabled={waiting}
-                onClick={() =>
-                  client.send({ type: 'action', action: { type: 'chooseSwapTarget', dwarfId: id } })
-                }
-              >
-                <span className="choice__icon">
-                  <DwarfToken color={dwarf.color} look={looks.get(dwarf.ownerId)} size={36} />
-                </span>
-                <span className="choice__title">{dwarfLabel(view, id)}</span>
-                <span className="choice__text">
-                  {dwarf.position === 4 ? 'Sur le Wagon' : `Sur la carte ${dwarf.position}`}
-                  {dwarf.position < (view.dwarves[pending.dwarfId]?.position ?? 0)
-                    ? ' — plus près de la Sortie que vous'
-                    : ''}
-                </span>
-              </button>
-            );
-          })}
         </div>
       )}
       <p className="actions__note">

@@ -119,6 +119,12 @@ export async function step(page) {
       await inline.first().click({ timeout: 1000 });
       return 'choice';
     }
+    // Échange : on touche le nain voulu directement sur le plateau.
+    const target = page.locator('button.disc--target');
+    if (await target.count()) {
+      await target.first().click({ timeout: 1000 });
+      return 'choice';
+    }
     const dialog = page.locator('dialog[open]');
     if (await dialog.count()) {
       const choice = dialog.locator('button.choice:not([disabled])');

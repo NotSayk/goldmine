@@ -7,10 +7,13 @@ function trackCard(position: number): Element | null {
   return document.querySelector(`[data-track-index="${position}"]`);
 }
 
-/** Tremblement de la table, plus fort à chaque pas d'une chaîne de dragons. */
+/**
+ * Tremblement de la mine (décor et piste), plus fort à chaque pas d'une
+ * chaîne de dragons. Les pioches ne bougent pas : on peut toujours les viser.
+ */
 function shake(strength: number): void {
-  const scene = document.querySelector<HTMLElement>('.scene');
-  if (!scene) return;
+  const targets = document.querySelectorAll<HTMLElement>('.scene__back, .scene__viewport');
+  if (targets.length === 0) return;
   const amplitude = 3 + strength * 3;
   const frames: Keyframe[] = [{ transform: 'none' }];
   for (let i = 0; i < 6; i++) {
@@ -20,7 +23,9 @@ function shake(strength: number): void {
     });
   }
   frames.push({ transform: 'none' });
-  scene.animate(frames, { duration: 480 + strength * 110, easing: 'ease-out' });
+  for (const target of targets) {
+    target.animate(frames, { duration: 480 + strength * 110, easing: 'ease-out' });
+  }
 }
 
 /** Travelling : la caméra s'approche du dragon, puis revient. */
