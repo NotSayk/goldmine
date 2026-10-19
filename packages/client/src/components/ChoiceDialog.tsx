@@ -4,9 +4,18 @@ import { DwarfDisc } from '../assets/DwarfDisc';
 import { EXIT_LABELS, dwarfLabel } from '../i18n/fr';
 import { client } from '../store';
 import { Modal } from './Modal';
+import { TurnCountdown, type TurnTimer } from './TurnCountdown';
 
 /** Choix demandé au joueur après une carte Exit : action à jouer ou nain à échanger. */
-export function ChoiceDialog({ view, waiting }: { view: PlayerView; waiting: boolean }) {
+export function ChoiceDialog({
+  view,
+  waiting,
+  turnTimer,
+}: {
+  view: PlayerView;
+  waiting: boolean;
+  turnTimer: TurnTimer | null;
+}) {
   const pending = view.pending;
   const mine = pending !== null && pending.playerId === view.viewerId;
   return (
@@ -16,7 +25,10 @@ export function ChoiceDialog({ view, waiting }: { view: PlayerView; waiting: boo
     >
       {pending?.kind === 'chooseExitAction' && (
         <div className="choice-grid">
-          <p className="muted">Votre carte Exit porte deux actions : choisissez-en une.</p>
+          <p className="muted choice-hint">
+            <TurnCountdown timer={turnTimer} />
+            Votre carte Exit porte deux actions : choisissez-en une, sinon pile ou face décide.
+          </p>
           {(pending.options ?? []).map((option) => (
             <button
               key={option.index}
@@ -45,6 +57,10 @@ export function ChoiceDialog({ view, waiting }: { view: PlayerView; waiting: boo
       )}
       {pending?.kind === 'chooseSwapTarget' && (
         <div className="choice-grid">
+          <p className="muted choice-hint">
+            <TurnCountdown timer={turnTimer} />
+            Sans choix avant la fin du temps, la cible est tirée au hasard.
+          </p>
           <p className="muted">
             Votre nain prend la place du nain choisi, et inversement. Seuls les nains encore dans la
             mine peuvent être choisis.

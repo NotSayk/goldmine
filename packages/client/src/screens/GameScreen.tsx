@@ -14,11 +14,20 @@ import { Spotlight } from '../components/Spotlight';
 import { FinalStandings, RoundResultTable } from '../components/Results';
 import { TopBar } from '../components/TopBar';
 import { Track } from '../components/Track';
+import { TurnCountdown, type TurnTimer } from '../components/TurnCountdown';
 import { dwarfLook, dwarfName } from '../i18n/fr';
 import type { Highlight } from '../spotlight';
 import { client, type Effect, type LastDrawn, type LogEntry } from '../store';
 
-function TurnBanner({ view, room }: { view: PlayerView; room: RoomView }) {
+function TurnBanner({
+  view,
+  room,
+  turnTimer,
+}: {
+  view: PlayerView;
+  room: RoomView;
+  turnTimer: TurnTimer | null;
+}) {
   if (view.phase !== 'playing') return null;
   const dwarf = view.currentDwarfId === null ? undefined : view.dwarves[view.currentDwarfId];
   const yours = view.legal.yourTurn;
@@ -35,17 +44,17 @@ function TurnBanner({ view, room }: { view: PlayerView; room: RoomView }) {
         : ' (choisit une action)';
   if (current?.botControlled || current?.isBot) text += ' — joue automatiquement';
   return (
-    <div
-      className={`turn-banner${yours ? ' turn-banner--you' : ''}`}
-      role="status"
-      aria-live="polite"
-    >
+    <div className={`turn-banner${yours ? ' turn-banner--you' : ''}`}>
       {dwarf && <DwarfDisc color={dwarf.color} size={30} />}
-      <span className="turn-banner__text">{text}</span>
+      {/* Seul le texte est annoncé : le compte à rebours changerait chaque seconde. */}
+      <span className="turn-banner__text" role="status" aria-live="polite">
+        {text}
+      </span>
       <span className="small muted">
         {BRANDING.dragonName} :{' '}
         {view.dragonPosition === 8 ? 'au fond' : `carte ${view.dragonPosition}`}
       </span>
+      <TurnCountdown timer={turnTimer} />
     </div>
   );
 }
@@ -137,6 +146,7 @@ export function GameScreen({
   highlights,
   highlightMs,
   lastDrawn,
+  turnTimer,
 }: {
   view: PlayerView;
   room: RoomView;
@@ -146,6 +156,7 @@ export function GameScreen({
   highlights: readonly Highlight[];
   highlightMs: number;
   lastDrawn: LastDrawn | null;
+  turnTimer: TurnTimer | null;
 }) {
   const [confirmLeave, setConfirmLeave] = useState(false);
   const isHost = room.hostId === view.viewerId;
@@ -176,7 +187,7 @@ export function GameScreen({
           <CardMemo view={view} />
         </div>
         <div className="game__center stack">
-          <TurnBanner view={view} room={room} />
+          <TurnBanner view={view} room={room} turnTimer={turnTimer} />
           <section className="board" aria-label="Table de jeu">
             <Track
               view={view}
@@ -195,7 +206,9 @@ export function GameScreen({
             idle={highlights.length === 0}
           />
           {view.phase === 'finished' && <FinalPanel view={view} isHost={isHost} />}
-          {view.phase === 'playing' && <ActionBar view={view} waiting={waiting} />}
+          {view.phase === 'playing' && (
+            <ActionBar view={view} waiting={waiting} turnTimer={turnTimer} />
+          )}
         </div>
         <aside className="game__side stack">
           <Players view={view} room={room} />
@@ -203,7 +216,7 @@ export function GameScreen({
         </aside>
       </main>
       <Spotlight highlight={highlight} durationMs={highlightMs} color={highlightColor} />
-      <ChoiceDialog view={view} waiting={waiting} />
+      <ChoiceDialog view={view} waiting={waiting} turnTimer={turnTimer} />
       <Modal open={confirmLeave} title="Quitter la partie ?" onClose={() => setConfirmLeave(false)}>
         <p>Un bot jouera à votre place jusqu’à la fin de la partie. Vous ne pourrez pas revenir.</p>
         <div className="row" style={{ justifyContent: 'flex-end' }}>

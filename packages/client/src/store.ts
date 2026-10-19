@@ -1,8 +1,13 @@
 import { useSyncExternalStore } from 'react';
 import type { ExtractionKind, GameEvent, PlayerView } from '@pepite/engine';
-import type { ClientMessage, RoomView, ServerMessage } from '@pepite/shared';
+import type { AutoPlay, ClientMessage, RoomView, ServerMessage } from '@pepite/shared';
 import { ERROR_MESSAGES, describeEvent, dwarfName } from './i18n/fr';
-import { buildHighlights, highlightDuration, type Highlight } from './spotlight';
+import {
+  buildAutoPlayHighlight,
+  buildHighlights,
+  highlightDuration,
+  type Highlight,
+} from './spotlight';
 
 export type ConnectionState = 'connecting' | 'open' | 'reconnecting';
 
@@ -49,6 +54,8 @@ export interface AppState {
   /** Durée d'affichage du coup en cours, en millisecondes. */
   readonly highlightMs: number;
   readonly lastDrawn: LastDrawn | null;
+  /** Chrono du tour en cours, en heure locale (`null` si pas de chrono). */
+  readonly turnTimer: { readonly deadline: number; readonly totalMs: number } | null;
 }
 
 const SESSION_KEY = 'pepite.session';
@@ -88,6 +95,7 @@ class GameClient {
     highlights: [],
     highlightMs: 0,
     lastDrawn: null,
+    turnTimer: null,
   };
   private highlightTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly listeners = new Set<() => void>();
@@ -155,7 +163,10 @@ class GameClient {
   private pumpHighlights(): void {
     if (this.highlightTimer || this.state.highlights.length === 0) return;
     const head = this.state.highlights[0];
-    const duration = highlightDuration(this.state.highlights.length, head?.dramatic);
+    const duration = highlightDuration(
+      this.state.highlights.length,
+      head?.dramatic === true || head?.slow === true,
+    );
     this.set({ highlightMs: duration });
     this.highlightTimer = setTimeout(() => {
       this.highlightTimer = null;
@@ -186,7 +197,14 @@ class GameClient {
           room: message.room,
           playerId: message.you,
           ...(message.room === null || message.room.status === 'lobby'
-            ? { view: null, log: [], effects: [], highlights: [], lastDrawn: null }
+            ? {
+                view: null,
+                log: [],
+                effects: [],
+                highlights: [],
+                lastDrawn: null,
+                turnTimer: null,
+              }
             : {}),
         });
         // Un lien d'invitation (?salon=CODE) reste dans l'adresse tant qu'on n'a pas rejoint.
@@ -194,7 +212,15 @@ class GameClient {
         break;
       }
       case 'game':
-        this.applyGame(message.view, message.events);
+        this.applyGame(message.view, message.events, message.autoPlay);
+        this.set({
+          turnTimer: message.turnTimer
+            ? {
+                deadline: Date.now() + message.turnTimer.remainingMs,
+                totalMs: message.turnTimer.totalMs,
+              }
+            : null,
+        });
         break;
       case 'error': {
         const notice = { id: nextId++, text: ERROR_MESSAGES[message.code] ?? message.message };
@@ -209,7 +235,7 @@ class GameClient {
     }
   }
 
-  private applyGame(view: PlayerView, events: readonly GameEvent[]): void {
+  private applyGame(view: PlayerView, events: readonly GameEvent[], autoPlay?: AutoPlay): void {
     const entries: LogEntry[] = [];
     const effects: Effect[] = [];
     let lastDrawn = this.state.lastDrawn;
@@ -236,7 +262,11 @@ class GameClient {
       waiting: false,
       log: [...this.state.log, ...entries].slice(-LOG_LIMIT),
       effects: [...this.state.effects, ...effects],
-      highlights: queueHighlights(this.state.highlights, buildHighlights(events, view)),
+      highlights: queueHighlights(this.state.highlights, [
+        // Temps écoulé : la pièce tourne d'abord, puis le coup joué d'office.
+        ...(autoPlay ? [buildAutoPlayHighlight(autoPlay, view)] : []),
+        ...buildHighlights(events, view),
+      ]),
       lastDrawn,
     });
     this.pumpHighlights();

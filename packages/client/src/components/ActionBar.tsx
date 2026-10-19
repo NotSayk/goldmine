@@ -1,8 +1,18 @@
 import type { PlayerView } from '@pepite/engine';
 import { EXTRACTION_LABELS, plural, reasonText } from '../i18n/fr';
 import { client } from '../store';
+import { useSecondsLeft, type TurnTimer } from './TurnCountdown';
 
-export function ActionBar({ view, waiting }: { view: PlayerView; waiting: boolean }) {
+export function ActionBar({
+  view,
+  waiting,
+  turnTimer,
+}: {
+  view: PlayerView;
+  waiting: boolean;
+  turnTimer: TurnTimer | null;
+}) {
+  const seconds = useSecondsLeft(turnTimer);
   const { drawExtraction, drawExit, yourTurn } = view.legal;
   const top = view.extraction.top;
   const me = view.players.find((p) => p.id === view.viewerId);
@@ -40,7 +50,9 @@ export function ActionBar({ view, waiting }: { view: PlayerView; waiting: boolea
       </button>
       <p className="actions__note" id="action-note" aria-live="polite">
         {yourTurn && !reason
-          ? `À vous ! Or en jeu : ${plural(gold, 'pépite')} (perdu si le dragon vous rattrape).`
+          ? seconds !== null && seconds <= 10
+            ? `Plus que ${plural(seconds, 'seconde')} : sinon, pile ou face entre Creuser et Fuir !`
+            : `À vous ! Or en jeu : ${plural(gold, 'pépite')} (perdu si le dragon vous rattrape).`
           : reason}
       </p>
     </section>

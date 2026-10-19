@@ -21,6 +21,8 @@ export interface ServerOptions {
   sweepIntervalMs: number;
   heartbeatMs: number;
   maxConnectionsPerIp: number;
+  /** Temps pour jouer un tour (joueurs humains), 0 pour désactiver. */
+  turnTimeMs: number;
   rateLimit: { burst: number; perSecond: number };
   logger: boolean;
   store?: RoomStore;
@@ -39,6 +41,7 @@ export const DEFAULT_OPTIONS: ServerOptions = {
   sweepIntervalMs: 1_000,
   heartbeatMs: 30_000,
   maxConnectionsPerIp: 20,
+  turnTimeMs: 45_000,
   rateLimit: { burst: 30, perSecond: 15 },
   logger: false,
 };

@@ -71,7 +71,7 @@ Les tests d'intégration inspectent tout le trafic reçu par chaque client simul
 
 Messages du client (validés par zod, 2 Kio maximum) : `hello`, `createRoom`, `joinRoom`, `leaveRoom`, `updateSettings`, `addBot`, `removePlayer`, `startGame`, `action`, `nextRound`, `replaceWithBot`, `skipPlayer`, `backToLobby`, `ping`.
 
-Messages du serveur : `welcome` (jeton de session), `room` (salon), `game` (vue + événements), `error` (code + message), `pong`.
+Messages du serveur : `welcome` (jeton de session), `room` (salon), `game` (vue + événements + chrono du tour, et `autoPlay` quand le serveur a joué d'office à pile ou face), `error` (code + message), `pong`.
 
 ## Sessions et reconnexion
 

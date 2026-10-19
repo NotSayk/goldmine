@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ErrorCode, GameEvent, PlayerId, PlayerView } from '@pepite/engine';
+import type { ErrorCode, ExitActionKind, GameEvent, PlayerId, PlayerView } from '@pepite/engine';
 
 export const ROOM_CODE_LENGTH = 5;
 /** Alphabet des codes de salon, sans caractères ambigus (0/O, 1/I). */
@@ -121,9 +121,53 @@ export type ServerErrorCode =
   | 'GRACE_NOT_EXPIRED'
   | 'NOT_PLAYERS_TURN';
 
+/** Côté de la pièce : pile = première option (Creuser), face = seconde (Fuir). */
+export type CoinSide = 'heads' | 'tails';
+
+/**
+ * Coup joué par le serveur quand le temps du tour est écoulé. `coin` vaut
+ * `null` quand une seule option était possible (pas de tirage).
+ */
+export type AutoPlay =
+  | {
+      readonly kind: 'draw';
+      readonly dwarfId: number;
+      readonly playerId: PlayerId;
+      readonly result: 'drawExtraction' | 'drawExit';
+      readonly coin: CoinSide | null;
+    }
+  | {
+      readonly kind: 'exitAction';
+      readonly dwarfId: number;
+      readonly playerId: PlayerId;
+      readonly options: readonly ExitActionKind[];
+      readonly result: ExitActionKind;
+      readonly coin: CoinSide | null;
+    }
+  | {
+      readonly kind: 'swapTarget';
+      readonly dwarfId: number;
+      readonly playerId: PlayerId;
+      readonly targetId: number;
+    };
+
+/** Temps restant pour jouer le tour en cours (joueurs humains uniquement). */
+export interface TurnTimerView {
+  readonly remainingMs: number;
+  readonly totalMs: number;
+}
+
 export type ServerMessage =
   | { readonly type: 'welcome'; readonly sessionToken: string; readonly playerId: PlayerId }
   | { readonly type: 'room'; readonly room: RoomView | null; readonly you: PlayerId }
-  | { readonly type: 'game'; readonly view: PlayerView; readonly events: readonly GameEvent[] }
+  | {
+      readonly type: 'game';
+      readonly view: PlayerView;
+      readonly events: readonly GameEvent[];
+      /** Chrono du tour en cours, `null` si c'est à un bot ou si le chrono est désactivé. */
+      readonly turnTimer: TurnTimerView | null;
+      /** Présent quand ce coup a été joué d'office (temps écoulé, pile ou face). */
+      readonly autoPlay?: AutoPlay;
+    }
   | { readonly type: 'error'; readonly code: ServerErrorCode; readonly message: string }
   | { readonly type: 'pong' };

@@ -18,6 +18,7 @@ const server = await startServer({
   staticDir: process.env.STATIC_DIR ?? resolve(here, '../../client/dist'),
   graceMs: numberFromEnv('GRACE_MS', DEFAULT_OPTIONS.graceMs),
   botDelayMs: numberFromEnv('BOT_DELAY_MS', DEFAULT_OPTIONS.botDelayMs),
+  turnTimeMs: numberFromEnv('TURN_TIME_MS', DEFAULT_OPTIONS.turnTimeMs),
   logger: process.env.LOG !== '0',
 });
 

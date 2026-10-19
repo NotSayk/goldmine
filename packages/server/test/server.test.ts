@@ -307,6 +307,62 @@ describe('déconnexion et reconnexion', () => {
   });
 });
 
+describe('chrono du tour', () => {
+  it('joue à pile ou face pour un joueur trop lent, et tout le monde le voit', async () => {
+    const fast = await startServer({ port: 0, host: '127.0.0.1', logger: false, turnTimeMs: 300 });
+    const host = await new TestClient(fast.url).connect();
+    const guest = await new TestClient(fast.url).connect();
+    clients.push(host, guest);
+    host.send({ type: 'createRoom', name: 'Lent' });
+    await waitUntil(() => host.room !== null);
+    guest.send({ type: 'joinRoom', code: host.room!.code, name: 'Patient' });
+    await waitUntil(() => host.room?.players.length === 2);
+    host.send({ type: 'updateSettings', firstPlayer: host.playerId! });
+    await waitUntil(() => host.room?.settings.firstPlayer === host.playerId);
+    host.send({ type: 'startGame' });
+    const started = await host.waitFor((m) => m.type === 'game');
+    if (started.type !== 'game') throw new Error('message inattendu');
+    expect(started.turnTimer?.totalMs).toBe(300);
+    expect(started.turnTimer!.remainingMs).toBeGreaterThan(0);
+    expect(started.turnTimer!.remainingMs).toBeLessThanOrEqual(300);
+    // Personne ne joue : le serveur tire à pile ou face pour l'hôte.
+    const [seenByHost, seenByGuest] = await Promise.all([
+      host.waitFor((m) => m.type === 'game' && m.autoPlay !== undefined, 3000),
+      guest.waitFor((m) => m.type === 'game' && m.autoPlay !== undefined, 3000),
+    ]);
+    for (const message of [seenByHost, seenByGuest]) {
+      if (message.type !== 'game' || !message.autoPlay) throw new Error('coup automatique attendu');
+      expect(message.autoPlay).toMatchObject({ kind: 'draw', playerId: host.playerId });
+      if (message.autoPlay.kind === 'draw') {
+        expect(message.autoPlay.coin).not.toBeNull();
+        expect(message.events[0]).toMatchObject({
+          type: 'CardDrawn',
+          deck: message.autoPlay.result === 'drawExtraction' ? 'extraction' : 'exit',
+        });
+      }
+    }
+    await fast.close();
+  });
+
+  it('ne chronomètre pas les bots', async () => {
+    const [host] = await lobby(1);
+    host!.send({ type: 'addBot' });
+    await waitUntil(() => host!.room?.players.length === 2);
+    host!.send({ type: 'updateSettings', firstPlayer: host!.room!.players[1]!.id });
+    await waitUntil(() => host!.room?.settings.firstPlayer !== 'random');
+    host!.send({ type: 'startGame' });
+    const first = await host!.waitFor((m) => m.type === 'game');
+    if (first.type !== 'game') throw new Error('message inattendu');
+    expect(first.view.currentPlayerId).not.toBe(host!.playerId);
+    expect(first.turnTimer).toBeNull();
+    const mine = await host!.waitFor(
+      (m) => m.type === 'game' && m.view.currentPlayerId === host!.playerId,
+    );
+    if (mine.type !== 'game') throw new Error('message inattendu');
+    expect(mine.turnTimer?.totalMs).toBe(45_000);
+  });
+});
+
 describe('HTTP', () => {
   it('sert le client, renvoie index.html pour les routes et 404 pour un fichier absent', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'pepite-client-'));

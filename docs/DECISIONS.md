@@ -53,6 +53,13 @@ Chaque cas est isolé dans une fonction nommée et documentée de [`packages/eng
 - Les résultats de manche (or de chaque nain sorti) sont révélés au décompte.
 - Le serveur mélange avec un générateur **HMAC-SHA256 à clé secrète** (déterministe, donc rejouable côté serveur, mais imprévisible pour un client qui observe les cartes révélées). Les tests et les simulations utilisent un générateur à graine (sfc32).
 
+**Temps de jeu** (demande du commanditaire, hors règles)
+
+- Chaque joueur humain a **45 secondes** par tour (`TURN_TIME_MS`, `0` pour désactiver). Le chrono est tenu par le serveur ; les clients affichent un compte à rebours.
+- Temps écoulé : le serveur lance une pièce. Pile, il creuse ; face, il fuit. Si une seule action est possible (pioche Exit vide), elle est jouée sans tirage. Tous les écrans montrent la pièce, puis le coup joué.
+- Carte Exit à deux actions piochée en fin de chrono : le joueur garde au moins 15 secondes pour la lire ; ensuite, pile ou face entre les deux actions. Cible d'un échange non choisie : tirée au hasard.
+- Les bots (et les joueurs remplacés par un bot) ne sont pas chronométrés. Le chrono repart de zéro à chaque nouveau tour.
+
 **Salons et connexions** (choix hors règles)
 
 - Un joueur qui quitte une partie en cours est remplacé définitivement par un bot.

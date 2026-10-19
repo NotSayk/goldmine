@@ -77,14 +77,15 @@ Le serveur sert le client construit et la WebSocket (`/ws`) sur le même port. U
 
 Variables d'environnement (toutes facultatives) :
 
-| Variable       | Défaut                 | Rôle                                                                     |
-| -------------- | ---------------------- | ------------------------------------------------------------------------ |
-| `PORT`         | `3000`                 | Port HTTP                                                                |
-| `HOST`         | `0.0.0.0`              | Interface d'écoute                                                       |
-| `GRACE_MS`     | `30000`                | Délai de grâce avant de pouvoir remplacer ou passer un joueur déconnecté |
-| `BOT_DELAY_MS` | `1800`                 | Pause avant chaque coup d'un bot (le temps de voir le coup précédent)    |
-| `STATIC_DIR`   | `packages/client/dist` | Dossier du client construit                                              |
-| `LOG`          | activé                 | `LOG=0` coupe les journaux HTTP                                          |
+| Variable       | Défaut                 | Rôle                                                                                                |
+| -------------- | ---------------------- | --------------------------------------------------------------------------------------------------- |
+| `PORT`         | `3000`                 | Port HTTP                                                                                           |
+| `HOST`         | `0.0.0.0`              | Interface d'écoute                                                                                  |
+| `GRACE_MS`     | `30000`                | Délai de grâce avant de pouvoir remplacer ou passer un joueur déconnecté                            |
+| `BOT_DELAY_MS` | `1800`                 | Pause avant chaque coup d'un bot (le temps de voir le coup précédent)                               |
+| `TURN_TIME_MS` | `45000`                | Temps pour jouer un tour ; passé ce délai, pile ou face entre Creuser et Fuir (`0` pour désactiver) |
+| `STATIC_DIR`   | `packages/client/dist` | Dossier du client construit                                                                         |
+| `LOG`          | activé                 | `LOG=0` coupe les journaux HTTP                                                                     |
 
 Pour garder le serveur actif sur un VPS, utilisez le gestionnaire de services de la machine (par exemple une unité `systemd` qui lance `npm start` dans le dossier du projet) et placez un proxy HTTPS (Caddy, Nginx) devant : la WebSocket fonctionne alors en `wss://` sans réglage supplémentaire.
 

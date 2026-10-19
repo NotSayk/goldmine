@@ -68,6 +68,27 @@ function Visual({ visual, color }: { visual: HighlightVisual; color: number | nu
           </span>
         </div>
       );
+    case 'coin':
+      return (
+        <div className="spot-card spot-card--coin">
+          <div
+            className={`coin${visual.side ? ' coin--flip' : ''}`}
+            // Nombre pair de demi-tours : pile ; impair : face.
+            style={
+              { '--coin-end': visual.side === 'tails' ? '1980deg' : '1800deg' } as CSSProperties
+            }
+          >
+            <span className="coin__face coin__face--heads">
+              <small>Pile</small>
+              {visual.heads}
+            </span>
+            <span className="coin__face coin__face--tails">
+              <small>Face</small>
+              {visual.tails}
+            </span>
+          </div>
+        </div>
+      );
     case 'skipped':
       return <div className="spot-card spot-card--skipped">⏭</div>;
   }

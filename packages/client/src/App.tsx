@@ -40,6 +40,7 @@ export function App() {
           highlights={state.highlights}
           highlightMs={state.highlightMs}
           lastDrawn={state.lastDrawn}
+          turnTimer={state.turnTimer}
         />
       )}
       {room && room.status !== 'lobby' && !view && (

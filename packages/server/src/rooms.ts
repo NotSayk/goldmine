@@ -17,6 +17,7 @@ import {
   ROOM_CODE_ALPHABET,
   ROOM_CODE_LENGTH,
   parseClientMessage,
+  type AutoPlay,
   type ClientMessage,
   type ClientPlayerAction,
   type ConnectionStatus,
@@ -27,6 +28,7 @@ import {
 import { TokenBucket } from './rateLimit';
 import type { Room, RoomPlayer, RoomStore } from './roomStore';
 import { createSecureRng } from './secureRng';
+import { MIN_CHOICE_MS, pickTimeoutMove } from './turnTimer';
 
 /** Connexion WebSocket vue par le gestionnaire (indépendante de la bibliothèque). */
 export interface Connection {
@@ -41,6 +43,8 @@ export interface RoomManagerOptions {
   botDelayMs: number;
   /** Durée de vie d'un salon sans aucun humain connecté. */
   idleRoomTtlMs: number;
+  /** Temps pour jouer un tour (joueurs humains), 0 pour désactiver le chrono. */
+  turnTimeMs: number;
   /** Limitation de débit par connexion : rafale maximale et messages par seconde. */
   rateLimit: { burst: number; perSecond: number };
   now?: () => number;
@@ -88,6 +92,11 @@ export class RoomManager {
   private readonly connections = new Map<Connection, ConnectionState>();
   private readonly connectionBySession = new Map<string, Connection>();
   private readonly botTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  /** Chrono du tour en cours par salon (clé : manche et numéro de tour). */
+  private readonly turnClocks = new Map<
+    string,
+    { key: string; deadline: number; timer: ReturnType<typeof setTimeout> }
+  >();
   private readonly lastStatuses = new Map<string, string>();
   private readonly botRng: Rng = createSeededRng(randomBytes(16).toString('hex'));
   private readonly now: () => number;
@@ -238,8 +247,10 @@ export class RoomManager {
     player.botControlled = false;
     this.touch(room);
     this.broadcastRoom(room);
-    if (room.game) {
-      connection.send({ type: 'game', view: viewFor(room.game, player.id), events: [] });
+    if (this.updateTurnClock(room)) {
+      this.broadcastGame(room, []);
+    } else if (room.game) {
+      connection.send(this.gameMessage(room, player.id, []));
     }
   }
 
@@ -410,6 +421,7 @@ export class RoomManager {
     room.status = 'playing';
     this.touch(room);
     this.broadcastRoom(room);
+    this.updateTurnClock(room);
     this.broadcastGame(room, events);
     this.scheduleBot(room);
   }
@@ -422,6 +434,7 @@ export class RoomManager {
     room.status = 'lobby';
     room.game = null;
     room.rng = null;
+    this.clearTurnClock(room.code);
     this.touch(room);
     this.broadcastRoom(room);
   }
@@ -449,6 +462,7 @@ export class RoomManager {
     player.botControlled = true;
     this.touch(room);
     this.broadcastRoom(room);
+    if (this.updateTurnClock(room)) this.broadcastGame(room, []);
     this.scheduleBot(room);
   }
 
@@ -463,7 +477,7 @@ export class RoomManager {
   }
 
   /** Applique une action via le moteur, puis diffuse les vues filtrées. */
-  private apply(room: Room, action: GameAction): void {
+  private apply(room: Room, action: GameAction, autoPlay?: AutoPlay): void {
     if (!room.game || !room.rng) fail('GAME_NOT_STARTED', 'La partie n’a pas commencé.');
     const result = reduce(room.game, action, room.rng);
     if (!result.ok) fail(result.error.code, result.error.message);
@@ -472,8 +486,69 @@ export class RoomManager {
     if (result.state.phase === 'finished') room.status = 'finished';
     this.touch(room);
     if (room.status !== statusBefore) this.broadcastRoom(room);
-    this.broadcastGame(room, result.events);
+    this.updateTurnClock(room);
+    this.broadcastGame(room, result.events, autoPlay);
     this.scheduleBot(room);
+  }
+
+  // -------------------------------------------------------------------------
+  // Chrono du tour
+  // -------------------------------------------------------------------------
+
+  /**
+   * Démarre, prolonge ou arrête le chrono selon le tour en cours. Un humain a
+   * `turnTimeMs` par tour ; s'il pioche une carte Exit à choisir, il garde au
+   * moins `MIN_CHOICE_MS`. Les bots ne sont pas chronométrés. Retourne vrai si
+   * le chrono a changé (les clients doivent alors en être informés).
+   */
+  private updateTurnClock(room: Room): boolean {
+    const game = room.game;
+    const total = this.options.turnTimeMs;
+    const existing = this.turnClocks.get(room.code);
+    if (
+      !game ||
+      total <= 0 ||
+      game.phase !== 'playing' ||
+      game.currentDwarf === null ||
+      this.botActor(room)
+    ) {
+      if (!existing) return false;
+      this.clearTurnClock(room.code);
+      return true;
+    }
+    const now = this.now();
+    const key = `${game.round}:${game.turn}`;
+    let deadline = existing?.key === key ? existing.deadline : now + total;
+    if (game.pending) deadline = Math.max(deadline, now + Math.min(MIN_CHOICE_MS, total));
+    if (existing?.key === key && existing.deadline === deadline) return false;
+    if (existing) clearTimeout(existing.timer);
+    const timer = setTimeout(() => this.onTurnTimeout(room.code, key), deadline - now);
+    this.turnClocks.set(room.code, { key, deadline, timer });
+    return true;
+  }
+
+  private clearTurnClock(code: string): void {
+    const clock = this.turnClocks.get(code);
+    if (clock) clearTimeout(clock.timer);
+    this.turnClocks.delete(code);
+  }
+
+  /** Temps écoulé : pile ou face, et le coup est joué pour le joueur. */
+  private onTurnTimeout(code: string, key: string): void {
+    const clock = this.turnClocks.get(code);
+    if (clock?.key !== key) return;
+    this.turnClocks.delete(code);
+    const room = this.store.get(code);
+    if (!room?.game) return;
+    const move = pickTimeoutMove(room.game, this.botRng);
+    if (!move) return;
+    try {
+      this.apply(room, move.action, move.autoPlay);
+    } catch (error) {
+      if (!(error instanceof RequestError)) throw error;
+      // Ne devrait jamais arriver : le coup est choisi parmi les actions légales.
+      if (room.game.phase === 'playing') this.apply(room, { type: 'skipTurn' });
+    }
   }
 
   /** Joueur que le serveur doit faire jouer (bot ou humain remplacé), sinon `null`. */
@@ -538,6 +613,7 @@ export class RoomManager {
   close(): void {
     for (const timer of this.botTimers.values()) clearTimeout(timer);
     this.botTimers.clear();
+    for (const code of [...this.turnClocks.keys()]) this.clearTurnClock(code);
   }
 
   roomCount(): number {
@@ -552,6 +628,7 @@ export class RoomManager {
     const timer = this.botTimers.get(room.code);
     if (timer) clearTimeout(timer);
     this.botTimers.delete(room.code);
+    this.clearTurnClock(room.code);
     this.lastStatuses.delete(room.code);
     for (const player of room.players) {
       const session = player.sessionToken ? this.sessions.get(player.sessionToken) : undefined;
@@ -666,18 +743,36 @@ export class RoomManager {
     }
   }
 
-  private broadcastGame(room: Room, events: readonly GameEvent[]): void {
+  private gameMessage(
+    room: Room,
+    playerId: string,
+    events: readonly GameEvent[],
+    autoPlay?: AutoPlay,
+  ): ServerMessage {
     const game = room.game;
-    if (!game) return;
+    if (!game) throw new Error('Aucune partie en cours.');
+    const clock = this.turnClocks.get(room.code);
+    return {
+      type: 'game',
+      view: viewFor(game, playerId),
+      events: filterEventsFor(events, game, playerId),
+      turnTimer: clock
+        ? {
+            remainingMs: Math.max(0, clock.deadline - this.now()),
+            totalMs: this.options.turnTimeMs,
+          }
+        : null,
+      ...(autoPlay ? { autoPlay } : {}),
+    };
+  }
+
+  private broadcastGame(room: Room, events: readonly GameEvent[], autoPlay?: AutoPlay): void {
+    if (!room.game) return;
     for (const player of room.players) {
       if (!player.sessionToken) continue;
       const session = this.sessions.get(player.sessionToken);
       if (session?.roomCode !== room.code) continue;
-      this.sendTo(session, {
-        type: 'game',
-        view: viewFor(game, player.id),
-        events: filterEventsFor(events, game, player.id),
-      });
+      this.sendTo(session, this.gameMessage(room, player.id, events, autoPlay));
     }
   }
 }

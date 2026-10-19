@@ -1,4 +1,5 @@
 import type { ExitActionKind, ExtractionKind, GameEvent, PlayerView } from '@pepite/engine';
+import type { AutoPlay, CoinSide } from '@pepite/shared';
 import { BRANDING } from '@pepite/shared/branding';
 import {
   EXIT_LABELS,
@@ -20,6 +21,14 @@ export type HighlightVisual =
   | { readonly kind: 'dragon'; readonly steps: number }
   | { readonly kind: 'exited' }
   | { readonly kind: 'eliminated'; readonly colors: readonly number[] }
+  | {
+      readonly kind: 'coin';
+      /** Libellés des deux côtés : pile, puis face. */
+      readonly heads: string;
+      readonly tails: string;
+      /** Côté tombé, `null` sans tirage (une seule option possible). */
+      readonly side: CoinSide | null;
+    }
   | { readonly kind: 'skipped' };
 
 /** Coup mis en avant au premier plan (carte piochée, action jouée, dragon…). */
@@ -36,6 +45,8 @@ export interface Highlight {
   readonly tone: 'info' | 'danger' | 'success';
   /** Annonce en grand sur tout l'écran (élimination). */
   readonly dramatic?: boolean;
+  /** Reste affiché plus longtemps (pile ou face). */
+  readonly slow?: boolean;
 }
 
 let nextId = 1;
@@ -215,9 +226,50 @@ function lossText(event: Extract<GameEvent, { type: 'DwarfEliminated' }>): strin
   return `${plural(event.goldLost, 'pépite')} perdue${event.goldLost > 1 ? 's' : ''} !`;
 }
 
+/**
+ * Temps écoulé : la pièce est lancée entre les deux options possibles, avant
+ * que le coup joué d'office ne s'affiche.
+ */
+export function buildAutoPlayHighlight(autoPlay: AutoPlay, view: PlayerView): Highlight {
+  const yours = autoPlay.playerId === view.viewerId;
+  const title = yours
+    ? 'Temps écoulé !'
+    : `Temps écoulé pour ${dwarfName(view, autoPlay.dwarfId)} !`;
+  const base = {
+    id: nextId++,
+    dwarfId: autoPlay.dwarfId,
+    title,
+    extra: [],
+    tone: 'info' as const,
+    slow: true,
+  };
+  if (autoPlay.kind === 'swapTarget') {
+    return {
+      ...base,
+      name: 'Échange au hasard',
+      detail: `Avec ${dwarfLabel(view, autoPlay.targetId)}.`,
+      visual: { kind: 'coin', heads: '?', tails: '?', side: null },
+    };
+  }
+  const [heads, tails, result] =
+    autoPlay.kind === 'draw'
+      ? ['Creuser', 'Fuir', autoPlay.result === 'drawExtraction' ? 'Creuser' : 'Fuir']
+      : [
+          EXIT_LABELS[autoPlay.options[0] ?? autoPlay.result].name,
+          EXIT_LABELS[autoPlay.options[1] ?? autoPlay.result].name,
+          EXIT_LABELS[autoPlay.result].name,
+        ];
+  return {
+    ...base,
+    name: autoPlay.coin ? `Pile ou face… ${result} !` : `Coup automatique : ${result}`,
+    detail: autoPlay.coin ? `Pile : ${heads} · Face : ${tails}` : 'Une seule option possible.',
+    visual: { kind: 'coin', heads, tails, side: autoPlay.coin },
+  };
+}
+
 /** Durée d'affichage selon la file d'attente : on accélère si les coups s'enchaînent. */
-export function highlightDuration(queueLength: number, dramatic = false): number {
-  if (dramatic) return queueLength >= 5 ? 1600 : 2800;
+export function highlightDuration(queueLength: number, slow = false): number {
+  if (slow) return queueLength >= 5 ? 1600 : 2800;
   if (queueLength >= 5) return 700;
   if (queueLength >= 3) return 1100;
   return 1900;

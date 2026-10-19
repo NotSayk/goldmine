@@ -94,6 +94,13 @@ export function RulesDialog({ open, onClose }: { open: boolean; onClose: () => v
           leur or. Si l’un est éliminé, l’autre garde l’or. Si l’un sort, il emporte l’or amassé et
           son équipier repart de zéro.
         </p>
+        <h3>Temps de jeu</h3>
+        <p>
+          Chaque joueur a 45 secondes pour jouer son tour (un compte à rebours s’affiche). Passé ce
+          délai, une pièce est lancée devant tout le monde : pile, il creuse ; face, il fuit. Même
+          chose pour choisir entre les deux actions d’une carte Exit (au moins 15 secondes pour lire
+          la carte). Les bots ne sont pas chronométrés.
+        </p>
         <h3>Ce que l’on voit</h3>
         <p>
           Les deux pioches sont face cachée : on découvre une carte en la piochant, et tout le monde

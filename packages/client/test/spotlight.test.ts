@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createGame, createSeededRng, viewFor, type GameEvent } from '@pepite/engine';
-import { buildHighlights, highlightDuration } from '../src/spotlight';
+import { buildAutoPlayHighlight, buildHighlights, highlightDuration } from '../src/spotlight';
 
 const { state } = createGame(
   {
@@ -92,5 +92,53 @@ describe('coups mis au premier plan', () => {
     expect(highlightDuration(1)).toBeGreaterThan(highlightDuration(3));
     expect(highlightDuration(3)).toBeGreaterThan(highlightDuration(6));
     expect(highlightDuration(1, true)).toBeGreaterThan(highlightDuration(1));
+  });
+});
+
+describe('temps écoulé : pile ou face', () => {
+  it('annonce le tirage entre Creuser et Fuir', () => {
+    const highlight = buildAutoPlayHighlight(
+      { kind: 'draw', dwarfId: 1, playerId: 'b', result: 'drawExit', coin: 'tails' },
+      viewFor(state, 'a'),
+    );
+    expect(highlight).toMatchObject({
+      title: 'Temps écoulé pour Bruno !',
+      name: 'Pile ou face… Fuir !',
+      detail: 'Pile : Creuser · Face : Fuir',
+      visual: { kind: 'coin', heads: 'Creuser', tails: 'Fuir', side: 'tails' },
+      slow: true,
+    });
+  });
+
+  it('parle au joueur concerné et gère le coup sans tirage', () => {
+    const highlight = buildAutoPlayHighlight(
+      { kind: 'draw', dwarfId: 0, playerId: 'a', result: 'drawExtraction', coin: null },
+      viewFor(state, 'a'),
+    );
+    expect(highlight).toMatchObject({
+      title: 'Temps écoulé !',
+      name: 'Coup automatique : Creuser',
+      visual: { side: null },
+    });
+  });
+
+  it('tire entre les deux actions d’une carte Exit', () => {
+    const highlight = buildAutoPlayHighlight(
+      {
+        kind: 'exitAction',
+        dwarfId: 0,
+        playerId: 'a',
+        options: ['step', 'goldBonus'],
+        result: 'goldBonus',
+        coin: 'tails',
+      },
+      viewFor(state, 'b'),
+    );
+    expect(highlight.visual).toEqual({
+      kind: 'coin',
+      heads: 'Un pas',
+      tails: 'Trésor caché',
+      side: 'tails',
+    });
   });
 });
