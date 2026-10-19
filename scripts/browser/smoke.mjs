@@ -5,9 +5,10 @@
  *
  *   npm run build && npm run smoke
  *
- * Par défaut les bots jouent vite (PACE_ANIMATIONS=0) : les humains simulés
- * jouent alors pendant les animations, ce qui vérifie qu'elles ne bloquent
- * jamais. SMOKE_PACED=1 garde le vrai rythme (parties bien plus longues).
+ * Par défaut les bots jouent vite (PACE_ANIMATIONS=0) : les animations
+ * s'accumulent et les humains simulés les passent à leur tour, ce qui vérifie
+ * qu'elles ne bloquent jamais. SMOKE_PACED=1 garde le vrai rythme (parties
+ * bien plus longues).
  */
 import {
   continueAfterRound,

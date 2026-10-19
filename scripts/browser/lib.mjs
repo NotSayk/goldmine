@@ -107,8 +107,9 @@ export async function startGame(page, firstPlayer) {
 }
 
 /**
- * Un coup du joueur humain simulé, joué dès que c'est possible (jamais
- * d'attente des animations). Retourne ce qui s'est passé.
+ * Un coup du joueur humain simulé, joué dès que c'est possible : à son tour,
+ * il passe les animations en attente (« À vous : passer »), comme un vrai
+ * joueur pressé. Retourne ce qui s'est passé.
  */
 export async function step(page) {
   try {
@@ -118,6 +119,12 @@ export async function step(page) {
     if (await inline.count()) {
       await inline.first().click({ timeout: 1000 });
       return 'choice';
+    }
+    // À son tour, on passe les animations qui cachent encore les pioches.
+    const skip = page.getByRole('button', { name: 'À vous : passer' });
+    if (await skip.count()) {
+      await skip.first().click({ timeout: 1000 });
+      return 'skipped';
     }
     // Échange : on touche le nain voulu directement sur le plateau. Il pulse
     // sans fin : on ne peut pas attendre qu'il soit immobile pour cliquer.

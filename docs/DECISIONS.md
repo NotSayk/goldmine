@@ -221,16 +221,16 @@ Sont chargés à la demande (`import()`) : les particules d'ambiance, le moteur 
 
 | Mesure                                                 | Résultat                                                                                |
 | ------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| Chemin critique (HTML + JS + CSS, gzip)                | **115 Ko** (JS 102 Ko, CSS 13 Ko), budget 250 Ko ; + 73 Ko de polices woff2 préchargées |
+| Chemin critique (HTML + JS + CSS, gzip)                | **126 Ko** (JS 110 Ko, CSS 15 Ko), budget 250 Ko ; + 73 Ko de polices woff2 préchargées |
 | Modules différés                                       | particules 2,3 Ko, ambiance 1,0 Ko, récapitulatif 1,7 Ko (gzip)                         |
-| Chargement, ordinateur (local)                         | DOM prêt en 60 ms, formulaire prêt en 110 ms                                            |
-| Chargement, téléphone simulé (processeur ×4, 4G lente) | premier affichage 1,3 s, formulaire prêt en 3,0 s                                       |
-| Partie de 30 s, qualité élevée, ordinateur             | 57 i/s en moyenne, 60 i/s au 5e centile, 2 % d'images sous 30 i/s                       |
-| Partie de 30 s, qualité élevée, téléphone simulé (×4)  | 50 i/s en moyenne, 30 i/s au 5e centile, 5 % d'images sous 30 i/s                       |
+| Chargement, ordinateur (local)                         | DOM prêt en 70 ms, formulaire prêt en 130 ms                                            |
+| Chargement, téléphone simulé (processeur ×4, 4G lente) | premier affichage 1,4 s, formulaire prêt en 3,2 s                                       |
+| Partie de 30 s, qualité élevée, ordinateur             | 50 i/s en moyenne, 30 i/s au 5e centile, 5 % d'images sous 30 i/s                       |
+| Partie de 30 s, qualité élevée, téléphone simulé (×4)  | 48 i/s en moyenne, 30 i/s au 5e centile, 5 % d'images sous 30 i/s                       |
 
-Une première mesure donnait 36 et 28 i/s : les lueurs du décor étaient animées à l'intérieur des SVG (tout le décor redessiné à chaque image), la distorsion de chaleur recalculait son bruit à chaque image, le fond de page était en `background-attachment: fixed` et la barre d'actions floutait l'arrière-plan. Désormais seules `transform` et `opacity` sont animées sur des calques séparés. Le rendu logiciel de Chromium sans écran est plus lent qu'un vrai téléphone avec carte graphique : ces chiffres sont prudents.
+Une première mesure donnait 36 et 28 i/s : les lueurs du décor étaient animées à l'intérieur des SVG (tout le décor redessiné à chaque image), la distorsion de chaleur recalculait son bruit à chaque image, le fond de page était en `background-attachment: fixed` et la barre d'actions floutait l'arrière-plan. Désormais seules `transform` et `opacity` sont animées sur des calques séparés. Le rendu logiciel de Chromium sans écran est plus lent qu'un vrai téléphone avec carte graphique : ces chiffres sont prudents. Dernière mesure, après Dragobert vivant et le nouveau décor (une douzaine de calques animés en plus, en opacité et transformation) : l'ordinateur passe de 57 à 50 i/s en moyenne et le téléphone simulé de 50 à 48 i/s ; en qualité « auto », le jeu baisse de lui-même la qualité si la fluidité chute, et la qualité basse fige ces calques.
 
 ### Vérifications
 
-- `npm run smoke` : parties complètes à 2, 4 (dont deux humains) et 6 joueurs ; les humains simulés jouent dès que c'est possible, pendant les animations. Aucune erreur console.
+- `npm run smoke` : parties complètes à 2, 4 (dont deux humains) et 6 joueurs ; les bots jouent sans attendre, les animations s'accumulent et les humains simulés les passent à leur tour (« À vous : passer »), comme un joueur pressé ; un échange se fait en touchant le nain sur le plateau. Aucune erreur console. (Sans ce passage, une partie à 4 durait 330 à 480 s, à la limite du délai de 8 min.)
 - `npm run screenshots` : accueil, salon, table, dragon, fin de manche, fin de partie, sur téléphone (390 px), tablette (820 px) et ordinateur (1440 px), avec et sans mouvement réduit, dans [`screenshots/`](screenshots/) (JPEG pour limiter le poids du dépôt).
