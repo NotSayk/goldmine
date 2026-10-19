@@ -2,7 +2,6 @@ import { useSyncExternalStore } from 'react';
 import { flushSync } from 'react-dom';
 import type { ExtractionKind, GameEvent, PlayerView } from '@pepite/engine';
 import type { AutoPlay, ClientMessage, RoomView, ServerMessage } from '@pepite/shared';
-import { playSound } from './audio';
 import { runCues } from './director/cues';
 import { Director, browserClock } from './director/director';
 import {
@@ -120,7 +119,7 @@ function acceptsCue(cue: Cue, urgent: boolean): boolean {
 function playCue(cue: Cue): void {
   switch (cue.type) {
     case 'sound':
-      playSound(cue.sound, cue.count);
+      // Repère sonore conservé pour brancher un moteur audio plus tard (pas de son pour l'instant).
       return;
     case 'vibrate':
       if (getPreferences().vibration && typeof navigator.vibrate === 'function') {

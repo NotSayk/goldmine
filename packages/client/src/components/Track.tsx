@@ -50,6 +50,12 @@ export function Track({
     byPosition.set(dwarf.position, list);
   }
   for (const list of byPosition.values()) list.forEach((dwarf, i) => slots.set(dwarf.id, i));
+  // La lampe frontale éclaire le nain dont c'est le tour.
+  const active = view.currentDwarfId === null ? undefined : view.dwarves[view.currentDwarfId];
+  const lamp =
+    view.phase === 'playing' && active?.status === 'mine'
+      ? slotCenter(active.position, slots.get(active.id) ?? 0)
+      : null;
 
   return (
     <div
@@ -77,6 +83,8 @@ export function Track({
           </div>
         </div>
       ))}
+
+      {lamp && <span className="track__lamp" style={lamp} aria-hidden />}
 
       {view.dwarves.map((_, slot) => (
         <span key={`slot-${slot}`} className="ladder-slot" style={slotCenter(0, slot)} aria-hidden>

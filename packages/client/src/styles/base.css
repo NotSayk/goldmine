@@ -22,7 +22,7 @@ body {
     radial-gradient(900px 520px at 50% -160px, rgba(242, 182, 50, 0.1), transparent 70%),
     radial-gradient(
       700px 500px at 100% 100%,
-      rgba(255, 90, 40, calc(0.03 + var(--page-heat, 0) * 0.12)),
+      rgba(255, 90, 40, calc(0.03 + var(--heat) * 0.14)),
       transparent 70%
     ),
     var(--rock-noise), linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 60%);
@@ -373,25 +373,6 @@ select {
   letter-spacing: 0.3em;
   font-weight: 800;
   font-family: var(--font-display);
-}
-
-.range {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 4px 12px;
-}
-
-.range input[type='range'] {
-  grid-column: 1 / -1;
-  width: 100%;
-  min-height: 32px;
-  accent-color: var(--gold);
-}
-
-.range output {
-  font-variant-numeric: tabular-nums;
-  color: var(--text-muted);
 }
 
 .checkbox-row {

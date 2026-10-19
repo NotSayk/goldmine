@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { PlayerView } from '@pepite/engine';
 import type { RoomView } from '@pepite/shared';
 import { BRANDING } from '@pepite/shared/branding';
@@ -10,11 +10,14 @@ import { Decks } from '../components/Decks';
 import { GameLog } from '../components/GameLog';
 import { Modal } from '../components/Modal';
 import { Players } from '../components/Players';
+import { Scene } from '../components/Scene';
 import { Spotlight } from '../components/Spotlight';
 import { FinalStandings, RoundResultTable } from '../components/Results';
 import { TopBar } from '../components/TopBar';
 import { Track } from '../components/Track';
 import { TurnCountdown, type TurnTimer } from '../components/TurnCountdown';
+import { startFpsMonitor } from '../fx/fps';
+import { heatOf } from '../fx/heat';
 import { dwarfLook, dwarfName } from '../i18n/fr';
 import type { Sequence } from '../director/sequences';
 import { client, type LastDrawn, type LogEntry } from '../store';
@@ -171,6 +174,19 @@ export function GameScreen({
       ? view.pending.targets
       : [];
   const idle = sequence === null && queued === 0;
+  const heat = heatOf(boardView.dragonPosition);
+
+  // La chaleur teinte toute la page ; la qualité « auto » suit la fluidité.
+  useEffect(() => {
+    document.documentElement.style.setProperty('--heat', heat.toFixed(3));
+  }, [heat]);
+  useEffect(() => {
+    const stop = startFpsMonitor();
+    return () => {
+      stop();
+      document.documentElement.style.removeProperty('--heat');
+    };
+  }, []);
   return (
     <>
       <TopBar
@@ -190,7 +206,7 @@ export function GameScreen({
         </div>
         <div className="game__center stack">
           <TurnBanner view={view} room={room} turnTimer={turnTimer} />
-          <section className="board" aria-label="Table de jeu">
+          <Scene heat={heat}>
             <Track
               view={boardView}
               swapTargets={swapTargets}
@@ -199,7 +215,7 @@ export function GameScreen({
               }
             />
             <Decks view={boardView} lastDrawn={lastDrawn} />
-          </section>
+          </Scene>
           <RoundEndPanel key={boardView.round} view={boardView} isHost={isHost} idle={idle} />
           {boardView.phase === 'finished' && <FinalPanel view={boardView} isHost={isHost} />}
           {view.phase === 'playing' && (

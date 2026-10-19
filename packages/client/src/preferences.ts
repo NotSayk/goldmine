@@ -13,10 +13,6 @@ export interface Preferences {
   readonly motion: MotionPreference;
   readonly quality: QualityPreference;
   readonly animationSpeed: AnimationSpeed;
-  /** Volumes de 0 à 1. */
-  readonly musicVolume: number;
-  readonly sfxVolume: number;
-  readonly muted: boolean;
   readonly vibration: boolean;
   /** Afficher les réactions rapides des autres joueurs. */
   readonly emotes: boolean;
@@ -30,19 +26,12 @@ export const DEFAULT_PREFERENCES: Preferences = {
   motion: 'auto',
   quality: 'auto',
   animationSpeed: 'normal',
-  musicVolume: 0.5,
-  sfxVolume: 0.8,
-  muted: false,
   vibration: true,
   emotes: true,
 };
 
 function oneOf<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
   return allowed.includes(value as T) ? (value as T) : fallback;
-}
-
-function volume(value: unknown, fallback: number): number {
-  return typeof value === 'number' && value >= 0 && value <= 1 ? value : fallback;
 }
 
 function load(): Preferences {
@@ -55,9 +44,6 @@ function load(): Preferences {
       motion: oneOf(parsed.motion, ['auto', 'reduced', 'full'], d.motion),
       quality: oneOf(parsed.quality, ['auto', 'low', 'medium', 'high'], d.quality),
       animationSpeed: oneOf(parsed.animationSpeed, ['normal', 'fast'], d.animationSpeed),
-      musicVolume: volume(parsed.musicVolume, d.musicVolume),
-      sfxVolume: volume(parsed.sfxVolume, d.sfxVolume),
-      muted: typeof parsed.muted === 'boolean' ? parsed.muted : d.muted,
       vibration: typeof parsed.vibration === 'boolean' ? parsed.vibration : d.vibration,
       emotes: typeof parsed.emotes === 'boolean' ? parsed.emotes : d.emotes,
     };

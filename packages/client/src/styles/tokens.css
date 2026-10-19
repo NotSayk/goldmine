@@ -1,3 +1,10 @@
+/* Jauge de chaleur (0 à 1) : propriété typée pour pouvoir la faire glisser en douceur. */
+@property --heat {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
 /*
  * Jetons de design : toutes les couleurs, ombres, rayons et durées passent par ici.
  * Thème « mine » (fantasy sombre, par défaut) et variante « contraste élevé ».
@@ -5,6 +12,8 @@
  */
 :root {
   color-scheme: dark;
+  --heat: 0;
+  transition: --heat 1.4s ease;
 
   /* Fonds : nuit et pierre froide */
   --bg: #090d16;

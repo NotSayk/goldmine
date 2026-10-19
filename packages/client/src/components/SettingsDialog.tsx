@@ -1,4 +1,3 @@
-import { useId } from 'react';
 import {
   setPreferences,
   usePreferences,
@@ -38,37 +37,6 @@ function Segmented<T extends string>({
         ))}
       </div>
       {hint && <span className="small muted">{hint}</span>}
-    </div>
-  );
-}
-
-function Volume({
-  label,
-  value,
-  disabled,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  disabled: boolean;
-  onChange: (value: number) => void;
-}) {
-  const id = useId();
-  const percent = Math.round(value * 100);
-  return (
-    <div className="field range">
-      <label htmlFor={id}>{label}</label>
-      <output htmlFor={id}>{percent} %</output>
-      <input
-        id={id}
-        type="range"
-        min={0}
-        max={100}
-        step={5}
-        value={percent}
-        disabled={disabled}
-        onChange={(event) => onChange(Number(event.target.value) / 100)}
-      />
     </div>
   );
 }
@@ -143,26 +111,6 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
             ]}
             onChange={(quality) => setPreferences({ quality })}
             hint="Auto baisse la qualité si l’animation devient saccadée."
-          />
-        </section>
-        <section className="menu__section" aria-label="Son">
-          <h3>Son</h3>
-          <Toggle
-            label="Couper le son"
-            checked={preferences.muted}
-            onChange={(muted) => setPreferences({ muted })}
-          />
-          <Volume
-            label="Musique"
-            value={preferences.musicVolume}
-            disabled={preferences.muted}
-            onChange={(musicVolume) => setPreferences({ musicVolume })}
-          />
-          <Volume
-            label="Effets sonores"
-            value={preferences.sfxVolume}
-            disabled={preferences.muted}
-            onChange={(sfxVolume) => setPreferences({ sfxVolume })}
           />
         </section>
         <section className="menu__section" aria-label="Divers">

@@ -14,3 +14,177 @@
   width: 100%;
   height: 100%;
 }
+
+/* ---------- La mine : décor en couches ---------- */
+
+.scene {
+  padding-top: 28px;
+}
+
+.backdrop {
+  position: absolute;
+  inset: -18px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.backdrop__layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: transform 700ms var(--ease-out);
+}
+
+/* Parallaxe : plus le plan est proche, plus il bouge. */
+.backdrop__far {
+  transform: translate3d(calc(var(--px, 0) * -5px), calc(var(--py, 0) * -3px), 0);
+}
+
+.backdrop__heat {
+  opacity: calc(0.2 + var(--heat) * 0.8);
+  transform: translate3d(calc(var(--px, 0) * -8px), calc(var(--py, 0) * -4px), 0);
+}
+
+.backdrop__mid {
+  transform: translate3d(calc(var(--px, 0) * -11px), calc(var(--py, 0) * -6px), 0);
+}
+
+.backdrop__near {
+  transform: translate3d(calc(var(--px, 0) * -18px), calc(var(--py, 0) * -9px), 0);
+}
+
+/* Distorsion de chaleur, seulement en qualité élevée (filtre coûteux). */
+:root[data-quality='high']:not([data-motion='reduced']) .backdrop__haze {
+  filter: url(#mine-heat-haze);
+}
+
+.crystal-glow {
+  animation: crystal-pulse 3.4s ease-in-out infinite;
+}
+
+.crystal-cluster--late .crystal-glow {
+  animation-delay: -1.7s;
+}
+
+.lantern-glow {
+  animation: lantern-flicker 3s ease-in-out infinite;
+}
+
+.light-shaft {
+  mix-blend-mode: screen;
+  animation: shaft 8s ease-in-out infinite alternate;
+}
+
+.light-shaft--2 {
+  animation-delay: -4s;
+}
+
+.scene__particles {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.scene__stage {
+  position: relative;
+  z-index: 1;
+}
+
+/* Vignette : les bords s'assombrissent et rougissent quand le dragon approche. */
+.scene__vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(70, 120, 210, calc((1 - var(--heat)) * 0.08)),
+      transparent 45%,
+      rgba(255, 70, 20, calc(var(--heat) * 0.16))
+    ),
+    radial-gradient(ellipse at 50% 45%, transparent 58%, rgba(0, 0, 0, 0.55) 100%);
+  box-shadow: inset 0 0 calc(24px + var(--heat) * 70px) rgba(255, 60, 20, calc(var(--heat) * 0.5));
+}
+
+:root[data-theme='contrast'] .backdrop,
+:root[data-theme='contrast'] .scene__vignette,
+:root[data-theme='contrast'] .scene__particles {
+  display: none;
+}
+
+/* Lampe frontale du nain dont c'est le tour. */
+.track__lamp {
+  position: absolute;
+  z-index: 1;
+  width: calc(100% / 9 * 2.4);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgba(255, 228, 160, 0.5) 0%,
+    rgba(255, 200, 110, 0.18) 35%,
+    transparent 68%
+  );
+  mix-blend-mode: screen;
+  transition:
+    left 600ms var(--ease-in-out),
+    top 600ms var(--ease-in-out);
+  animation: lamp-flicker 2.4s ease-in-out infinite;
+}
+
+:root[data-quality='low'] .track__lamp {
+  mix-blend-mode: normal;
+  background: radial-gradient(circle, rgba(255, 228, 160, 0.22) 0%, transparent 60%);
+}
+
+@keyframes crystal-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes lantern-flicker {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  40% {
+    opacity: 0.7;
+  }
+  45% {
+    opacity: 0.95;
+  }
+  70% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes shaft {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lamp-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.82;
+  }
+}
