@@ -225,10 +225,24 @@ Sont chargés à la demande (`import()`) : les particules d'ambiance, le moteur 
 | Modules différés                                       | particules 2,3 Ko, ambiance 1,0 Ko, récapitulatif 1,7 Ko (gzip)                         |
 | Chargement, ordinateur (local)                         | DOM prêt en 70 ms, formulaire prêt en 130 ms                                            |
 | Chargement, téléphone simulé (processeur ×4, 4G lente) | premier affichage 1,4 s, formulaire prêt en 3,2 s                                       |
-| Partie de 30 s, qualité élevée, ordinateur             | 50 i/s en moyenne, 30 i/s au 5e centile, 5 % d'images sous 30 i/s                       |
-| Partie de 30 s, qualité élevée, téléphone simulé (×4)  | 48 i/s en moyenne, 30 i/s au 5e centile, 5 % d'images sous 30 i/s                       |
+| Partie de 30 s, qualité élevée, ordinateur             | 57 i/s en moyenne, 60 i/s au 5e centile, 1,5 % d'images sous 30 i/s                     |
+| Partie de 30 s, qualité élevée, téléphone simulé (×4)  | 54 à 57 i/s en moyenne, 1,5 à 3 % d'images sous 30 i/s                                  |
 
 Une première mesure donnait 36 et 28 i/s : les lueurs du décor étaient animées à l'intérieur des SVG (tout le décor redessiné à chaque image), la distorsion de chaleur recalculait son bruit à chaque image, le fond de page était en `background-attachment: fixed` et la barre d'actions floutait l'arrière-plan. Désormais seules `transform` et `opacity` sont animées sur des calques séparés. Le rendu logiciel de Chromium sans écran est plus lent qu'un vrai téléphone avec carte graphique : ces chiffres sont prudents. Dernière mesure, après Dragobert vivant et le nouveau décor (une douzaine de calques animés en plus, en opacité et transformation) : l'ordinateur passe de 57 à 50 i/s en moyenne et le téléphone simulé de 50 à 48 i/s ; en qualité « auto », le jeu baisse de lui-même la qualité si la fluidité chute, et la qualité basse fige ces calques.
+
+### Fluidité : optimisation sans toucher aux animations
+
+Profilage par traces Chrome (temps du fil principal par étape, animations refusées par la carte graphique, calques et leur raison, invalidations), puis corrections qui gardent chaque animation telle quelle :
+
+- **Dragobert** : sa fumée, la lueur de son ventre, sa paupière et son cabrage étaient animés à l'intérieur de son dessin SVG, redessiné à chaque image. Ce sont désormais des calques séparés, superposés au dessin dans le même cadre et animés par la carte graphique.
+- **Nains** : respiration, tremblement de panique et saut de joie passent en `transform` (Chrome refuse de confier `scale` ou `translate` séparés à la carte graphique sur un élément SVG) ; le demi-tour se fait à l'intérieur du dessin ; la goutte de sueur devient un calque. Les yeux clignent par vagues lancées par un seul minuteur (chaque nain cligne toujours en moyenne toutes les 4,6 s), au lieu d'une animation par œil.
+- **Particules d'ambiance** : même simulation, mais dessinée par un worker sur une `OffscreenCanvas`, hors du fil principal (repli sur le fil principal si le navigateur ne le permet pas) ; les couleurs ne sont plus recréées pour chaque particule.
+- **Calques inutiles** : les cartes ne prennent un calque 3D que lorsqu'elles s'inclinent ; les animations ponctuelles dont l'état final est le style de repos ne restent plus « actives » une fois finies (`backwards` au lieu de `both`), ce qui libérait un calque par carte de la piste (85 calques ramenés à 65) ; fissures de lave et mur de flammes n'existent qu'une fois visibles ; l'ondulation de chaleur s'anime sur une enveloppe HTML.
+- **Travail superflu** : les variables de parallaxe ne recalculent plus que le décor (et non toute la table) à chaque mouvement de souris, le compte à rebours se rend une fois par seconde, le moniteur d'images ne tourne qu'en qualité « auto ».
+
+Comparaison avant / après sur le même protocole (`STATIC_DIR` pointé sur l'ancien build, deux mesures chacun, rendu logiciel) : ordinateur 52–56 → 57 i/s en moyenne, 5e centile 30 → 60 i/s ; téléphone simulé 47–48 → 54–57 i/s, images sous 30 i/s 6 % → 1,5–3 %. La pire image isolée reste entre 67 et 150 ms. Avec un GPU émulé (`PERF_GPU=1`, SwiftShader), plus proche d'un vrai appareil, le fil principal au repos sur téléphone simulé est occupé environ 300 ms par seconde, contre 750 en rendu logiciel : les chiffres du tableau restent prudents. Ce mode est trop lent pour compter les images.
+
+Reste incompressible : React écoute tous les types d'événements à la racine, donc Chrome émet `animationiteration` à chaque tour de chaque animation infinie (une dizaine par seconde), ce qui demande une petite image du fil principal ; et le compte à rebours (`stroke-dashoffset`) ne peut pas être confié à la carte graphique.
 
 ### Vérifications
 

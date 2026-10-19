@@ -5,8 +5,10 @@
  *
  *   npm run build && npm run perf
  *
- * Les images sont composées par un GPU émulé (SwiftShader), comme sur un vrai
- * appareil ; PERF_SOFTWARE=1 revient au rendu tout logiciel (bien plus lent).
+ * Chromium sans écran compose les images en logiciel : les chiffres sont
+ * prudents (les animations confiées à la carte graphique y coûtent encore au
+ * fil principal). PERF_GPU=1 compose avec un GPU émulé (SwiftShader) : plus
+ * fidèle pour la charge du fil principal, mais trop lent pour compter les images.
  * STATIC_DIR=… mesure un autre build du client (comparaison avant / après).
  */
 import { readFileSync, readdirSync } from 'node:fs';
@@ -65,7 +67,7 @@ const server = await startServer({
   BOT_DELAY_MS: '700',
   ...(process.env.STATIC_DIR ? { STATIC_DIR: process.env.STATIC_DIR } : {}),
 });
-const browser = await launchBrowser({ gpu: process.env.PERF_SOFTWARE !== '1' });
+const browser = await launchBrowser({ gpu: process.env.PERF_GPU === '1' });
 
 async function measure(profile) {
   const context = await browser.newContext({ viewport: profile.viewport, locale: 'fr-FR' });
