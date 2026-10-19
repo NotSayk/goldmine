@@ -7,8 +7,8 @@ services:
     restart: unless-stopped
     mem_limit: 512m
     environment:
-      PORT: "3000"
-      HOST: "0.0.0.0"
+      PORT: '3000'
+      HOST: '0.0.0.0'
     networks: [web]
 networks:
   web:
