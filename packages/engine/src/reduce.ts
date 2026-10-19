@@ -6,6 +6,7 @@ import {
   addsGoldBeforeMoving,
   assertLadderHasRoom,
   bonusCardsOfEliminatedGoTo,
+  dragonActsWhenDrawn,
   endsRoundWhenExtractionDeckEmpty,
   isMovedByAllTogether,
   isSwapTargetAllowed,
@@ -109,6 +110,14 @@ function drawExtraction(state: GameState, dwarf: DwarfState, events: GameEvent[]
     card: card.kind,
     gold: effect.gold,
   });
+
+  // Dragon pioché (pioche cachée, décision E) : il fait seulement avancer Dragobert.
+  if (card.kind === 'dragon') {
+    state.box.extraction.push(card);
+    if (state.dragonPosition > DRAGON_FINAL_POSITION) moveDragon(state, events);
+    finishTurn(state, events);
+    return;
+  }
   const goldFirst = addsGoldBeforeMoving();
   if (goldFirst) pileOf(state, dwarf.ownerId).extraction.push(card);
 
@@ -139,11 +148,11 @@ function drawExtraction(state: GameState, dwarf: DwarfState, events: GameEvent[]
     }
   }
 
-  revealDragons(state, events);
+  if (!dragonActsWhenDrawn()) revealDragons(state, events);
   finishTurn(state, events);
 }
 
-/** Tant que la carte visible est un dragon, le dragon avance (4A.1). */
+/** Pioche visible : tant que la carte du dessus est un dragon, le dragon avance (4A.1). */
 function revealDragons(state: GameState, events: GameEvent[]): void {
   while (
     state.dragonPosition > DRAGON_FINAL_POSITION &&

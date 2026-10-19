@@ -1,14 +1,18 @@
+import { useEffect, useRef } from 'react';
 import type { PlayerView } from '@pepite/engine';
 import { ExitActionIcon } from '../assets/Cards';
 import { DwarfToken } from '../assets/DwarfToken';
-import { useLooks } from '../looks';
 import { EXIT_LABELS, dwarfLabel } from '../i18n/fr';
+import { useLooks } from '../looks';
 import { client } from '../store';
-import { Modal } from './Modal';
 import { TurnCountdown, type TurnTimer } from './TurnCountdown';
 
-/** Choix demandé au joueur après une carte Exit : action à jouer ou nain à échanger. */
-export function ChoiceDialog({
+/**
+ * Choix demandé au joueur après une carte Exit (action à jouer ou nain à
+ * échanger). Affiché à la place des boutons d'action, sans fenêtre : le
+ * plateau reste visible, et les nains échangeables s'y touchent aussi.
+ */
+export function ChoicePanel({
   view,
   waiting,
   turnTimer,
@@ -18,19 +22,30 @@ export function ChoiceDialog({
   turnTimer: TurnTimer | null;
 }) {
   const looks = useLooks();
+  const ref = useRef<HTMLElement>(null);
   const pending = view.pending;
   const mine = pending !== null && pending.playerId === view.viewerId;
+  const kind = mine ? pending.kind : null;
+
+  // Le focus va au premier choix possible, comme dans une fenêtre de dialogue.
+  useEffect(() => {
+    if (kind)
+      ref.current?.querySelector<HTMLButtonElement>('button.choice:not([disabled])')?.focus();
+  }, [kind]);
+
+  if (!mine) return null;
   return (
-    <Modal
-      open={mine}
-      title={pending?.kind === 'chooseSwapTarget' ? 'Avec qui échanger ?' : 'Choisissez une action'}
-    >
-      {pending?.kind === 'chooseExitAction' && (
+    <section ref={ref} className="actions choice-panel" aria-labelledby="choice-title">
+      <p className="choice-panel__title" id="choice-title">
+        <TurnCountdown timer={turnTimer} />
+        <span role="status">
+          {pending.kind === 'chooseSwapTarget'
+            ? 'Avec quel nain échanger votre place ? Touchez-le sur le plateau ou ci-dessous.'
+            : 'Votre carte Exit porte deux actions : choisissez-en une.'}
+        </span>
+      </p>
+      {pending.kind === 'chooseExitAction' && (
         <div className="choice-grid">
-          <p className="muted choice-hint">
-            <TurnCountdown timer={turnTimer} />
-            Votre carte Exit porte deux actions : choisissez-en une, sinon pile ou face décide.
-          </p>
           {(pending.options ?? []).map((option) => (
             <button
               key={option.index}
@@ -45,7 +60,7 @@ export function ChoiceDialog({
               }
             >
               <span className="choice__icon">
-                <ExitActionIcon action={option.action} size={36} />
+                <ExitActionIcon action={option.action} size={32} />
               </span>
               <span className="choice__title">{EXIT_LABELS[option.action].name}</span>
               <span className="choice__text">
@@ -57,16 +72,8 @@ export function ChoiceDialog({
           ))}
         </div>
       )}
-      {pending?.kind === 'chooseSwapTarget' && (
+      {pending.kind === 'chooseSwapTarget' && (
         <div className="choice-grid">
-          <p className="muted choice-hint">
-            <TurnCountdown timer={turnTimer} />
-            Sans choix avant la fin du temps, la cible est tirée au hasard.
-          </p>
-          <p className="muted">
-            Votre nain prend la place du nain choisi, et inversement. Seuls les nains encore dans la
-            mine peuvent être choisis.
-          </p>
           {pending.targets.map((id) => {
             const dwarf = view.dwarves[id];
             if (!dwarf) return null;
@@ -81,7 +88,7 @@ export function ChoiceDialog({
                 }
               >
                 <span className="choice__icon">
-                  <DwarfToken color={dwarf.color} look={looks.get(dwarf.ownerId)} size={40} />
+                  <DwarfToken color={dwarf.color} look={looks.get(dwarf.ownerId)} size={36} />
                 </span>
                 <span className="choice__title">{dwarfLabel(view, id)}</span>
                 <span className="choice__text">
@@ -95,6 +102,12 @@ export function ChoiceDialog({
           })}
         </div>
       )}
-    </Modal>
+      <p className="actions__note">
+        Sans choix avant la fin du temps,{' '}
+        {pending.kind === 'chooseSwapTarget'
+          ? 'la cible est tirée au hasard.'
+          : 'pile ou face décide.'}
+      </p>
+    </section>
   );
 }

@@ -46,7 +46,8 @@ Chaque cas est isolé dans une fonction nommée et documentée de [`packages/eng
 **Informations cachées et réseau**
 
 - **L'or de chaque joueur est visible de tous** (demande du commanditaire, écart assumé par rapport au livret où les cartes sont posées face cachée et où il faut s'en souvenir). Réglage en une ligne : `pileValuesArePublic` dans `houseRules.ts` ; s'il renvoie `false`, le serveur n'envoie plus que le nombre de cartes des piles adverses.
-- **La pioche Extraction est face cachée** (demande du commanditaire, écart assumé : le livret la pose face visible, on voit la carte avant de la prendre). On découvre la carte en la piochant et elle est montrée à tous à ce moment-là. Le mécanisme du dragon est inchangé : après chaque carte creusée, si la carte suivante est un dragon, elle est retournée devant tout le monde et le dragon avance. Seul le nombre total de cartes restantes est envoyé, jamais le détail par type. Réglage en une ligne : `extractionTopIsPublic` dans `houseRules.ts`.
+- **La pioche Extraction est face cachée** (demande du commanditaire, écart assumé : le livret la pose face visible, on voit la carte avant de la prendre). On découvre la carte en la piochant et elle est montrée à tous à ce moment-là. Seul le nombre total de cartes restantes est envoyé, jamais le détail par type. Réglage en une ligne : `extractionTopIsPublic` dans `houseRules.ts`.
+- **Le dragon n'agit que lorsqu'on le pioche** (demande du commanditaire, conséquence de la pioche cachée ; décision E, `dragonActsWhenDrawn`). Le livret fait avancer Dragobert dès qu'une carte dragon apparaît sur le dessus de la pioche visible, en chaîne. En ligne, c'est le joueur qui pioche la carte dragon : Dragobert avance d'une carte (Mine retournée, nains éliminés comme dans le livret), et rien d'autre : pas d'or, le nain du joueur ne bouge pas, la carte est rangée dans la boîte et le tour passe. Un dragon sur le dessus de la pioche ne fait rien tant que personne ne le pioche. Avec la pioche visible, la règle du livret s'applique (testée à part).
 - **Nain éliminé** : son disque reste sur la carte Mine où il est tombé (celle que le dragon vient de retourner sur sa face rouge et de faire passer à sa droite), pour que chacun voie où il est mort. L'événement `DwarfEliminated` indique cette carte et l'or perdu (`goldLost`, masqué pour les autres joueurs si les piles sont cachées).
 - Le nombre de cartes Bonus d'or gardées par chaque joueur est public (on voit qu'il garde la carte, et sa valeur est fixe).
 - Une carte Exit à deux actions en attente de choix n'est visible que de son auteur ; elle devient publique quand l'action est jouée.
@@ -131,6 +132,8 @@ Bots aléatoires (8 dragons) : 16 à 30 tours par manche, 4 à 6 % d'éliminatio
 - La tension monte avec le nombre de joueurs (plus de cartes creusées entre deux tours, donc plus de dragons) : de 8 % d'éliminations par manche à 2 joueurs jusqu'à 30 % à 6 joueurs.
 - Pas d'avantage marqué selon la place autour de la table.
 
+**Depuis la décision E** (dragon pioché, `npm run simulate`, 2 000 parties par configuration, bots heuristiques) : 24 à 40 tours par manche (2 → 6 joueurs), 2,1 à 4,0 pas du dragon par manche, de 2 % à 20 % de risque pour un nain d'être éliminé dans une manche, fin par le dragon quasi nulle, au plus 1,1 % de manches sans vainqueur. Le dragon est un peu moins menaçant (un dragon pioché ne vaut qu'un pas, et coûte un tour à celui qui le pioche) : une composition à 10 dragons est à essayer si les manches paraissent trop sûres.
+
 **Proposition** : garder 8 dragons tant que la composition réelle n'est pas connue. Si le jeu paraît trop sûr à 2 ou 3 joueurs, 10 dragons rendent le dragon nettement plus menaçant sans rendre les manches à 6 joueurs punitives. **Rien n'est figé** : la composition doit être confirmée par un comptage des cartes d'une vraie boîte.
 
 ## 5. Écarts par rapport au prompt de départ
@@ -191,9 +194,15 @@ Sont chargés à la demande (`import()`) : les particules d'ambiance, le moteur 
 - Daltonisme : chaque nain garde sa couleur (palette Okabe-Ito) **et** son symbole, dessiné en grand sur le corps du personnage ; tous les symboles sont symétriques pour que le nain puisse regarder à droite.
 - Contrastes mesurés (WCAG) : texte 14,4:1, texte secondaire 8,8:1, texte discret 5,6:1, or 12,2:1, cyan 10,0:1, braise 6,8:1, vert 10,6:1, texte des boutons or 9,2:1 et « Fuir » 5,1:1 ou plus ; contraste élevé : 21:1.
 
+### Le plateau reste visible
+
+- Le coup mis en scène (carte piochée, dragon, sortie, élimination) s'affiche **sur la zone des pioches, sous la piste**, jamais par-dessus la piste ni en plein écran : on voit toujours les nains bouger et le dragon avancer. L'annonce d'une élimination garde un éclair rouge sur les bords de l'écran. La carte piochée peut toujours voler jusqu'à la pile du joueur (le décor reste rogné aux bords du plateau, pas la mise en scène).
+- Les choix (action d'une carte Exit à deux actions, nain à échanger) remplacent les boutons d'action dans la barre du bas au lieu d'ouvrir une fenêtre ; pour un échange, on peut aussi toucher le nain directement sur le plateau.
+- Les emplacements de l'échelle de la Sortie ont la silhouette des nains-personnages.
+
 ### Réactions rapides et apparence
 
-- Six réactions (bravo, rire, oh non, ça chauffe, de l'or, salut), envoyées comme intentions `emote`, validées par zod et **limitées par le serveur** (rafale de 3, puis une toutes les 2 s, par joueur), relayées à tout le salon. Masquables dans les réglages.
+- Sept réactions (bravo, rire, oh non, ça chauffe, de l'or, salut, et « Culé ! » avec l'emoji 🫃🏿 demandé par les joueurs, seul emoji du système utilisé), envoyées comme intentions `emote`, validées par zod et **limitées par le serveur** (rafale de 3, puis une toutes les 2 s, par joueur), relayées à tout le salon. Masquables dans les réglages.
 - Apparence des nains : 3 chapeaux et 3 barbes, choisis dans le salon (intention `setLook`, refusée pendant la partie), visibles de tous.
 
 ### Performance (mesurée avec `npm run perf`, Chromium 141 sans écran ni carte graphique)

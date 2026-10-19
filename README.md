@@ -121,7 +121,7 @@ docs/
 
 ## Animations et réglages
 
-Chaque coup est mis en scène : la carte piochée vole depuis la pioche, marque une pause de suspense puis se retourne ; le dragon déclenche un travelling, un tremblement et un souffle de flammes ; les nains bondissent de carte en carte. Les coups des bots défilent au même rythme que ceux des joueurs. On peut toujours jouer sans attendre la fin d'une animation, et la passer (clic, bouton « Passer », touche Échap).
+Chaque coup est mis en scène sur la zone des pioches, sans jamais cacher la piste : la carte piochée vole depuis la pioche, marque une pause de suspense puis se retourne ; le dragon déclenche un travelling, un tremblement et un souffle de flammes ; les nains bondissent de carte en carte. Les coups des bots défilent au même rythme que ceux des joueurs. On peut toujours jouer sans attendre la fin d'une animation, et la passer (clic, bouton « Passer », touche Échap).
 
 Le menu **Réglages** (roue dentée) propose : thème (mine ou contraste élevé), animations réduites, vitesse des cinématiques, qualité des effets (basse, moyenne, élevée ou automatique), vibrations et affichage des réactions des autres joueurs. Dans le salon, chacun choisit le chapeau et la barbe de ses nains. Pas de son pour l'instant.
 

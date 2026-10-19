@@ -240,7 +240,16 @@ function MineBackdrop() {
  * La mine : décor en couches (parallaxe), particules, vignette et lampe. La
  * chaleur (`--heat`, posée sur la racine) vire l'ambiance du froid au rouge braise.
  */
-export function Scene({ heat, children }: { heat: number; children: ReactNode }) {
+export function Scene({
+  heat,
+  children,
+  overlay,
+}: {
+  heat: number;
+  children: ReactNode;
+  /** Coup mis en scène, posé sur la zone des pioches : la piste reste toujours visible. */
+  overlay?: ReactNode;
+}) {
   const ref = useRef<HTMLElement>(null);
   const preferences = usePreferences();
   const quality = effectiveQuality(preferences);
@@ -248,10 +257,17 @@ export function Scene({ heat, children }: { heat: number; children: ReactNode })
   useParallax(ref, !still && quality !== 'low');
   return (
     <section ref={ref} className="board scene" aria-label="Table de jeu">
-      <MineBackdrop />
-      {!still && quality !== 'low' && <AmbientLayer quality={quality} heat={heat} />}
-      <div className="scene__stage">{children}</div>
-      <div className="scene__vignette" aria-hidden />
+      <div className="scene__back" aria-hidden>
+        <MineBackdrop />
+        {!still && quality !== 'low' && <AmbientLayer quality={quality} heat={heat} />}
+      </div>
+      <div className="scene__viewport">
+        <div className="scene__stage">{children}</div>
+      </div>
+      <div className="scene__front" aria-hidden>
+        <div className="scene__vignette" />
+      </div>
+      {overlay && <div className="scene__overlay">{overlay}</div>}
     </section>
   );
 }

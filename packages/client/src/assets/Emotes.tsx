@@ -9,6 +9,7 @@ export const EMOTE_LABELS: Record<Emote, string> = {
   fire: 'Ça chauffe !',
   gold: 'De l’or !',
   wave: 'Salut !',
+  cule: 'Culé !',
 };
 
 function Face({ children }: { children: React.ReactNode }) {
@@ -66,6 +67,13 @@ export function EmoteIcon({ emote }: { emote: Emote }) {
       return <Flame size={28} />;
     case 'gold':
       return <Nugget size={28} />;
+    case 'cule':
+      // Demandé tel quel par les joueurs : l'emoji du système plutôt qu'un dessin.
+      return (
+        <span className="emote-emoji" aria-hidden>
+          🫃🏿
+        </span>
+      );
     case 'wave':
       return (
         <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden>

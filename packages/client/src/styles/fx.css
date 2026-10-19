@@ -24,6 +24,52 @@
 
 .scene {
   padding-top: 28px;
+  container-type: inline-size;
+}
+
+/* Décor et vignette sont rognés aux bords du plateau ; la scène elle-même ne
+   l'est pas, pour que la carte mise en scène puisse voler jusqu'aux piles. */
+.scene__back,
+.scene__front {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.scene__back {
+  z-index: 0;
+}
+
+.scene__front {
+  z-index: 2;
+}
+
+.scene__viewport {
+  position: relative;
+  z-index: 1;
+  margin: -28px -12px -12px;
+  padding: 28px 12px 12px;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+/* Zone des pioches, juste sous la piste : le coup y est mis en scène sans cacher la piste. */
+.scene__overlay {
+  position: absolute;
+  z-index: 4;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  top: calc(40px + 100cqw * 2 / 9);
+  pointer-events: none;
+}
+
+@media (min-width: 640px) {
+  .scene__overlay {
+    top: calc(40px + 100cqw * 1.55 / 9);
+  }
 }
 
 .backdrop {
@@ -87,14 +133,12 @@
 
 .scene__stage {
   position: relative;
-  z-index: 1;
 }
 
 /* Vignette : les bords s'assombrissent et rougissent quand le dragon approche. */
 .scene__vignette {
   position: absolute;
   inset: 0;
-  z-index: 2;
   pointer-events: none;
   border-radius: inherit;
   background:

@@ -3,13 +3,11 @@
 .spotlight {
   --dur: 1900ms;
   --reveal-delay: 0ms;
-  position: fixed;
+  position: absolute;
   inset: 0;
-  z-index: 40;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding: 16vh 16px 0;
+  align-items: center;
   pointer-events: none;
 }
 
@@ -19,9 +17,10 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 18px;
-  width: min(480px, 100%);
-  padding: 18px 20px 20px;
+  gap: 16px;
+  width: min(520px, 100%);
+  max-height: 100%;
+  padding: 12px 16px 16px;
   color: var(--text);
 }
 
@@ -86,7 +85,7 @@
 
 .spotlight__name {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: clamp(1.05rem, 3.6cqw, 1.4rem);
   font-weight: 800;
   letter-spacing: 0.02em;
   line-height: 1.15;
@@ -173,7 +172,7 @@
 
 .spotlight__card {
   flex: none;
-  width: 118px;
+  width: 84px;
   perspective: 900px;
 }
 
@@ -292,7 +291,7 @@
 .spot-coin {
   display: grid;
   place-items: center;
-  width: 118px;
+  width: 100px;
   aspect-ratio: 1;
   perspective: 600px;
 }
@@ -300,8 +299,8 @@
 .coin {
   --coin-dur: 1700ms;
   position: relative;
-  width: 112px;
-  height: 112px;
+  width: 96px;
+  height: 96px;
   transform-style: preserve-3d;
   /* Position finale (aussi celle affichée si les animations sont coupées). */
   transform: rotateY(var(--coin-end, 1800deg));
@@ -353,11 +352,7 @@
   color: #08222a;
 }
 
-/* ---------- Bandeau (dragon, sortie, manche) : la table reste visible ---------- */
-
-.spotlight--banner {
-  padding-top: max(10px, env(safe-area-inset-top));
-}
+/* ---------- Bandeau (dragon, sortie, manche) ---------- */
 
 .spotlight--banner .spotlight__panel {
   width: min(560px, 100%);
@@ -439,23 +434,19 @@
 
 /* ---------- Élimination : annonce en grand sur tous les écrans ---------- */
 
-.spotlight--dramatic {
-  align-items: center;
-  padding-top: 0;
-}
-
-.spotlight__veil {
-  position: absolute;
+/* Éclair rouge sur les bords de l'écran : la piste, au centre, reste dégagée. */
+.spot-flash {
+  position: fixed;
   inset: 0;
-  background: radial-gradient(circle at center, rgba(120, 0, 0, 0.2) 0%, rgba(40, 0, 0, 0.7) 100%);
-  animation: red-flash var(--dur) ease forwards;
+  z-index: 44;
+  pointer-events: none;
+  box-shadow: inset 0 0 140px 40px rgba(255, 40, 0, 0.6);
+  animation: edge-flash var(--dur) ease forwards;
 }
 
 .spotlight--dramatic .spotlight__panel {
-  flex-direction: column;
-  text-align: center;
-  width: min(580px, 100%);
-  padding: 24px 24px 28px;
+  width: min(600px, 100%);
+  padding: 14px 18px 18px;
   animation: quake 500ms ease-in-out 150ms 2;
 }
 
@@ -464,9 +455,8 @@
 }
 
 .spotlight--dramatic .spotlight__title {
-  justify-content: center;
   font-family: var(--font-display);
-  font-size: clamp(1.6rem, 6vw, 2.5rem);
+  font-size: clamp(1.2rem, 4.6cqw, 2rem);
   font-weight: 900;
   color: var(--danger);
   line-height: 1.1;
@@ -474,22 +464,23 @@
 }
 
 .spotlight--dramatic .spotlight__name {
-  font-size: 1.15rem;
+  font-size: 1rem;
   color: var(--text);
 }
 
 .spotlight--dramatic .spotlight__detail {
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: var(--gold-text);
 }
 
 .spot-eliminated {
   position: relative;
+  flex: none;
   display: grid;
   place-items: center;
-  width: 180px;
-  aspect-ratio: 1.3;
+  width: 120px;
+  aspect-ratio: 1.15;
   border-radius: 16px;
   background: radial-gradient(circle at 50% 75%, #6a1d10 0%, #2a0d08 70%);
   border: 1px solid #14161c;
@@ -521,26 +512,33 @@
 }
 
 @media (max-width: 480px) {
-  .spotlight {
-    padding-top: 12vh;
-  }
   .spotlight__panel {
-    gap: 12px;
-    padding: 14px 14px 18px;
+    gap: 10px;
+    padding: 10px 10px 14px;
   }
-  .spotlight__card,
+  .spotlight__card {
+    width: 64px;
+  }
   .spot-coin {
-    width: 92px;
+    width: 76px;
   }
   .coin {
-    width: 92px;
-    height: 92px;
+    width: 72px;
+    height: 72px;
   }
-  .spotlight__name {
-    font-size: 1.2rem;
+  .coin__face {
+    font-size: 0.72rem;
+    padding: 6px;
+  }
+  .spotlight__detail,
+  .spotlight__extra {
+    font-size: 0.82rem;
   }
   .banner-icon {
-    width: 56px;
+    width: 52px;
+  }
+  .spot-eliminated {
+    width: 84px;
   }
 }
 
@@ -691,6 +689,21 @@
   }
   100% {
     transform: translateY(0) rotateY(var(--coin-end, 1800deg)) scale(1);
+  }
+}
+
+@keyframes edge-flash {
+  0% {
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
   }
 }
 

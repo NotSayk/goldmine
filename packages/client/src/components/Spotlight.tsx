@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import type { PlayerView } from '@pepite/engine';
 import type { DwarfLook } from '@pepite/shared';
 import { PACE } from '@pepite/shared/pacing';
@@ -442,9 +443,10 @@ function useSkipKey(active: boolean): void {
 }
 
 /**
- * Coup en cours mis au premier plan par le réalisateur : carte piochée,
- * action jouée, dragon, sortie, élimination. Le journal en donne
- * l'équivalent textuel pour les lecteurs d'écran ; un clic ou Échap passe.
+ * Coup en cours mis en scène par le réalisateur (carte piochée, action jouée,
+ * dragon, sortie, élimination), posé sur la zone des pioches pour que la
+ * piste reste visible. Le journal en donne l'équivalent textuel pour les
+ * lecteurs d'écran ; un clic ou Échap passe.
  */
 export function Spotlight({
   sequence,
@@ -497,7 +499,8 @@ export function Spotlight({
     const colors = sequence.visual.colors;
     return (
       <div className="spotlight spotlight--dramatic" style={style}>
-        <div className="spotlight__veil" aria-hidden />
+        {/* Éclair rouge sur les bords de l'écran : le centre (la piste) reste dégagé. */}
+        {createPortal(<div className="spot-flash" style={style} aria-hidden />, document.body)}
         <div
           key={sequence.id}
           className={`spotlight__panel spotlight__panel--${sequence.tone}`}
@@ -505,7 +508,7 @@ export function Spotlight({
         >
           <div className="spot-eliminated" aria-hidden>
             <span className="spot-flames">
-              <Flame size={130} />
+              <Flame size={92} />
             </span>
             <span className="spot-dead-discs">
               {colors.map((dwarfColor, i) => (
@@ -513,11 +516,11 @@ export function Spotlight({
                   key={i}
                   color={dwarfColor}
                   mood="dead"
-                  size={colors.length > 1 ? 58 : 80}
+                  size={colors.length > 1 ? 40 : 60}
                 />
               ))}
             </span>
-            <IconSkull className="spot-skull" size={44} />
+            <IconSkull className="spot-skull" size={32} />
           </div>
           {text}
           <Controls queued={queued} />

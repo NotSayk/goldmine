@@ -31,11 +31,11 @@ describe('variante « Double pioche » (2 joueurs, 2 nains chacun)', () => {
     const s = variant();
     s.piles.p1!.extraction.push(...s.extractionDeck.splice(3, 2));
     place(s, { 1: 7 });
-    stackExtraction(s, ['noDoor', 'dragon', 'noDoor']);
+    stackExtraction(s, ['dragon', 'noDoor']);
     const { state: next, events } = play(s, { type: 'drawExtraction' });
     expect(next.dwarves[1]?.status).toBe('eliminated');
     expect(eventsOfType(events, 'DwarfEliminated')[0]?.pileLost).toBe(false);
-    expect(next.piles.p1!.extraction).toHaveLength(3);
+    expect(next.piles.p1!.extraction).toHaveLength(2);
     // Le nain éliminé ne joue plus : après le nain 0, c'est le nain 2.
     expect(next.currentDwarf).toBe(2);
   });
@@ -44,7 +44,7 @@ describe('variante « Double pioche » (2 joueurs, 2 nains chacun)', () => {
     const s = variant();
     s.piles.p2!.extraction.push(...s.extractionDeck.splice(3, 2));
     place(s, { 2: 7, 3: 7 });
-    stackExtraction(s, ['noDoor', 'dragon', 'noDoor']);
+    stackExtraction(s, ['dragon', 'noDoor']);
     const { state: next, events } = play(s, { type: 'drawExtraction' });
     expect(eventsOfType(events, 'DwarfEliminated').map((e) => e.pileLost)).toEqual([false, true]);
     expect(next.piles.p2!.extraction).toEqual([]);

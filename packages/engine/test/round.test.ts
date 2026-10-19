@@ -145,7 +145,7 @@ describe('fin de manche et décompte (manches 1 et 2)', () => {
       ...state.track.slice(2, 8).map((c) => ({ ...c, burned: true })),
     ];
     place(state, { 0: 1 });
-    stackExtraction(state, ['noDoor', 'dragon']);
+    stackExtraction(state, ['dragon']);
     const { state: ended } = play(state, { type: 'drawExtraction' });
     expect(ended.roundResults[0]?.cause).toBe('dragonReachedExit');
     expect(ended.roundResults[0]?.ranking.map((r) => r.playerId)).toEqual(['p2']);

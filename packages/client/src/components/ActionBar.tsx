@@ -36,7 +36,7 @@ export function ActionBar({
           {top
             ? `${EXTRACTION_LABELS[top].name} : ${EXTRACTION_LABELS[top].effect}`
             : view.extraction.count > 0
-              ? `Carte cachée : de l’or… et peut-être 1 carte vers la Sortie ou vers ${BRANDING.dragonName}`
+              ? `Carte cachée : de l’or et 1 carte vers la Sortie ou vers ${BRANDING.dragonName}… ou un dragon !`
               : 'Pioche vide'}
         </span>
       </button>

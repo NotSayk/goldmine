@@ -24,7 +24,8 @@ export function RulesDialog({ open, onClose }: { open: boolean; onClose: () => v
         <ul>
           <li>
             <strong>Creuser</strong> : piochez la carte du dessus de la pioche Extraction, face
-            cachée. Elle est montrée à tous, rapporte de l’or et peut déplacer votre nain.
+            cachée. Elle est montrée à tous, rapporte de l’or et peut déplacer votre nain… ou c’est
+            un dragon.
           </li>
           <li>
             <strong>Fuir</strong> : piochez une carte Exit, face cachée, pour avancer vers la Sortie
@@ -48,12 +49,12 @@ export function RulesDialog({ open, onClose }: { open: boolean; onClose: () => v
         <p className="legend">
           <DragonHead size={40} />
           <span>
-            Après chaque carte creusée, la carte suivante de la pioche est retournée si c’est un
-            dragon : {BRANDING.dragonName} avance d’une carte, la carte Mine dépassée est retournée
-            sur sa face rouge et les nains qui s’y trouvaient sont éliminés, avec leur or. Leur pion
-            reste, noirci, sur la carte retournée. Plusieurs dragons à la suite le font avancer
-            plusieurs fois. S’il arrive juste devant la Sortie, la manche s’arrête aussitôt. Un nain
-            collé au dragon ne peut pas avancer vers lui (il prend quand même l’or).
+            La pioche Extraction cache aussi des cartes « Un dragon ! UN DRAGON ! ». Celui qui en
+            pioche une ne gagne pas d’or et son nain ne bouge pas : {BRANDING.dragonName} avance
+            d’une carte vers la Sortie, la carte Mine dépassée est retournée sur sa face rouge et
+            les nains qui s’y trouvaient sont éliminés, avec leur or. Leur pion reste, noirci, sur
+            la carte retournée. S’il arrive juste devant la Sortie, la manche s’arrête aussitôt. Un
+            nain collé au dragon ne peut pas avancer vers lui (il prend quand même l’or).
           </span>
         </p>
         <h3>Cartes Exit</h3>

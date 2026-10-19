@@ -135,8 +135,9 @@
   box-shadow:
     inset 0 2px 18px rgba(0, 0, 0, 0.7),
     0 10px 30px rgba(0, 0, 0, 0.45);
-  overflow: hidden;
+  /* Au-dessus des colonnes voisines : la carte piochée peut voler jusqu'aux piles. */
   isolation: isolate;
+  z-index: 5;
 }
 
 .scene__stage > * + * {
@@ -237,17 +238,33 @@
 
 .ladder-slot {
   position: absolute;
-  width: calc(100% / 9 * 0.4);
+  width: calc(100% / 9 * 0.48);
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
-  border-radius: 50%;
-  border: 2px dashed rgba(20, 22, 28, 0.55);
-  display: grid;
-  place-items: center;
-  font-size: 0.6rem;
-  font-weight: 800;
-  color: rgba(20, 22, 28, 0.75);
   pointer-events: none;
+}
+
+/* Emplacement de l'échelle : la silhouette du nain qui viendra s'y poser. */
+.ladder-slot svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ladder-slot path {
+  fill: rgba(20, 22, 28, 0.16);
+  stroke: rgba(20, 22, 28, 0.6);
+  stroke-width: 1.6;
+  stroke-dasharray: 3 2.4;
+}
+
+.ladder-slot text {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  fill: rgba(20, 22, 28, 0.78);
+  text-anchor: middle;
 }
 
 /* ---------- Nains sur la piste ---------- */
@@ -1640,4 +1657,54 @@ button.disc--target {
     opacity: 0;
     transform: translateY(-8px);
   }
+}
+
+/* ---------- Choix intégré (carte Exit à deux actions, échange) ---------- */
+
+.choice-panel {
+  display: block;
+  border-color: var(--gold);
+  box-shadow:
+    0 -8px 24px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(242, 182, 50, 0.35);
+}
+
+.choice-panel__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-weight: 700;
+  color: var(--gold-text);
+}
+
+/* Les choix défilent à l'horizontale : le panneau reste bas, le plateau visible. */
+.choice-panel .choice-grid {
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(170px, 1fr);
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.choice-panel .choice {
+  min-height: 56px;
+  padding: 8px 10px;
+}
+
+.choice-panel .choice__text {
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.choice-panel .actions__note {
+  margin-top: 6px;
+}
+
+.emote-emoji {
+  display: inline-block;
+  font-size: 24px;
+  line-height: 28px;
+  width: 28px;
+  text-align: center;
 }

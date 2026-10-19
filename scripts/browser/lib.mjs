@@ -113,6 +113,12 @@ export async function startGame(page, firstPlayer) {
 export async function step(page) {
   try {
     if (await page.locator('.final-hero').count()) return 'finished';
+    // Choix d'une action Exit ou d'un nain à échanger, à la place des boutons d'action.
+    const inline = page.locator('.choice-panel button.choice:not([disabled])');
+    if (await inline.count()) {
+      await inline.first().click({ timeout: 1000 });
+      return 'choice';
+    }
     const dialog = page.locator('dialog[open]');
     if (await dialog.count()) {
       const choice = dialog.locator('button.choice:not([disabled])');

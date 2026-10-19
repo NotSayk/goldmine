@@ -11,6 +11,8 @@ import { reducedMotion } from '../preferences';
 import { Card3D } from './Card3D';
 
 const COLUMNS = 9;
+/** Silhouette d'un nain (tête et corps du jeton) : emplacement de l'échelle de la Sortie. */
+const SLOT_SILHOUETTE = 'M13.44 16.48 A7.2 7.2 0 1 1 26.56 16.48 A12.4 12.4 0 1 1 13.44 16.48 Z';
 const HOP_MS = PACE.hopMs;
 
 interface Spot {
@@ -226,7 +228,12 @@ export function Track({
           style={spotStyle(slotCenter(0, slot))}
           aria-hidden
         >
-          {slot + 1}
+          <svg viewBox="0 0 40 40">
+            <path d={SLOT_SILHOUETTE} />
+            <text x="20" y="31">
+              {slot + 1}
+            </text>
+          </svg>
         </span>
       ))}
 

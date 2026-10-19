@@ -31,8 +31,8 @@ export const EXTRACTION_LABELS: Record<
   },
   dragon: {
     name: 'Un dragon ! UN DRAGON !',
-    effect: `${BRANDING.dragonName} se déplace immédiatement d’1 carte vers la gauche, en direction de la Sortie de la mine, tout en crachant du feu`,
-    short: `${BRANDING.dragonName} avance d’1 carte`,
+    effect: `Pas d’or et votre nain ne bouge pas : ${BRANDING.dragonName} se déplace immédiatement d’1 carte vers la gauche, en direction de la Sortie de la mine, tout en crachant du feu`,
+    short: `Pas d’or : ${BRANDING.dragonName} avance d’1 carte`,
   },
 };
 
@@ -194,6 +194,10 @@ export function describeEvent(event: GameEvent, view: PlayerView): string | null
     case 'TurnStarted':
       return null;
     case 'CardDrawn': {
+      if (event.deck === 'extraction' && event.card === 'dragon') {
+        const card = `« ${EXTRACTION_LABELS.dragon.name} »`;
+        return say(event.dwarfId, `piochez ${card}`, `pioche ${card}`);
+      }
       if (event.deck === 'extraction') {
         const card = `${EXTRACTION_LABELS[event.card].name} (+${plural(event.gold, 'pépite')})`;
         return say(event.dwarfId, `creusez : ${card}.`, `creuse : ${card}.`);

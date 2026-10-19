@@ -39,7 +39,8 @@ function checkInvariants(state: GameState): void {
   }
   expect(state.track[state.dragonPosition]?.kind).toBe('dragon');
   if (state.phase === 'playing') {
-    expect(state.extractionDeck[0]?.kind).not.toBe('dragon');
+    // Pioche visible : un dragon sur le dessus est joué aussitôt.
+    if (!houseRules.dragonActsWhenDrawn()) expect(state.extractionDeck[0]?.kind).not.toBe('dragon');
     expect(state.dwarves[state.currentDwarf ?? -1]?.status).toBe('mine');
   }
 }

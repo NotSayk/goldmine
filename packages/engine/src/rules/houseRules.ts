@@ -126,8 +126,20 @@ export function pileValuesArePublic(): boolean {
  * Le livret pose la pioche Extraction face visible (on voit la carte avant de
  * la prendre). À la demande du commanditaire, la pioche est cachée en ligne :
  * on découvre la carte en la piochant, et tout le monde la voit à ce moment-là.
- * Le dragon reste révélé à tous dès qu'il arrive sur le dessus de la pioche.
  */
 export function extractionTopIsPublic(): boolean {
   return false;
+}
+
+/**
+ * Décision E : quand le dragon agit.
+ * Livret (pioche visible) : dès qu'une carte dragon apparaît sur le dessus de
+ * la pioche après une pioche, Dragobert avance, en chaîne tant que le dessus
+ * est un dragon. Avec la pioche cachée (décision D), le commanditaire a demandé
+ * que la carte dragon ne soit jamais jouée d'office : c'est le joueur qui la
+ * pioche, et elle fait seulement avancer Dragobert d'une carte (pas d'or, le
+ * nain ne bouge pas, la carte est rangée dans la boîte et le tour passe).
+ */
+export function dragonActsWhenDrawn(): boolean {
+  return !extractionTopIsPublic();
 }

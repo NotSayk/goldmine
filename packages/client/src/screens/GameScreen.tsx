@@ -5,7 +5,7 @@ import { BRANDING } from '@pepite/shared/branding';
 import { DwarfToken } from '../assets/DwarfToken';
 import { ActionBar } from '../components/ActionBar';
 import { CardMemo } from '../components/CardMemo';
-import { ChoiceDialog } from '../components/ChoiceDialog';
+import { ChoicePanel } from '../components/ChoicePanel';
 import { Decks } from '../components/Decks';
 import { EmoteBar } from '../components/Emotes';
 import { FxLayer } from '../components/FxLayer';
@@ -227,7 +227,20 @@ export function GameScreen({
         </div>
         <div className="game__center stack">
           <TurnBanner view={view} room={room} turnTimer={turnTimer} />
-          <Scene heat={heat}>
+          <Scene
+            heat={heat}
+            overlay={
+              sequence && (
+                <Spotlight
+                  sequence={sequence}
+                  durationMs={sequenceMs}
+                  speed={sequenceSpeed}
+                  queued={queued}
+                  view={view}
+                />
+              )
+            }
+          >
             <Track
               view={boardView}
               swapTargets={swapTargets}
@@ -241,9 +254,12 @@ export function GameScreen({
           {boardView.phase === 'finished' && (
             <FinalPanel view={boardView} isHost={isHost} history={goldHistory} />
           )}
-          {view.phase === 'playing' && (
-            <ActionBar view={view} waiting={waiting} turnTimer={turnTimer} />
-          )}
+          {view.phase === 'playing' &&
+            (view.pending?.playerId === view.viewerId ? (
+              <ChoicePanel view={view} waiting={waiting} turnTimer={turnTimer} />
+            ) : (
+              <ActionBar view={view} waiting={waiting} turnTimer={turnTimer} />
+            ))}
         </div>
         <aside className="game__side stack">
           <Players view={boardView} room={room} emotes={emotes} />
@@ -252,14 +268,6 @@ export function GameScreen({
         </aside>
       </main>
       <FxLayer />
-      <Spotlight
-        sequence={sequence}
-        durationMs={sequenceMs}
-        speed={sequenceSpeed}
-        queued={queued}
-        view={view}
-      />
-      <ChoiceDialog view={view} waiting={waiting} turnTimer={turnTimer} />
       <Modal open={confirmLeave} title="Quitter la partie ?" onClose={() => setConfirmLeave(false)}>
         <p>Un bot jouera à votre place jusqu’à la fin de la partie. Vous ne pourrez pas revenir.</p>
         <div className="row" style={{ justifyContent: 'flex-end' }}>

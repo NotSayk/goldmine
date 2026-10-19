@@ -95,6 +95,22 @@ describe('séquences du réalisateur', () => {
     expect(seenByBruno[0]).toMatchObject({ title: 'Alice fuit', visual: { kind: 'exitBack' } });
   });
 
+  it('un dragon pioché : pas de pépites, la carte ne va pas dans la pile', () => {
+    const events: GameEvent[] = [
+      { type: 'CardDrawn', deck: 'extraction', dwarfId: 0, card: 'dragon', gold: 0 },
+      { type: 'DragonMoved', from: 8, to: 7, burnedCardId: 'mine-6' },
+    ];
+    const [draw, dragon] = buildHighlights(events, viewFor(state, 'b'));
+    expect(draw).toMatchObject({
+      title: 'Alice pioche un dragon !',
+      name: 'Un dragon ! UN DRAGON !',
+      tone: 'danger',
+      targetPlayerId: null,
+    });
+    expect(draw?.cues.some((cue) => cue.type === 'burst')).toBe(false);
+    expect(dragon?.visual).toEqual({ kind: 'dragon', steps: 1 });
+  });
+
   it('marque la même pause de suspense pour une bonne ou une mauvaise carte', () => {
     const timing = (card: 'redDoor' | 'blueDoor' | 'noDoor' | 'dragon'): Cue[] => {
       const [sequence] = buildHighlights(

@@ -213,27 +213,36 @@ export function buildSequences(events: readonly GameEvent[], view: PlayerView): 
         if (event.deck === 'extraction') {
           const label = EXTRACTION_LABELS[event.card];
           const owner = ownerOf(event.dwarfId);
+          const dragon = event.card === 'dragon';
           start({
             dwarfId: event.dwarfId,
-            title: say(event.dwarfId, 'creusez', 'creuse'),
+            title: dragon
+              ? say(event.dwarfId, 'piochez un dragon !', 'pioche un dragon !')
+              : say(event.dwarfId, 'creusez', 'creuse'),
             name: label.name,
             detail: `${label.effect}.`,
             visual: { kind: 'extraction', card: event.card },
-            tone: 'info',
+            tone: dragon ? 'danger' : 'info',
             duration: DRAW_MS,
-            targetPlayerId: owner,
+            // La carte dragon est rangée dans la boîte, pas dans la pile du joueur.
+            targetPlayerId: dragon ? null : owner,
             flight: 'extraction',
             cues: [
               ...drawCues(),
-              {
-                at: REVEAL_AT + 50,
-                type: 'burst',
-                effect: 'gold',
-                anchor: { kind: 'center' },
-                count: event.gold,
-                ...(owner ? { target: { kind: 'player', playerId: owner } as const } : {}),
-              },
-              { at: REVEAL_AT + 120, type: 'sound', sound: 'gold', count: event.gold },
+              // Pas de pépites pour une carte dragon.
+              ...(event.gold > 0
+                ? ([
+                    {
+                      at: REVEAL_AT + 50,
+                      type: 'burst',
+                      effect: 'gold',
+                      anchor: { kind: 'center' },
+                      count: event.gold,
+                      ...(owner ? { target: { kind: 'player', playerId: owner } as const } : {}),
+                    },
+                    { at: REVEAL_AT + 120, type: 'sound', sound: 'gold', count: event.gold },
+                  ] satisfies Cue[])
+                : []),
             ],
           });
           return;

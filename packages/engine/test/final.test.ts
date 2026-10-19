@@ -72,8 +72,8 @@ describe('manche 3 : décompte final', () => {
     state.dragonPosition = 2;
     place(state, { 0: 1 });
     state.extractionDeck = [
-      state.extractionDeck.find((c) => c.kind === 'noDoor')!,
       state.extractionDeck.find((c) => c.kind === 'dragon')!,
+      state.extractionDeck.find((c) => c.kind === 'noDoor')!,
     ];
     const { state: ended } = play(state, { type: 'drawExtraction' });
     expect(ended.dwarves[0]?.status).toBe('eliminated');

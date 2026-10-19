@@ -15,7 +15,7 @@ export interface DwarfLook {
 }
 
 /** Réactions rapides envoyées pendant la partie. */
-export const EMOTES = ['cheer', 'laugh', 'gasp', 'fire', 'gold', 'wave'] as const;
+export const EMOTES = ['cheer', 'laugh', 'gasp', 'fire', 'gold', 'wave', 'cule'] as const;
 export type Emote = (typeof EMOTES)[number];
 
 /** Débit des réactions : rafale de 3, puis une toutes les 2 secondes. */
