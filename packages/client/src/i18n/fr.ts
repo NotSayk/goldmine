@@ -142,6 +142,21 @@ export function dwarfName(view: PlayerView, dwarfId: number): string {
   return view.doubleDraw ? `${name} (${dwarfLook(dwarf.color).name})` : name;
 }
 
+/** « de Bruno », « d’Alice ». */
+export function ofName(name: string): string {
+  return /^[aeiouyhàâäéèêëîïôöûüœ]/i.test(name) ? `d’${name}` : `de ${name}`;
+}
+
+/** Sujet neutre pour annoncer ce qui arrive à un nain : « Votre nain », « Le nain d’Alice ». */
+export function dwarfNoun(view: PlayerView, dwarfId: number): string {
+  const dwarf = view.dwarves[dwarfId];
+  if (!dwarf) return 'Un nain';
+  const look = view.doubleDraw ? ` ${dwarfLook(dwarf.color).name}` : '';
+  if (dwarf.ownerId === view.viewerId) return `Votre nain${look}`;
+  const owner = view.players.find((p) => p.id === dwarf.ownerId)?.name ?? '?';
+  return `Le nain${look} ${ofName(owner)}`;
+}
+
 /** Libellé d'un nain hors phrase (listes, boutons) : « Votre nain Ambre », « Alice ». */
 export function dwarfLabel(view: PlayerView, dwarfId: number): string {
   const dwarf = view.dwarves[dwarfId];
@@ -234,7 +249,15 @@ export function describeEvent(event: GameEvent, view: PlayerView): string | null
         );
       }
       const yours = isYou(event.dwarfId);
-      const lost = event.pileLost ? (yours ? ' : votre or est perdu' : ' : son or est perdu') : '';
+      const amount =
+        event.goldLost === null || event.goldLost === 0
+          ? ''
+          : ` (${plural(event.goldLost, 'pépite')})`;
+      const lost = event.pileLost
+        ? yours
+          ? ` : votre or est perdu${amount}`
+          : ` : son or est perdu${amount}`
+        : '';
       const target = object(event.dwarfId);
       return target === 'vous'
         ? `${BRANDING.dragonName} vous rattrape${lost}.`

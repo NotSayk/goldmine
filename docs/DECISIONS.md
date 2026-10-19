@@ -46,7 +46,8 @@ Chaque cas est isolé dans une fonction nommée et documentée de [`packages/eng
 **Informations cachées et réseau**
 
 - **L'or de chaque joueur est visible de tous** (demande du commanditaire, écart assumé par rapport au livret où les cartes sont posées face cachée et où il faut s'en souvenir). Réglage en une ligne : `pileValuesArePublic` dans `houseRules.ts` ; s'il renvoie `false`, le serveur n'envoie plus que le nombre de cartes des piles adverses.
-- La carte du dessus de la pioche Extraction est publique : la carte qu'un joueur prend est donc connue de tous, comme à la table. Pour la même raison, le nombre de cartes Extraction restantes par type (affiché dans le mémo) est une information publique.
+- **La pioche Extraction est face cachée** (demande du commanditaire, écart assumé : le livret la pose face visible, on voit la carte avant de la prendre). On découvre la carte en la piochant et elle est montrée à tous à ce moment-là. Le mécanisme du dragon est inchangé : après chaque carte creusée, si la carte suivante est un dragon, elle est retournée devant tout le monde et le dragon avance. Seul le nombre total de cartes restantes est envoyé, jamais le détail par type. Réglage en une ligne : `extractionTopIsPublic` dans `houseRules.ts`.
+- **Nain éliminé** : son disque reste sur la galerie où il est tombé (celle que le dragon vient de brûler et de faire passer à sa droite), pour que chacun voie où il est mort. L'événement `DwarfEliminated` indique cette carte et l'or perdu (`goldLost`, masqué pour les autres joueurs si les piles sont cachées).
 - Le nombre de cartes Bonus d'or gardées par chaque joueur est public (on voit qu'il garde la carte, et sa valeur est fixe).
 - Une carte Exit à deux actions en attente de choix n'est visible que de son auteur ; elle devient publique quand l'action est jouée.
 - Les résultats de manche (or de chaque nain sorti) sont révélés au décompte.
@@ -84,7 +85,7 @@ Dans l'interface, les cartes portent des noms propres à cette version (« Filon
 
 ## 4. Résultats de simulation
 
-Commande : `npm run simulate` (1 000 parties, soit 3 000 manches, par configuration). Bots « heuristique » : ils creusent tant que le risque reste faible au regard du gain, puis fuient. Bots « aléatoire » : choix uniforme entre les deux actions.
+Commande : `npm run simulate` (1 000 parties, soit 3 000 manches, par configuration). Bots « heuristique » : ils creusent tant que le risque reste faible au regard du gain, puis fuient. Bots « aléatoire » : choix uniforme entre les deux actions. Simulation refaite avec la pioche Extraction cachée (les bots raisonnent alors sur une carte moyenne de la boîte) : les chiffres ne bougent pas de plus de 0,3 point.
 
 **Composition provisoire (8 dragons), bots heuristiques**
 

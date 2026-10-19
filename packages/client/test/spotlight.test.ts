@@ -33,20 +33,36 @@ describe('coups mis au premier plan', () => {
     });
   });
 
-  it('regroupe une chaîne de dragons et ses victimes', () => {
+  it('regroupe une chaîne de dragons, puis annonce l’élimination en grand', () => {
     const events: GameEvent[] = [
       { type: 'CardDrawn', deck: 'extraction', dwarfId: 0, card: 'noDoor', gold: 1 },
       { type: 'DragonMoved', from: 8, to: 7, burnedCardId: 'mine-6' },
       { type: 'DragonMoved', from: 7, to: 6, burnedCardId: 'mine-5' },
-      { type: 'DwarfEliminated', dwarfId: 1, position: 6, cause: 'dragon', pileLost: true },
+      {
+        type: 'DwarfEliminated',
+        dwarfId: 1,
+        position: 7,
+        cause: 'dragon',
+        pileLost: true,
+        goldLost: 5,
+      },
     ];
     const highlights = buildHighlights(events, viewFor(state, 'a'));
-    expect(highlights.map((h) => h.visual.kind)).toEqual(['extraction', 'dragon']);
+    expect(highlights.map((h) => h.visual.kind)).toEqual(['extraction', 'dragon', 'eliminated']);
     expect(highlights[1]).toMatchObject({
-      title: 'Braisard avance de 2 cartes !',
+      title: 'Dragon révélé : Braisard avance de 2 cartes !',
       visual: { kind: 'dragon', steps: 2 },
-      extra: ['Bruno : rattrapé, or perdu.'],
       tone: 'danger',
+    });
+    expect(highlights[2]).toMatchObject({
+      title: 'Le nain de Bruno est éliminé !',
+      name: 'Rattrapé par Braisard sur la carte 7',
+      detail: '5 pépites perdues !',
+      dramatic: true,
+    });
+    // Pour le joueur concerné, l'annonce lui parle directement.
+    expect(buildHighlights(events, viewFor(state, 'b'))[2]).toMatchObject({
+      title: 'Votre nain est éliminé !',
     });
   });
 
@@ -72,8 +88,9 @@ describe('coups mis au premier plan', () => {
     expect(seenByBruno[0]).toMatchObject({ title: 'Alice fuit', visual: { kind: 'exitBack' } });
   });
 
-  it('accélère quand les coups s’accumulent', () => {
+  it('accélère quand les coups s’accumulent, laisse plus de temps aux éliminations', () => {
     expect(highlightDuration(1)).toBeGreaterThan(highlightDuration(3));
     expect(highlightDuration(3)).toBeGreaterThan(highlightDuration(6));
+    expect(highlightDuration(1, true)).toBeGreaterThan(highlightDuration(1));
   });
 });

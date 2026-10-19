@@ -249,8 +249,8 @@ export function ExtractionCardArt({ kind }: { kind: ExtractionKind }) {
   );
 }
 
-/** Dos d'une carte (pioche Exit, cachée). */
-export function CardBack() {
+/** Dos d'une carte Exit. */
+function ExitBack() {
   return (
     <svg viewBox="0 0 60 84" aria-hidden className="card-art">
       <defs>
@@ -302,6 +302,53 @@ export function CardBack() {
       />
     </svg>
   );
+}
+
+/** Dos d'une carte Extraction : pioche face cachée, pioche et pépite. */
+function ExtractionBack() {
+  return (
+    <svg viewBox="0 0 60 84" aria-hidden className="card-art">
+      <defs>
+        <pattern id="extraction-back-pattern" width="10" height="10" patternUnits="userSpaceOnUse">
+          <rect width="10" height="10" fill="var(--extraction-back)" />
+          <circle cx="5" cy="5" r="1.4" fill="var(--extraction-back-dot)" />
+        </pattern>
+      </defs>
+      <rect
+        x="1.5"
+        y="1.5"
+        width="57"
+        height="81"
+        rx="6"
+        fill="url(#extraction-back-pattern)"
+        stroke={STROKE}
+        strokeWidth="2"
+      />
+      <circle
+        cx="30"
+        cy="42"
+        r="19"
+        fill="var(--extraction-back)"
+        stroke={STROKE}
+        strokeWidth="1.6"
+      />
+      {/* Pioche de mineur */}
+      <path d="M21 52 L38 32" stroke="#e9d3a6" strokeWidth="3.4" strokeLinecap="round" />
+      <path
+        d="M30 27 Q40 26 45 33 Q39 30 33 31 Z"
+        fill="#c9ced8"
+        stroke={STROKE}
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+      <MiniNugget x={36} y={50} scale={0.7} />
+    </svg>
+  );
+}
+
+/** Dos d'une carte : pioche Exit (par défaut) ou pioche Extraction. */
+export function CardBack({ deck = 'exit' }: { deck?: 'exit' | 'extraction' }) {
+  return deck === 'extraction' ? <ExtractionBack /> : <ExitBack />;
 }
 
 /** Pictogramme d'une action Exit. */

@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
-import type { GameEvent, PlayerView } from '@pepite/engine';
+import type { ExtractionKind, GameEvent, PlayerView } from '@pepite/engine';
 import type { ClientMessage, RoomView, ServerMessage } from '@pepite/shared';
-import { ERROR_MESSAGES, describeEvent } from './i18n/fr';
+import { ERROR_MESSAGES, describeEvent, dwarfName } from './i18n/fr';
 import { buildHighlights, highlightDuration, type Highlight } from './spotlight';
 
 export type ConnectionState = 'connecting' | 'open' | 'reconnecting';
@@ -20,6 +20,13 @@ export interface Effect {
   readonly position: number;
   readonly dwarfId: number | null;
   readonly color: number | null;
+}
+
+/** Dernière carte creusée, montrée à tous au moment de la pioche. */
+export interface LastDrawn {
+  readonly card: ExtractionKind;
+  /** Nom de qui l'a piochée (« Vous » pour soi). */
+  readonly by: string;
 }
 
 export interface Notice {
@@ -41,6 +48,7 @@ export interface AppState {
   readonly highlights: readonly Highlight[];
   /** Durée d'affichage du coup en cours, en millisecondes. */
   readonly highlightMs: number;
+  readonly lastDrawn: LastDrawn | null;
 }
 
 const SESSION_KEY = 'pepite.session';
@@ -79,6 +87,7 @@ class GameClient {
     waiting: false,
     highlights: [],
     highlightMs: 0,
+    lastDrawn: null,
   };
   private highlightTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly listeners = new Set<() => void>();
@@ -145,7 +154,8 @@ class GameClient {
   /** Affiche les coups l'un après l'autre, plus vite quand la file s'allonge. */
   private pumpHighlights(): void {
     if (this.highlightTimer || this.state.highlights.length === 0) return;
-    const duration = highlightDuration(this.state.highlights.length);
+    const head = this.state.highlights[0];
+    const duration = highlightDuration(this.state.highlights.length, head?.dramatic);
     this.set({ highlightMs: duration });
     this.highlightTimer = setTimeout(() => {
       this.highlightTimer = null;
@@ -176,7 +186,7 @@ class GameClient {
           room: message.room,
           playerId: message.you,
           ...(message.room === null || message.room.status === 'lobby'
-            ? { view: null, log: [], effects: [], highlights: [] }
+            ? { view: null, log: [], effects: [], highlights: [], lastDrawn: null }
             : {}),
         });
         // Un lien d'invitation (?salon=CODE) reste dans l'adresse tant qu'on n'a pas rejoint.
@@ -202,7 +212,12 @@ class GameClient {
   private applyGame(view: PlayerView, events: readonly GameEvent[]): void {
     const entries: LogEntry[] = [];
     const effects: Effect[] = [];
+    let lastDrawn = this.state.lastDrawn;
     for (const event of events) {
+      if (event.type === 'RoundStarted') lastDrawn = null;
+      if (event.type === 'CardDrawn' && event.deck === 'extraction') {
+        lastDrawn = { card: event.card, by: dwarfName(view, event.dwarfId) };
+      }
       const text = describeEvent(event, view);
       if (text) {
         const tone =
@@ -222,6 +237,7 @@ class GameClient {
       log: [...this.state.log, ...entries].slice(-LOG_LIMIT),
       effects: [...this.state.effects, ...effects],
       highlights: queueHighlights(this.state.highlights, buildHighlights(events, view)),
+      lastDrawn,
     });
     this.pumpHighlights();
     if (effects.length > 0) {

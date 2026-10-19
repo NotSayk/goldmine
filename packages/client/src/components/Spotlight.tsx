@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { CardBack, ExitActionIcon, ExtractionCardArt } from '../assets/Cards';
-import { DragonHead } from '../assets/Dragon';
+import { DragonHead, Flame } from '../assets/Dragon';
 import { DwarfDisc } from '../assets/DwarfDisc';
 import { EXIT_LABELS } from '../i18n/fr';
 import type { Highlight, HighlightVisual } from '../spotlight';
@@ -52,6 +52,22 @@ function Visual({ visual, color }: { visual: HighlightVisual; color: number | nu
           <span className="spot-sparkle">✨</span>
         </div>
       );
+    case 'eliminated':
+      return (
+        <div className="spot-card spot-card--eliminated">
+          <span className="spot-flames" aria-hidden>
+            <Flame size={120} />
+          </span>
+          <span className="spot-dead-discs">
+            {visual.colors.map((dwarfColor, i) => (
+              <DwarfDisc key={i} color={dwarfColor} size={visual.colors.length > 1 ? 52 : 72} />
+            ))}
+          </span>
+          <span className="spot-skull" aria-hidden>
+            💀
+          </span>
+        </div>
+      );
     case 'skipped':
       return <div className="spot-card spot-card--skipped">⏭</div>;
   }
@@ -73,7 +89,7 @@ export function Spotlight({
 }) {
   if (!highlight) return null;
   return (
-    <div className="spotlight" aria-hidden>
+    <div className={`spotlight${highlight.dramatic ? ' spotlight--dramatic' : ''}`} aria-hidden>
       <div
         key={highlight.id}
         className={`spotlight__panel spotlight__panel--${highlight.tone}`}

@@ -11,7 +11,6 @@ const WIDE_QUERY = '(min-width: 1200px)';
 export function CardMemo({ view }: { view: PlayerView }) {
   // Ouvert d'office en colonne de gauche (grand écran), replié sur téléphone.
   const [open, setOpen] = useState(() => window.matchMedia(WIDE_QUERY).matches);
-  const { remaining } = view.extraction;
   return (
     <details
       className="panel memo"
@@ -23,15 +22,13 @@ export function CardMemo({ view }: { view: PlayerView }) {
       </summary>
       <section aria-labelledby="memo-extraction">
         <h3 id="memo-extraction">
-          Extraction <span className="memo__hint">visible · « Creuser »</span>
+          Extraction <span className="memo__hint">cachée · « Creuser »</span>
         </h3>
         <ul className="memo__list">
           {EXTRACTION_ORDER.map((kind) => (
             <li
               key={kind}
-              className={`memo__item${kind === 'dragon' ? ' memo__item--danger' : ''}${
-                kind === view.extraction.top ? ' memo__item--top' : ''
-              }`}
+              className={`memo__item${kind === 'dragon' ? ' memo__item--danger' : ''}`}
             >
               <span className="memo__art">
                 <ExtractionCardArt kind={kind} />
@@ -40,18 +37,16 @@ export function CardMemo({ view }: { view: PlayerView }) {
                 <strong>{EXTRACTION_LABELS[kind].name}</strong>
                 <span>{EXTRACTION_LABELS[kind].short}</span>
               </span>
-              <span
-                className="memo__count"
-                title={`${remaining[kind]} encore dans la pioche sur ${view.decks.extraction[kind]}`}
-              >
-                <strong>{remaining[kind]}</strong>
-                <span>/{view.decks.extraction[kind]}</span>
+              <span className="memo__count" title="Exemplaires dans la boîte">
+                <span>×</span>
+                <strong>{view.decks.extraction[kind]}</strong>
               </span>
             </li>
           ))}
         </ul>
         <p className="memo__hint">
-          Chiffre de droite : cartes encore dans la pioche / dans la boîte.
+          Pioche face cachée : {view.extraction.count} cartes restantes (le détail par type reste
+          secret).
         </p>
       </section>
       <section aria-labelledby="memo-exit">

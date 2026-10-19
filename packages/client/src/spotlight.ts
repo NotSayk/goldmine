@@ -1,6 +1,13 @@
 import type { ExitActionKind, ExtractionKind, GameEvent, PlayerView } from '@pepite/engine';
 import { BRANDING } from '@pepite/shared/branding';
-import { EXIT_LABELS, EXTRACTION_LABELS, dwarfLabel, dwarfName } from './i18n/fr';
+import {
+  EXIT_LABELS,
+  EXTRACTION_LABELS,
+  dwarfLabel,
+  dwarfName,
+  dwarfNoun,
+  plural,
+} from './i18n/fr';
 
 export type HighlightVisual =
   | { readonly kind: 'extraction'; readonly card: ExtractionKind }
@@ -12,6 +19,7 @@ export type HighlightVisual =
     }
   | { readonly kind: 'dragon'; readonly steps: number }
   | { readonly kind: 'exited' }
+  | { readonly kind: 'eliminated'; readonly colors: readonly number[] }
   | { readonly kind: 'skipped' };
 
 /** Coup mis en avant au premier plan (carte piochée, action jouée, dragon…). */
@@ -26,6 +34,8 @@ export interface Highlight {
   readonly extra: readonly string[];
   readonly visual: HighlightVisual;
   readonly tone: 'info' | 'danger' | 'success';
+  /** Annonce en grand sur tout l'écran (élimination). */
+  readonly dramatic?: boolean;
 }
 
 let nextId = 1;
@@ -142,12 +152,12 @@ export function buildHighlights(events: readonly GameEvent[], view: PlayerView):
         if (draft?.visual.kind === 'dragon') {
           const steps = draft.visual.steps + 1;
           draft.visual = { kind: 'dragon', steps };
-          draft.title = `${BRANDING.dragonName} avance de ${steps} cartes !`;
+          draft.title = `Dragon révélé : ${BRANDING.dragonName} avance de ${steps} cartes !`;
           return;
         }
         start({
           dwarfId: null,
-          title: `${BRANDING.dragonName} avance !`,
+          title: `Dragon révélé : ${BRANDING.dragonName} avance !`,
           name: 'Dragon',
           detail: 'La galerie dépassée brûle.',
           visual: { kind: 'dragon', steps: 1 },
@@ -156,15 +166,27 @@ export function buildHighlights(events: readonly GameEvent[], view: PlayerView):
         return;
       }
       case 'DwarfEliminated': {
-        const who = dwarfLabel(view, event.dwarfId);
-        const text =
-          event.cause === 'dragon'
-            ? `${who} : rattrapé${event.pileLost ? ', or perdu' : ''}.`
-            : `${who} n’a pas quitté la mine à temps.`;
-        if (draft) {
-          draft.extra.push(text);
-          draft.tone = 'danger';
+        // Chaque élimination a sa propre annonce, en grand, après la carte qui l'a causée.
+        const who = dwarfNoun(view, event.dwarfId);
+        const color = view.dwarves[event.dwarfId]?.color ?? 0;
+        if (draft?.visual.kind === 'eliminated' && draft.dramatic) {
+          draft.visual = { kind: 'eliminated', colors: [...draft.visual.colors, color] };
+          draft.extra.push(`${who} est aussi éliminé.`);
+          return;
         }
+        const lost = lossText(event);
+        start({
+          dwarfId: event.dwarfId,
+          title: `${who} est éliminé !`,
+          name:
+            event.cause === 'dragon'
+              ? `Rattrapé par ${BRANDING.dragonName} sur la carte ${event.position}`
+              : 'Resté dans la mine',
+          detail: lost,
+          visual: { kind: 'eliminated', colors: [color] },
+          tone: 'danger',
+          dramatic: true,
+        });
         return;
       }
       case 'TurnSkipped':
@@ -185,8 +207,17 @@ export function buildHighlights(events: readonly GameEvent[], view: PlayerView):
   return out;
 }
 
+function lossText(event: Extract<GameEvent, { type: 'DwarfEliminated' }>): string {
+  if (event.cause === 'stranded') return 'Il n’a pas quitté la mine à temps : son or est perdu.';
+  if (!event.pileLost) return 'Son équipier garde l’or commun.';
+  if (event.goldLost === null) return 'Tout son or est perdu.';
+  if (event.goldLost === 0) return 'Il n’avait pas encore d’or.';
+  return `${plural(event.goldLost, 'pépite')} perdue${event.goldLost > 1 ? 's' : ''} !`;
+}
+
 /** Durée d'affichage selon la file d'attente : on accélère si les coups s'enchaînent. */
-export function highlightDuration(queueLength: number): number {
+export function highlightDuration(queueLength: number, dramatic = false): number {
+  if (dramatic) return queueLength >= 5 ? 1600 : 2800;
   if (queueLength >= 5) return 700;
   if (queueLength >= 3) return 1100;
   return 1900;

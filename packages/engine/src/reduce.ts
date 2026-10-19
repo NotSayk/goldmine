@@ -1,7 +1,7 @@
 import { DRAGON_FINAL_POSITION, EXIT_POSITION, TOTAL_ROUNDS } from './constants';
 import { cloneState } from './clone';
 import { activeDwarf, validateAction } from './legal';
-import { EXTRACTION_EFFECTS, emptyPile } from './rules/cards';
+import { EXTRACTION_EFFECTS, emptyPile, pileValue } from './rules/cards';
 import {
   addsGoldBeforeMoving,
   assertLadderHasRoom,
@@ -168,6 +168,8 @@ function moveDragon(state: GameState, events: GameEvent[]): void {
   events.push({ type: 'DragonMoved', from, to, burnedCardId: passedCard.id });
   for (const dwarf of state.dwarves) {
     if (dwarf.status === 'mine' && dwarf.position === to) {
+      // Le disque reste sur sa galerie, désormais brûlée à droite du dragon.
+      dwarf.position = from;
       eliminateDwarf(state, dwarf, 'dragon', events);
     }
   }
@@ -347,6 +349,7 @@ function eliminateDwarf(
   dwarf.status = 'eliminated';
   // Variante : si l'équipier est encore dans la mine, il garde l'or commun.
   const pileLost = !hasDwarfInMine(state, dwarf.ownerId);
+  const goldLost = pileLost ? pileValue(pileOf(state, dwarf.ownerId)).total : 0;
   if (pileLost) {
     const pile = pileOf(state, dwarf.ownerId);
     state.box.extraction.push(...pile.extraction);
@@ -363,6 +366,7 @@ function eliminateDwarf(
     position: dwarf.position,
     cause,
     pileLost,
+    goldLost,
   });
 }
 

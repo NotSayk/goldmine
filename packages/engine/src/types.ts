@@ -50,7 +50,10 @@ export interface DwarfState {
   /** Index de couleur (0 à 5), stable pour toute la partie. */
   readonly color: number;
   status: DwarfStatus;
-  /** Index sur la piste : 0 = Sortie, 4 = Wagon, 8 = position initiale du dragon. */
+  /**
+   * Index sur la piste : 0 = Sortie, 4 = Wagon, 8 = position initiale du dragon.
+   * Un nain éliminé garde la position de la carte où il est tombé.
+   */
   position: number;
   /** Or posé sur la carte Nain à l'arrivée à la Sortie (à l'abri du dragon). */
   secured: GoldPile;
@@ -238,10 +241,13 @@ export type GameEvent =
   | {
       readonly type: 'DwarfEliminated';
       readonly dwarfId: DwarfId;
+      /** Carte où repose le disque du nain éliminé (la galerie brûlée, à droite du dragon). */
       readonly position: number;
       readonly cause: EliminationCause;
       /** L'or en cours est perdu (faux si un équipier reste dans la mine, variante). */
       readonly pileLost: boolean;
+      /** Pépites perdues ; `null` pour les autres joueurs si les piles sont cachées. */
+      readonly goldLost: number | null;
     }
   | { readonly type: 'ExitDeckReshuffled'; readonly count: number }
   | { readonly type: 'TurnSkipped'; readonly dwarfId: DwarfId }

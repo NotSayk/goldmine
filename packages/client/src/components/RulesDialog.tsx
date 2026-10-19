@@ -23,8 +23,8 @@ export function RulesDialog({ open, onClose }: { open: boolean; onClose: () => v
         <h3>À votre tour : creuser ou fuir</h3>
         <ul>
           <li>
-            <strong>Creuser</strong> : prenez la carte Extraction visible. Elle rapporte de l’or et
-            peut déplacer votre nain.
+            <strong>Creuser</strong> : piochez la carte du dessus de la pioche Extraction, face
+            cachée. Elle est montrée à tous, rapporte de l’or et peut déplacer votre nain.
           </li>
           <li>
             <strong>Fuir</strong> : piochez une carte Exit, face cachée, pour avancer vers la Sortie
@@ -48,12 +48,12 @@ export function RulesDialog({ open, onClose }: { open: boolean; onClose: () => v
         <p className="legend">
           <DragonHead size={40} />
           <span>
-            Après chaque carte creusée, si la nouvelle carte visible est un dragon,{' '}
-            {BRANDING.dragonName} avance d’une carte : la galerie dépassée devient rouge et les
-            nains qui s’y trouvaient sont éliminés, avec leur or. Plusieurs dragons à la suite le
-            font avancer plusieurs fois. S’il arrive juste devant la Sortie, la manche s’arrête
-            aussitôt. Un nain collé au dragon ne peut pas avancer vers lui (il prend quand même
-            l’or).
+            Après chaque carte creusée, la carte suivante de la pioche est retournée si c’est un
+            dragon : {BRANDING.dragonName} avance d’une carte, la galerie dépassée devient rouge et
+            les nains qui s’y trouvaient sont éliminés, avec leur or. Leur pion reste, grisé, sur la
+            galerie brûlée. Plusieurs dragons à la suite le font avancer plusieurs fois. S’il arrive
+            juste devant la Sortie, la manche s’arrête aussitôt. Un nain collé au dragon ne peut pas
+            avancer vers lui (il prend quand même l’or).
           </span>
         </p>
         <h3>Cartes Exit</h3>
@@ -96,11 +96,11 @@ export function RulesDialog({ open, onClose }: { open: boolean; onClose: () => v
         </p>
         <h3>Ce que l’on voit</h3>
         <p>
-          La carte Extraction du dessus et l’or de chaque joueur sont visibles de tous. Les cartes
-          Exit sont tirées à l’aveugle. Les deux pioches sont mélangées une seule fois en début de
+          Les deux pioches sont face cachée : on découvre une carte en la piochant, et tout le monde
+          la voit à ce moment-là. Seul le nombre total de cartes restantes est affiché. L’or de
+          chaque joueur est visible de tous. Les pioches sont mélangées une seule fois en début de
           manche : l’ordre des cartes est fixé à l’avance, rien n’est tiré au hasard au moment où
-          l’on pioche. Le mémo des cartes (à gauche sur grand écran) indique combien de cartes de
-          chaque type restent dans la pioche Extraction.
+          l’on pioche.
         </p>
       </div>
     </Modal>

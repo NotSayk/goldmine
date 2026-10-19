@@ -33,12 +33,13 @@ describe('journal en français', () => {
       position: 3,
       cause: 'dragon',
       pileLost: true,
+      goldLost: 4,
     } as const;
     expect(describeEvent(caught, viewFor(state, 'a'))).toBe(
-      'Braisard vous rattrape : votre or est perdu.',
+      'Braisard vous rattrape : votre or est perdu (4 pépites).',
     );
     expect(describeEvent(caught, viewFor(state, 'b'))).toBe(
-      'Braisard rattrape Alice : son or est perdu.',
+      'Braisard rattrape Alice : son or est perdu (4 pépites).',
     );
     const drawn = {
       type: 'CardDrawn',

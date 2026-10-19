@@ -16,7 +16,7 @@ import { TopBar } from '../components/TopBar';
 import { Track } from '../components/Track';
 import { dwarfLook, dwarfName } from '../i18n/fr';
 import type { Highlight } from '../spotlight';
-import { client, type Effect, type LogEntry } from '../store';
+import { client, type Effect, type LastDrawn, type LogEntry } from '../store';
 
 function TurnBanner({ view, room }: { view: PlayerView; room: RoomView }) {
   if (view.phase !== 'playing') return null;
@@ -136,6 +136,7 @@ export function GameScreen({
   waiting,
   highlights,
   highlightMs,
+  lastDrawn,
 }: {
   view: PlayerView;
   room: RoomView;
@@ -144,6 +145,7 @@ export function GameScreen({
   waiting: boolean;
   highlights: readonly Highlight[];
   highlightMs: number;
+  lastDrawn: LastDrawn | null;
 }) {
   const [confirmLeave, setConfirmLeave] = useState(false);
   const isHost = room.hostId === view.viewerId;
@@ -184,7 +186,7 @@ export function GameScreen({
                 client.send({ type: 'action', action: { type: 'chooseSwapTarget', dwarfId } })
               }
             />
-            <Decks view={view} />
+            <Decks view={view} lastDrawn={lastDrawn} />
           </section>
           <RoundEndPanel
             key={view.round}

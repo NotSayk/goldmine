@@ -37,8 +37,9 @@ describe('dragon', () => {
   it('élimine les nains de la Mine dépassée : or rangé dans la boîte', () => {
     const { state } = newGame({ players: 3 });
     place(state, { 1: 7, 2: 7 });
-    state.piles.p2!.extraction.push(...state.extractionDeck.splice(5, 2));
-    stackExtraction(state, ['noDoor', 'dragon', 'noDoor']);
+    // p2 tient un « porte rouge » et un « sans porte » : 3 pépites.
+    stackExtraction(state, ['noDoor', 'dragon', 'noDoor', 'redDoor', 'noDoor']);
+    state.piles.p2!.extraction.push(...state.extractionDeck.splice(3, 2));
     const { state: next, events } = play(state, { type: 'drawExtraction' });
     expect(next.dwarves[1]?.status).toBe('eliminated');
     expect(next.dwarves[2]?.status).toBe('eliminated');
@@ -48,8 +49,14 @@ describe('dragon', () => {
     expect(eventsOfType(events, 'DwarfEliminated')[0]).toMatchObject({
       cause: 'dragon',
       pileLost: true,
-      position: 7,
+      goldLost: 3,
+      position: 8,
     });
+    expect(eventsOfType(events, 'DwarfEliminated')[1]).toMatchObject({ goldLost: 0 });
+    // Les disques restent sur leur galerie, brûlée et passée à droite du dragon.
+    expect(next.dwarves[1]?.position).toBe(8);
+    expect(next.dwarves[2]?.position).toBe(8);
+    expect(next.track[8]).toMatchObject({ id: 'mine-6', burned: true });
     // Le prochain nain encore dans la mine est le joueur 1.
     expect(next.currentDwarf).toBe(0);
   });

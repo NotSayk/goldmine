@@ -42,6 +42,20 @@ function nextDragonProbability(view: PlayerView): number {
   return Math.min(1, dragonsLeft / hidden);
 }
 
+/** Effet moyen d'une carte avec de l'or, d'après la composition (publique) de la boîte. */
+function averageGoldCard(view: PlayerView): { gold: number; move: number } {
+  let cards = 0;
+  let gold = 0;
+  let move = 0;
+  for (const kind of ['redDoor', 'blueDoor', 'noDoor'] as const) {
+    const count = view.decks.extraction[kind];
+    cards += count;
+    gold += count * EXTRACTION_EFFECTS[kind].gold;
+    move += count * EXTRACTION_EFFECTS[kind].move;
+  }
+  return cards === 0 ? { gold: 0, move: 0 } : { gold: gold / cards, move: move / cards };
+}
+
 function scoreExitAction(
   action: ExitActionKind,
   me: DwarfView,
@@ -100,7 +114,8 @@ export const heuristicBot: BotPolicy = (view, rng) => {
   if (!canExtract) return { type: 'drawExit' };
 
   const top = view.extraction.top;
-  const topEffect = top ? EXTRACTION_EFFECTS[top] : { gold: 0, move: 0 };
+  // Pioche cachée : on raisonne sur une carte moyenne de la boîte (hors dragons).
+  const topEffect = top ? EXTRACTION_EFFECTS[top] : averageGoldCard(view);
   // Distance au dragon après la pioche (porte rouge : on s'en rapproche).
   const dangerAfter = Math.max(
     1,

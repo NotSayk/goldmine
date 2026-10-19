@@ -78,6 +78,10 @@ function assertNoLeak(c: TestClient): void {
       }
     }
     expect(Object.keys(view.exit).sort()).toEqual(['deckCount', 'discard']);
+    // Pioche Extraction cachée : la carte du dessus n'est jamais envoyée avant la pioche.
+    if (!houseRules.extractionTopIsPublic()) {
+      expect(view.extraction).toEqual({ top: null, count: view.extraction.count });
+    }
     for (const event of message.events) {
       if (event.type === 'CardDrawn' && event.deck === 'exit') {
         const owner = view.dwarves[event.dwarfId]?.ownerId;

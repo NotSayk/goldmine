@@ -120,3 +120,14 @@ export function swapNeedsExplicitTarget(targetCount: number): boolean {
 export function pileValuesArePublic(): boolean {
   return true;
 }
+
+/**
+ * Décision D : pioche Extraction visible ou cachée.
+ * Le livret pose la pioche Extraction face visible (on voit la carte avant de
+ * la prendre). À la demande du commanditaire, la pioche est cachée en ligne :
+ * on découvre la carte en la piochant, et tout le monde la voit à ce moment-là.
+ * Le dragon reste révélé à tous dès qu'il arrive sur le dessus de la pioche.
+ */
+export function extractionTopIsPublic(): boolean {
+  return false;
+}

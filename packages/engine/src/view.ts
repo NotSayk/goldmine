@@ -1,8 +1,7 @@
 import { TOTAL_ROUNDS } from './constants';
 import { activeDwarf, validatePlayerAction } from './legal';
-import { EXTRACTION_KINDS } from './config/decks';
 import { pileValue } from './rules/cards';
-import { pileValuesArePublic } from './rules/houseRules';
+import { extractionTopIsPublic, pileValuesArePublic } from './rules/houseRules';
 import type {
   DeckComposition,
   DwarfId,
@@ -106,14 +105,10 @@ export interface PlayerView {
   readonly track: readonly TrackCard[];
   readonly dragonPosition: number;
   readonly extraction: {
-    /** Carte visible du dessus (publique). */
+    /** Carte du dessus si `houseRules.extractionTopIsPublic()`, sinon `null` (pioche cachée). */
     readonly top: ExtractionKind | null;
+    /** Nombre total de cartes dans la pioche (le détail par type n'est pas donné). */
     readonly count: number;
-    /**
-     * Cartes restantes par type. Information publique : chaque carte prise
-     * était visible sur le dessus de la pioche et les dragons sont rangés à la vue de tous.
-     */
-    readonly remaining: Readonly<Record<ExtractionKind, number>>;
   };
   readonly exit: {
     /** Seul le nombre de cartes de la pioche Exit est public. */
@@ -182,15 +177,6 @@ function pendingView(state: GameState, viewerId: PlayerId | null): PendingView |
   };
 }
 
-function countRemaining(state: GameState): Record<ExtractionKind, number> {
-  const counts = Object.fromEntries(EXTRACTION_KINDS.map((kind) => [kind, 0])) as Record<
-    ExtractionKind,
-    number
-  >;
-  for (const card of state.extractionDeck) counts[card.kind] += 1;
-  return counts;
-}
-
 /** Vue d'un joueur (ou d'un spectateur avec `null`) sur l'état de la partie. */
 export function viewFor(state: GameState, viewerId: PlayerId | null): PlayerView {
   const current = activeDwarf(state);
@@ -234,9 +220,11 @@ export function viewFor(state: GameState, viewerId: PlayerId | null): PlayerView
     track: state.track.map((card) => ({ id: card.id, kind: card.kind, burned: card.burned })),
     dragonPosition: state.dragonPosition,
     extraction: {
-      top: state.phase === 'playing' ? (state.extractionDeck[0]?.kind ?? null) : null,
+      top:
+        state.phase === 'playing' && extractionTopIsPublic()
+          ? (state.extractionDeck[0]?.kind ?? null)
+          : null,
       count: state.extractionDeck.length,
-      remaining: countRemaining(state),
     },
     exit: {
       deckCount: state.exitDeck.length,
@@ -263,16 +251,25 @@ export function viewFor(state: GameState, viewerId: PlayerId | null): PlayerView
   };
 }
 
-/** Filtre les événements pour un joueur : une carte Exit piochée n'est visible que de son auteur. */
+/**
+ * Filtre les événements pour un joueur : une carte Exit piochée n'est visible
+ * que de son auteur, et l'or perdu seulement si les piles sont publiques.
+ */
 export function filterEventsFor(
   events: readonly GameEvent[],
   state: GameState,
   viewerId: PlayerId | null,
 ): GameEvent[] {
   return events.map((event) => {
+    const owner =
+      'dwarfId' in event && typeof event.dwarfId === 'number'
+        ? state.dwarves[event.dwarfId]?.ownerId
+        : undefined;
     if (event.type === 'CardDrawn' && event.deck === 'exit') {
-      const owner = state.dwarves[event.dwarfId]?.ownerId;
       return owner === viewerId ? event : { ...event, card: null };
+    }
+    if (event.type === 'DwarfEliminated' && owner !== viewerId && !pileValuesArePublic()) {
+      return { ...event, goldLost: null };
     }
     return event;
   });

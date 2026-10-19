@@ -21,7 +21,9 @@ export function ActionBar({ view, waiting }: { view: PlayerView; waiting: boolea
         <span className="action-btn__sub">
           {top
             ? `${EXTRACTION_LABELS[top].name} : ${EXTRACTION_LABELS[top].effect}`
-            : 'Pioche vide'}
+            : view.extraction.count > 0
+              ? 'Carte cachée : de l’or… et peut-être un pas vers la Sortie ou vers le dragon'
+              : 'Pioche vide'}
         </span>
       </button>
       <button

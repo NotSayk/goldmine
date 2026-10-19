@@ -39,6 +39,7 @@ export function App() {
           waiting={state.waiting}
           highlights={state.highlights}
           highlightMs={state.highlightMs}
+          lastDrawn={state.lastDrawn}
         />
       )}
       {room && room.status !== 'lobby' && !view && (

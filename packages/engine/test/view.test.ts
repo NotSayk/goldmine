@@ -3,21 +3,18 @@ import { filterEventsFor, houseRules, viewFor } from '../src';
 import { DUAL_ACTION_DECKS, newGame, play, stackExit, stackExtraction } from './helpers';
 
 describe('vue filtrée (informations cachées)', () => {
-  it('montre la carte visible Extraction mais jamais le contenu de la pioche Exit', () => {
+  it('cache la pioche Extraction (règle maison) : seul le nombre total de cartes est donné', () => {
     const { state } = newGame();
     const view = viewFor(state, 'p2');
-    expect(view.extraction).toEqual({
-      top: state.extractionDeck[0]!.kind,
-      count: 58,
-      remaining: { redDoor: 20, blueDoor: 20, noDoor: 10, dragon: 8 },
-    });
+    expect(houseRules.extractionTopIsPublic()).toBe(false);
+    expect(view.extraction).toEqual({ top: null, count: 58 });
     expect(view.exit).toEqual({ deckCount: 16, discard: [] });
     const json = JSON.stringify(view);
     for (const card of state.exitDeck) expect(json).not.toContain(card.id);
     for (const card of state.extractionDeck) expect(json).not.toContain(`"${card.id}"`);
   });
 
-  it('montre l’or de chaque joueur à tous (règle maison) et les cartes restantes', () => {
+  it('montre l’or de chaque joueur à tous (règle maison)', () => {
     const { state } = newGame();
     stackExtraction(state, ['redDoor', 'noDoor']);
     const next = play(state, { type: 'drawExtraction' }).state;
@@ -26,12 +23,22 @@ describe('vue filtrée (informations cachées)', () => {
     expect(viewFor(next, 'p1').players[0]!.pile).toEqual(pile);
     expect(viewFor(next, 'p2').players[0]!.pile).toEqual(pile);
     expect(viewFor(next, null).players[0]!.pile).toEqual(pile);
-    expect(viewFor(next, 'p2').extraction.remaining).toEqual({
-      redDoor: 19,
-      blueDoor: 20,
-      noDoor: 10,
-      dragon: 8,
-    });
+  });
+
+  it('montre à tous la carte piochée, au moment où elle est piochée', () => {
+    const { state } = newGame();
+    stackExtraction(state, ['redDoor', 'noDoor']);
+    const { state: next, events } = play(state, { type: 'drawExtraction' });
+    for (const viewer of ['p1', 'p2', 'p3']) {
+      expect(filterEventsFor(events, next, viewer)[0]).toEqual({
+        type: 'CardDrawn',
+        deck: 'extraction',
+        dwarfId: 0,
+        card: 'redDoor',
+        gold: 2,
+      });
+      expect(viewFor(next, viewer).extraction.top).toBeNull();
+    }
   });
 
   it('cache la carte Exit en attente de choix aux autres joueurs', () => {

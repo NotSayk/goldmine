@@ -59,6 +59,7 @@ function checkView(state: GameState, viewerId: string): void {
       if (dwarf.ownerId !== viewerId) expect(dwarf.secured.gold).toBeNull();
     }
   }
+  if (!houseRules.extractionTopIsPublic()) expect(view.extraction.top).toBeNull();
   if (view.pending?.kind === 'chooseExitAction' && view.pending.playerId !== viewerId) {
     expect(view.pending.options).toBeNull();
   }

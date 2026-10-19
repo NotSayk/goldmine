@@ -1,10 +1,19 @@
 import type { PlayerView } from '@pepite/engine';
 import { CardBack, ExitCardFace, ExtractionCardArt } from '../assets/Cards';
 import { EXIT_LABELS, EXTRACTION_LABELS, plural } from '../i18n/fr';
+import type { LastDrawn } from '../store';
 
-export function Decks({ view }: { view: PlayerView }) {
+export function Decks({
+  view,
+  lastDrawn,
+}: {
+  view: PlayerView;
+  /** Dernière carte creusée (vue par tous au moment de la pioche). */
+  lastDrawn: LastDrawn | null;
+}) {
   const top = view.extraction.top;
   const discardTop = view.exit.discard[view.exit.discard.length - 1];
+  const count = view.extraction.count;
   return (
     <section className="decks" aria-label="Pioches">
       <div className="deck">
@@ -15,20 +24,28 @@ export function Decks({ view }: { view: PlayerView }) {
           aria-label={
             top
               ? `Carte visible : ${EXTRACTION_LABELS[top].name}, ${EXTRACTION_LABELS[top].effect}`
-              : 'Aucune carte visible'
+              : `Pioche Extraction, face cachée : ${plural(count, 'carte')}`
           }
           title={
-            top ? `${EXTRACTION_LABELS[top].name} : ${EXTRACTION_LABELS[top].effect}` : undefined
+            top
+              ? `${EXTRACTION_LABELS[top].name} : ${EXTRACTION_LABELS[top].effect}`
+              : 'Face cachée : on découvre la carte en la piochant'
           }
         >
           {top ? (
             <ExtractionCardArt kind={top} />
+          ) : count > 0 ? (
+            <CardBack deck="extraction" />
           ) : (
-            <div className="card-empty">{view.phase === 'playing' ? 'Vide' : 'Manche finie'}</div>
+            <div className="card-empty">Vide</div>
           )}
         </div>
-        <div className="deck__count">{plural(view.extraction.count, 'carte')}</div>
-        {top && <div className="deck__hint">{EXTRACTION_LABELS[top].name}</div>}
+        <div className="deck__count">{plural(count, 'carte')}</div>
+        {lastDrawn && (
+          <div className="deck__hint">
+            Dernière : {EXTRACTION_LABELS[lastDrawn.card].name} ({lastDrawn.by})
+          </div>
+        )}
       </div>
       <div className="deck">
         <div className="deck__label">Exit</div>

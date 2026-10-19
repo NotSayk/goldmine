@@ -54,16 +54,16 @@ Le client n'importe **aucune valeur** du moteur (règle ESLint `no-restricted-im
 
 `viewFor` construit la vue par **liste blanche** :
 
-| Donnée                                         | Envoyée à                                                                   |
-| ---------------------------------------------- | --------------------------------------------------------------------------- |
-| Carte du dessus de la pioche Extraction        | tous                                                                        |
-| Nombre de cartes des pioches                   | tous                                                                        |
-| Contenu et ordre des pioches                   | personne                                                                    |
-| Défausse Exit                                  | tous                                                                        |
-| Valeur et contenu d'une pile d'or              | tous (règle maison `pileValuesArePublic`, sinon son propriétaire seulement) |
-| Carte Exit en attente de choix                 | son auteur seulement                                                        |
-| Résultats de manche                            | tous, au décompte                                                           |
-| Graine / état du générateur, jetons de session | personne                                                                    |
+| Donnée                                         | Envoyée à                                                                                             |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Carte du dessus de la pioche Extraction        | personne avant la pioche (règle maison `extractionTopIsPublic`) ; la carte piochée est montrée à tous |
+| Nombre de cartes des pioches                   | tous                                                                                                  |
+| Contenu et ordre des pioches                   | personne                                                                                              |
+| Défausse Exit                                  | tous                                                                                                  |
+| Valeur et contenu d'une pile d'or              | tous (règle maison `pileValuesArePublic`, sinon son propriétaire seulement)                           |
+| Carte Exit en attente de choix                 | son auteur seulement                                                                                  |
+| Résultats de manche                            | tous, au décompte                                                                                     |
+| Graine / état du générateur, jetons de session | personne                                                                                              |
 
 Les tests d'intégration inspectent tout le trafic reçu par chaque client simulé pour vérifier qu'aucune de ces données n'y figure.
 

@@ -47,7 +47,8 @@ export function Track({
   const slots = new Map<number, number>();
   const byPosition = new Map<number, DwarfView[]>();
   for (const dwarf of view.dwarves) {
-    if (dwarf.status !== 'mine') continue;
+    // Nains vivants et nains tombés partagent les emplacements de leur carte.
+    if (dwarf.status === 'exit') continue;
     const list = byPosition.get(dwarf.position) ?? [];
     list.push(dwarf);
     byPosition.set(dwarf.position, list);
@@ -87,8 +88,8 @@ export function Track({
       ))}
 
       {view.dwarves.map((dwarf) => {
-        if (dwarf.status === 'eliminated') return null;
         const onExit = dwarf.status === 'exit';
+        const dead = dwarf.status === 'eliminated';
         const style = onExit
           ? slotCenter(0, dwarf.ladderSlot ?? 0)
           : slotCenter(dwarf.position, slots.get(dwarf.id) ?? 0);
@@ -96,14 +97,17 @@ export function Track({
         const name = dwarfName(view, dwarf.id);
         const where = onExit
           ? `sorti, place ${(dwarf.ladderSlot ?? 0) + 1} sur l’échelle`
-          : dwarf.position === 4
-            ? 'sur le Wagon'
-            : `sur la carte ${dwarf.position}`;
+          : dead
+            ? `éliminé sur la carte ${dwarf.position}`
+            : dwarf.position === 4
+              ? 'sur le Wagon'
+              : `sur la carte ${dwarf.position}`;
         const label = `${name} — nain ${look.name}, ${where}`;
         const className = [
           'disc',
           dwarf.id === view.currentDwarfId ? 'disc--active' : '',
           dwarf.ownerId === view.viewerId ? 'disc--mine' : '',
+          dead ? 'disc--dead' : '',
         ].join(' ');
         if (swapTargets.includes(dwarf.id)) {
           return (
@@ -137,6 +141,14 @@ export function Track({
               </span>
             );
           case 'eliminated':
+            return (
+              <span key={effect.id} className="effect effect--eliminated" style={{ left }}>
+                <Flame />
+                <span className="effect__skull" aria-hidden>
+                  💀
+                </span>
+              </span>
+            );
           case 'blocked':
             return (
               <span key={effect.id} className={`effect effect--${effect.kind}`} style={{ left }}>
