@@ -8,10 +8,18 @@ export interface TurnTimer {
 /** Secondes restantes avant le coup automatique (`null` sans chrono). */
 export function useSecondsLeft(timer: TurnTimer | null): number | null {
   const [now, setNow] = useState(() => Date.now());
+  // Un réveil par seconde, calé sur le changement de seconde affichée (le
+  // premier tout de suite, pour un nouveau chrono).
   useEffect(() => {
     if (!timer) return;
-    const id = setInterval(() => setNow(Date.now()), 250);
-    return () => clearInterval(id);
+    let id: ReturnType<typeof setTimeout>;
+    const tick = (): void => {
+      setNow(Date.now());
+      const untilNext = (timer.deadline - Date.now()) % 1000;
+      id = setTimeout(tick, (untilNext <= 0 ? untilNext + 1000 : untilNext) + 15);
+    };
+    id = setTimeout(tick, 0);
+    return () => clearTimeout(id);
   }, [timer]);
   if (!timer) return null;
   const left = Math.ceil((timer.deadline - now) / 1000);

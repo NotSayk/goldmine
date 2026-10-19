@@ -98,7 +98,7 @@
   background: var(--surface-2);
   border: 1px solid var(--line);
   min-height: 56px;
-  animation: pop-in 320ms var(--ease-spring) both;
+  animation: pop-in 320ms var(--ease-spring) backwards;
 }
 
 .player-item__name {
@@ -133,7 +133,7 @@
   border-radius: 12px;
   background: var(--surface-2);
   border: 1px solid var(--line);
-  animation: pop-in 320ms var(--ease-spring) both;
+  animation: pop-in 320ms var(--ease-spring) backwards;
 }
 
 .open-rooms__host {

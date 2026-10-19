@@ -71,7 +71,7 @@
 }
 
 .spotlight__reveal {
-  animation: reveal-in 320ms var(--ease-out) var(--reveal-delay) both;
+  animation: reveal-in 320ms var(--ease-out) var(--reveal-delay) backwards;
 }
 
 .spotlight__title {
@@ -342,7 +342,7 @@
 
 .banner-icon--dragon svg {
   filter: drop-shadow(0 0 10px rgba(255, 90, 30, 0.6));
-  animation: roar 600ms ease-in-out both;
+  animation: roar 600ms ease-in-out backwards;
 }
 
 .banner-icon__sparkle {
@@ -363,7 +363,7 @@
   color: #fff;
   font-weight: 900;
   border: 2px solid #14161c;
-  animation: spot-pop 400ms var(--ease-spring) both;
+  animation: spot-pop 400ms var(--ease-spring) backwards;
 }
 
 /* Mélange des deux pioches au début de chaque manche. */

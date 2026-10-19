@@ -319,15 +319,6 @@ export function DwarfToken({
             strokeWidth="0.9"
           />
         )}
-        {mood === 'panic' && (
-          <path
-            className="token__sweat"
-            d="M29.6 8.5 Q31.6 11.5 29.6 12.7 Q27.6 11.5 29.6 8.5 Z"
-            fill="#9fe3ff"
-            stroke={INK}
-            strokeWidth="0.6"
-          />
-        )}
       </g>
     </svg>
   );

@@ -51,9 +51,19 @@ export async function startServer(env = {}) {
   };
 }
 
-export function launchBrowser() {
+/**
+ * `gpu` : composition des images par un GPU émulé (SwiftShader), comme sur un
+ * vrai téléphone ou ordinateur ; sans lui, Chromium sans écran compose tout en
+ * logiciel et les animations confiées à la carte graphique pèsent sur la page.
+ */
+export function launchBrowser({ gpu = false } = {}) {
   return chromium.launch({
-    args: ['--no-proxy-server'],
+    args: [
+      '--no-proxy-server',
+      ...(gpu
+        ? ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist']
+        : []),
+    ],
     ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}),
   });
 }
@@ -109,9 +119,10 @@ export async function startGame(page, firstPlayer) {
 /**
  * Un coup du joueur humain simulé, joué dès que c'est possible : à son tour,
  * il passe les animations en attente (« À vous : passer »), comme un vrai
- * joueur pressé. Retourne ce qui s'est passé.
+ * joueur pressé, sauf avec `skip: false` (mesures de fluidité, qui doivent
+ * voir toutes les animations). Retourne ce qui s'est passé.
  */
-export async function step(page) {
+export async function step(page, { skip = true } = {}) {
   try {
     if (await page.locator('.final-hero').count()) return 'finished';
     // Choix d'une action Exit ou d'un nain à échanger, à la place des boutons d'action.
@@ -121,9 +132,9 @@ export async function step(page) {
       return 'choice';
     }
     // À son tour, on passe les animations qui cachent encore les pioches.
-    const skip = page.getByRole('button', { name: 'À vous : passer' });
-    if (await skip.count()) {
-      await skip.first().click({ timeout: 1000 });
+    const skipButton = page.getByRole('button', { name: 'À vous : passer' });
+    if (skip && (await skipButton.count())) {
+      await skipButton.first().click({ timeout: 1000 });
       return 'skipped';
     }
     // Échange : on touche le nain voulu directement sur le plateau. Il pulse

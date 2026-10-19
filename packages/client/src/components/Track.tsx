@@ -154,6 +154,20 @@ function TrackDwarf({
           <Flame />
         </span>
       )}
+      {/* Goutte de sueur près du dragon : un calque à part, qui coule sans
+          redessiner le jeton. */}
+      {mood === 'panic' && (
+        <span className="disc__sweat" aria-hidden>
+          <svg viewBox="27.3 8.2 4.6 4.8">
+            <path
+              d="M29.6 8.5 Q31.6 11.5 29.6 12.7 Q27.6 11.5 29.6 8.5 Z"
+              fill="#9fe3ff"
+              stroke="#14161c"
+              strokeWidth="0.6"
+            />
+          </svg>
+        </span>
+      )}
     </>
   );
   if (target) {

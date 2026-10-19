@@ -129,42 +129,47 @@ function MineBackdrop({
         />
       </svg>
 
-      <svg
-        className="backdrop__layer backdrop__heat"
-        viewBox="0 0 480 400"
-        preserveAspectRatio="xMaxYMid slice"
-      >
-        <defs>
-          <radialGradient id="mine-ember-glow" cx="1" cy="0.75" r="0.75">
-            <stop offset="0" stopColor="#ff7a2a" stopOpacity="0.85" />
-            <stop offset="0.45" stopColor="#c2321a" stopOpacity="0.35" />
-            <stop offset="1" stopColor="#400a05" stopOpacity="0" />
-          </radialGradient>
-          <filter id="mine-heat-haze" x="-5%" y="-5%" width="110%" height="110%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.012 0.06" numOctaves="2" seed="4" />
-            <feDisplacementMap
-              in="SourceGraphic"
-              scale="14"
-              xChannelSelector="R"
-              yChannelSelector="G"
+      {/* Enveloppe HTML : l'ondulation de chaleur s'y anime par la carte graphique
+          (pas sur le SVG lui-même, où elle serait recalculée à chaque image). */}
+      <div className="backdrop__layer backdrop__heat">
+        <svg viewBox="0 0 480 400" preserveAspectRatio="xMaxYMid slice">
+          <defs>
+            <radialGradient id="mine-ember-glow" cx="1" cy="0.75" r="0.75">
+              <stop offset="0" stopColor="#ff7a2a" stopOpacity="0.85" />
+              <stop offset="0.45" stopColor="#c2321a" stopOpacity="0.35" />
+              <stop offset="1" stopColor="#400a05" stopOpacity="0" />
+            </radialGradient>
+            <filter id="mine-heat-haze" x="-5%" y="-5%" width="110%" height="110%">
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.012 0.06"
+                numOctaves="2"
+                seed="4"
+              />
+              <feDisplacementMap
+                in="SourceGraphic"
+                scale="14"
+                xChannelSelector="R"
+                yChannelSelector="G"
+              />
+            </filter>
+          </defs>
+          <g className="backdrop__haze">
+            <rect x="0" y="0" width="480" height="400" fill="url(#mine-ember-glow)" />
+            <path
+              d="M120 400 L180 330 L240 352 L300 296 L360 330 L420 286 L480 312 V400 Z"
+              fill="#1a0b08"
             />
-          </filter>
-        </defs>
-        <g className="backdrop__haze">
-          <rect x="0" y="0" width="480" height="400" fill="url(#mine-ember-glow)" />
-          <path
-            d="M120 400 L180 330 L240 352 L300 296 L360 330 L420 286 L480 312 V400 Z"
-            fill="#1a0b08"
-          />
-          <path
-            d="M180 330 L240 352 L300 296 L360 330 L420 286 L480 312"
-            fill="none"
-            stroke="#ff8a3d"
-            strokeOpacity="0.55"
-            strokeWidth="3"
-          />
-        </g>
-      </svg>
+            <path
+              d="M180 330 L240 352 L300 296 L360 330 L420 286 L480 312"
+              fill="none"
+              stroke="#ff8a3d"
+              strokeOpacity="0.55"
+              strokeWidth="3"
+            />
+          </g>
+        </svg>
+      </div>
 
       <div className="backdrop__daylight">
         <span />
@@ -177,44 +182,53 @@ function MineBackdrop({
         <span className="backdrop__fire-b" />
       </div>
 
-      <svg className="backdrop__cracks" viewBox="0 0 600 400" preserveAspectRatio="xMaxYMax slice">
-        {CRACKS.map((d, i) => (
-          <g
-            key={d}
-            className="backdrop__crack"
-            style={{ opacity: heat >= (i + 1) / 7 - 0.01 ? 1 : 0 }}
-          >
-            <path className="backdrop__crack-glow" d={d} />
-            <path className="backdrop__crack-core" d={d} />
-          </g>
-        ))}
-      </svg>
-
-      <div className="backdrop__flames" style={{ opacity: clamp01((heat - 0.45) / 0.4) }}>
-        <div>
-          <svg viewBox="0 0 300 160" preserveAspectRatio="none">
-            <path
-              d="M0 160 Q20 110 34 128 Q40 80 62 112 Q74 60 92 104 Q110 70 124 112 Q140 50 160 100 Q178 64 192 110 Q210 40 230 96 Q248 70 262 112 Q280 60 300 90 V160 Z"
-              fill="#c2321a"
-              fillOpacity="0.75"
-            />
-          </svg>
+      {/* Fissures et flammes n'existent qu'une fois visibles : invisibles, elles
+          animeraient pour rien (un calque de plus à chaque image). */}
+      {heat >= 1 / 7 - 0.01 && (
+        <svg
+          className="backdrop__cracks"
+          viewBox="0 0 600 400"
+          preserveAspectRatio="xMaxYMax slice"
+        >
+          {CRACKS.map((d, i) => (
+            <g
+              key={d}
+              className="backdrop__crack"
+              style={{ opacity: heat >= (i + 1) / 7 - 0.01 ? 1 : 0 }}
+            >
+              <path className="backdrop__crack-glow" d={d} />
+              <path className="backdrop__crack-core" d={d} />
+            </g>
+          ))}
+        </svg>
+      )}
+      {heat > 0.45 && (
+        <div className="backdrop__flames" style={{ opacity: clamp01((heat - 0.45) / 0.4) }}>
+          <div>
+            <svg viewBox="0 0 300 160" preserveAspectRatio="none">
+              <path
+                d="M0 160 Q20 110 34 128 Q40 80 62 112 Q74 60 92 104 Q110 70 124 112 Q140 50 160 100 Q178 64 192 110 Q210 40 230 96 Q248 70 262 112 Q280 60 300 90 V160 Z"
+                fill="#c2321a"
+                fillOpacity="0.75"
+              />
+            </svg>
+          </div>
+          <div>
+            <svg viewBox="0 0 300 160" preserveAspectRatio="none">
+              <path
+                d="M0 160 Q24 128 40 140 Q52 104 72 132 Q88 96 104 128 Q122 100 140 134 Q158 88 176 126 Q194 104 210 136 Q228 92 248 128 Q266 110 282 138 Q292 120 300 128 V160 Z"
+                fill="#ff8a2a"
+                fillOpacity="0.85"
+              />
+              <path
+                d="M0 160 Q30 146 48 152 Q66 132 86 150 Q108 136 126 152 Q148 128 168 150 Q190 138 210 154 Q232 132 254 150 Q276 140 300 150 V160 Z"
+                fill="#ffd36b"
+                fillOpacity="0.9"
+              />
+            </svg>
+          </div>
         </div>
-        <div>
-          <svg viewBox="0 0 300 160" preserveAspectRatio="none">
-            <path
-              d="M0 160 Q24 128 40 140 Q52 104 72 132 Q88 96 104 128 Q122 100 140 134 Q158 88 176 126 Q194 104 210 136 Q228 92 248 128 Q266 110 282 138 Q292 120 300 128 V160 Z"
-              fill="#ff8a2a"
-              fillOpacity="0.85"
-            />
-            <path
-              d="M0 160 Q30 146 48 152 Q66 132 86 150 Q108 136 126 152 Q148 128 168 150 Q190 138 210 154 Q232 132 254 150 Q276 140 300 150 V160 Z"
-              fill="#ffd36b"
-              fillOpacity="0.9"
-            />
-          </svg>
-        </div>
-      </div>
+      )}
 
       <svg
         className="backdrop__layer backdrop__mid"
@@ -340,14 +354,16 @@ export function Scene({
   /** Coup mis en scène, posé sur la zone des pioches : la piste reste toujours visible. */
   overlay?: ReactNode;
 }) {
-  const ref = useRef<HTMLElement>(null);
+  // Les variables de parallaxe ne touchent que le décor : à chaque mouvement de
+  // souris, seul lui est recalculé, pas toute la table.
+  const backRef = useRef<HTMLDivElement>(null);
   const preferences = usePreferences();
   const quality = effectiveQuality(preferences);
   const still = reducedMotion(preferences);
-  useParallax(ref, !still && quality !== 'low');
+  useParallax(backRef, !still && quality !== 'low');
   return (
-    <section ref={ref} className="board scene" aria-label="Table de jeu">
-      <div className="scene__back" aria-hidden>
+    <section className="board scene" aria-label="Table de jeu">
+      <div ref={backRef} className="scene__back" aria-hidden>
         <MineBackdrop heat={heat} focus={focus} yourTurn={yourTurn} />
         {!still && quality !== 'low' && <AmbientLayer quality={quality} heat={heat} />}
       </div>

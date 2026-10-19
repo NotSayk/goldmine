@@ -5,7 +5,9 @@
  *
  *   npm run build && npm run perf
  *
- * Chromium sans écran rend sans carte graphique : les chiffres sont prudents.
+ * Les images sont composées par un GPU émulé (SwiftShader), comme sur un vrai
+ * appareil ; PERF_SOFTWARE=1 revient au rendu tout logiciel (bien plus lent).
+ * STATIC_DIR=… mesure un autre build du client (comparaison avant / après).
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -59,8 +61,11 @@ const PROFILES = [
   },
 ];
 
-const server = await startServer({ BOT_DELAY_MS: '700' });
-const browser = await launchBrowser();
+const server = await startServer({
+  BOT_DELAY_MS: '700',
+  ...(process.env.STATIC_DIR ? { STATIC_DIR: process.env.STATIC_DIR } : {}),
+});
+const browser = await launchBrowser({ gpu: process.env.PERF_SOFTWARE !== '1' });
 
 async function measure(profile) {
   const context = await browser.newContext({ viewport: profile.viewport, locale: 'fr-FR' });
@@ -118,7 +123,8 @@ async function measure(profile) {
   let dragons = 0;
   while (Date.now() < until) {
     if (await page.locator('.spotlight[data-kind="dragon"]').count()) dragons += 1;
-    const result = await step(page);
+    // Sans passer les animations : on mesure le jeu tel qu'il se joue.
+    const result = await step(page, { skip: false });
     if (result === 'finished' || result === 'roundEnd') break;
     await wait(80);
   }

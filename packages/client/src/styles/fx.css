@@ -100,6 +100,12 @@
   transform: translate3d(calc(var(--px, 0) * -5px), calc(var(--py, 0) * -3px), 0);
 }
 
+.backdrop__heat svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .backdrop__heat {
   opacity: calc(0.2 + var(--heat) * 0.8);
   transform: translate3d(calc(var(--px, 0) * -8px), calc(var(--py, 0) * -4px), 0);
@@ -208,6 +214,13 @@
   transition: opacity 1.4s ease;
 }
 
+/* Une fissure qui apparaît (ou le calque qui la porte) s'ouvre en fondu. */
+@starting-style {
+  .backdrop__crack {
+    opacity: 0;
+  }
+}
+
 .backdrop__crack path {
   fill: none;
   stroke-linecap: round;
@@ -232,6 +245,12 @@
   width: 48%;
   height: 40%;
   transition: opacity 1.4s ease;
+}
+
+@starting-style {
+  .backdrop__flames {
+    opacity: 0;
+  }
 }
 
 .backdrop__flames > div {

@@ -288,9 +288,13 @@
   overflow: visible;
 }
 
-/* Il regarde vers où il va (tous les symboles sont symétriques). */
-.disc[data-facing='right'] .token {
+/* Il regarde vers où il va (tous les symboles sont symétriques) : le dessin se
+   retourne à l'intérieur du jeton, qui reste libre de s'animer (respiration,
+   sauts) par la carte graphique. */
+.disc[data-facing='right'] .token__figure {
   transform: scaleX(-1);
+  transform-box: view-box;
+  transform-origin: 50% 50%;
 }
 
 .disc--active {
@@ -416,16 +420,22 @@ button.disc--target:focus-visible {
   }
 }
 
-/* Repos : respiration (animation composée du jeton entier) et clignement des yeux. */
+/* Repos : respiration du jeton entier, en transformation (animée par la carte
+   graphique ; les propriétés séparées comme scale ne le sont pas sur un SVG). */
 .disc .token {
   transform-origin: 50% 95%;
   animation: breathe 2.8s ease-in-out infinite;
 }
 
+/* Clignement : un nain à la fois, déclenché au hasard par fx/blink.ts (une
+   animation continue par œil serait recalculée à chaque image). */
 .token__eye {
   transform-box: fill-box;
   transform-origin: center;
-  animation: blink 4.6s ease-in-out infinite;
+}
+
+.token--blink .token__eye {
+  animation: blink 280ms ease-in-out;
 }
 
 .disc:nth-of-type(2n) .token {
@@ -437,8 +447,26 @@ button.disc--target:focus-visible {
   animation: tremble 0.22s linear infinite;
 }
 
-.token__sweat {
+/* Goutte de sueur (calque à part, au-dessus de la tête, côté nuque). */
+.disc__sweat {
+  position: absolute;
+  left: 68.25%;
+  top: 20.5%;
+  width: 11.5%;
+  height: 12%;
+  pointer-events: none;
   animation: sweat 1s ease-in infinite;
+}
+
+.disc[data-facing='right'] .disc__sweat {
+  left: 20.25%;
+}
+
+.disc__sweat svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
 /* Joie à la sortie : un saut. */
@@ -467,7 +495,11 @@ button.disc--target:focus-visible {
   bottom: 0;
   height: 130%;
   pointer-events: none;
-  animation: engulf 1.3s ease-out both;
+  /* État final de l'embrasement comme style de repos : une fois l'animation
+     finie, rien ne reste actif (ni calque) sur le plateau. */
+  opacity: 0;
+  transform: scale(0.7) translateY(-20%);
+  animation: engulf 1.3s ease-out backwards;
 }
 
 .disc__burn svg {
@@ -495,27 +527,26 @@ button.disc--target:focus-visible {
 
 @keyframes breathe {
   50% {
-    scale: 1.025 0.975;
+    transform: scale(1.025, 0.975);
   }
 }
 
 @keyframes blink {
   0%,
-  94%,
   100% {
     scale: 1 1;
   }
-  97% {
+  50% {
     scale: 1 0.1;
   }
 }
 
 @keyframes tremble {
   25% {
-    translate: -0.8px 0;
+    transform: translateX(-0.8px);
   }
   75% {
-    translate: 0.8px 0;
+    transform: translateX(0.8px);
   }
 }
 
@@ -526,25 +557,23 @@ button.disc--target:focus-visible {
   }
   to {
     opacity: 0;
-    translate: 0 3px;
+    /* 3 unités du jeton (40) : 62 % de la goutte (4,8). */
+    translate: 0 62%;
   }
 }
 
 @keyframes joy-jump {
   0% {
-    translate: 0 0;
+    transform: none;
   }
   35% {
-    translate: 0 -38%;
-    scale: 0.9 1.1;
+    transform: translateY(-38%) scale(0.9, 1.1);
   }
   70% {
-    translate: 0 0;
-    scale: 1.1 0.9;
+    transform: scale(1.1, 0.9);
   }
   100% {
-    translate: 0 0;
-    scale: 1 1;
+    transform: none;
   }
 }
 
@@ -769,7 +798,7 @@ button.disc--target:focus-visible {
 .log li {
   padding: 4px 8px;
   border-left: 3px solid var(--border-strong);
-  animation: log-in 300ms var(--ease-out) both;
+  animation: log-in 300ms var(--ease-out) backwards;
 }
 
 .log li[data-tone='danger'] {
@@ -1122,7 +1151,9 @@ button.disc--target:focus-visible {
   width: 100%;
   height: 100%;
   border-radius: 8px;
-  transform: rotateX(calc(var(--ty) * -12deg)) rotateY(calc(var(--tx) * 14deg));
+  /* Au repos, pas de transformation 3D : la carte n'occupe pas de calque à elle
+     (moins de travail à chaque image) ; elle s'incline sous le pointeur. */
+  transform: none;
   transition:
     transform 450ms var(--ease-out),
     box-shadow 450ms var(--ease-out);
@@ -1130,6 +1161,7 @@ button.disc--target:focus-visible {
 }
 
 .card3d--tilting .card3d__body {
+  transform: rotateX(calc(var(--ty) * -12deg)) rotateY(calc(var(--tx) * 14deg));
   transition-duration: 90ms;
 }
 
@@ -1201,20 +1233,35 @@ button.disc--target:focus-visible {
 
 /* ---------- Dragobert vivant (carte de la piste) ---------- */
 
-.dragobert__lid,
-.dragobert__jaw,
-.dragobert__rear,
-.dragobert__pupil,
-.dragobert__brow,
-.dragobert__smoke circle {
-  transform-box: fill-box;
+/* Cadre 60 × 84 de l'illustration, centré dans la carte (plus haute que lui). */
+.dragobert {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  aspect-ratio: 60 / 84;
+  translate: 0 -50%;
 }
 
-/* Paupière : ouverte (écrasée en haut de l'œil), elle cligne de temps en temps. */
-.dragobert__lid {
-  transform-origin: 50% 0;
-  transform: scaleY(0);
-  animation: dragon-blink 5.2s ease-in-out infinite;
+.dragobert__layer,
+.dragobert__rear,
+.dragobert__glow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Le décor de l'antre déborde du cadre pour remplir la carte. */
+.dragobert__layer {
+  display: block;
+  overflow: visible;
+}
+
+.dragobert__pupil,
+.dragobert__brow,
+.dragobert__jaw {
+  transform-box: fill-box;
 }
 
 /* Il suit des yeux le nain qui joue. */
@@ -1244,9 +1291,21 @@ button.disc--target:focus-visible {
   transition: transform 260ms var(--ease-spring);
 }
 
-/* Ventre et gorge : une braise qui respire, plus vive quand la chaleur monte. */
+/* Paupière : ouverte (écrasée en haut de l'œil), elle cligne de temps en temps. */
+.dragobert__lid {
+  transform-origin: 30% 29.5%;
+  transform: scaleY(0);
+  animation: dragon-blink 5.2s ease-in-out infinite;
+}
+
+/* Ventre et gorge : une braise qui respire, plus vive quand la chaleur monte
+   (le calque extérieur suit la chaleur, l'intérieur respire). */
 .dragobert__glow {
-  opacity: calc(0.12 + var(--heat, 0) * 0.4);
+  opacity: calc(0.4 + var(--heat, 0) * 0.6);
+}
+
+.dragobert__glow > svg {
+  opacity: 0.3;
   animation: dragon-breathe 3.2s ease-in-out infinite;
 }
 
@@ -1255,17 +1314,23 @@ button.disc--target:focus-visible {
 }
 
 /* Fumée des naseaux : trois volutes décalées. */
-.dragobert__smoke circle {
+.dragobert__puff {
+  position: absolute;
+  left: 5%;
+  top: 29.75%;
+  width: 5.33%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--smoke);
   opacity: 0;
-  transform-origin: center;
   animation: dragon-smoke 3.6s ease-out infinite;
 }
 
-.dragobert__smoke circle:nth-child(2) {
+.dragobert__puff:nth-of-type(2) {
   animation-delay: -1.2s;
 }
 
-.dragobert__smoke circle:nth-child(3) {
+.dragobert__puff:nth-of-type(3) {
   animation-delay: -2.4s;
 }
 
@@ -1280,11 +1345,11 @@ button.disc--target:focus-visible {
   transform: rotate(-10deg);
 }
 
-.dragobert--enraged .dragobert__smoke circle {
+.dragobert--enraged .dragobert__puff {
   animation-duration: 1.8s;
 }
 
-.dragobert--enraged .dragobert__glow {
+.dragobert--enraged .dragobert__glow > svg {
   animation-duration: 1.6s;
 }
 
@@ -1293,18 +1358,21 @@ button.disc--target:focus-visible {
   transform: rotate(-18deg);
 }
 
+.dragobert__rear {
+  transform-origin: 88% 94%;
+}
+
 .dragobert--roar .dragobert__rear {
-  transform-origin: 85% 100%;
   animation: dragon-rear 1.3s var(--ease-out);
 }
 
-.dragobert--roar .dragobert__smoke circle {
+.dragobert--roar .dragobert__puff {
   animation-duration: 0.9s;
 }
 
 :root[data-quality='low'] .dragobert__lid,
-:root[data-quality='low'] .dragobert__glow,
-:root[data-quality='low'] .dragobert__smoke circle {
+:root[data-quality='low'] .dragobert__glow > svg,
+:root[data-quality='low'] .dragobert__puff {
   animation: none;
 }
 
@@ -1322,13 +1390,14 @@ button.disc--target:focus-visible {
 @keyframes dragon-breathe {
   0%,
   100% {
-    opacity: calc(0.12 + var(--heat, 0) * 0.4);
+    opacity: 0.3;
   }
   50% {
-    opacity: calc(0.4 + var(--heat, 0) * 0.6);
+    opacity: 1;
   }
 }
 
+/* Une volute monte de 12 et dérive de 2 (repère de la carte) : en % de sa taille (3,2). */
 @keyframes dragon-smoke {
   0% {
     opacity: 0;
@@ -1339,7 +1408,7 @@ button.disc--target:focus-visible {
   }
   100% {
     opacity: 0;
-    transform: translate(-2px, -12px) scale(1.9);
+    transform: translate(-62%, -375%) scale(1.9);
   }
 }
 
@@ -1363,7 +1432,7 @@ button.disc--target:focus-visible {
 
 /* Distribution de la piste en cascade, à chaque manche. */
 .track-card .card3d {
-  animation: deal 720ms var(--ease-out) calc(200ms + var(--i) * 120ms) both;
+  animation: deal 720ms var(--ease-out) calc(200ms + var(--i) * 120ms) backwards;
 }
 
 /*
@@ -1376,7 +1445,7 @@ button.disc--target:focus-visible {
 }
 
 .track-card[data-burned='true'] .card3d {
-  animation: burn-flip 700ms var(--ease-out) 950ms both;
+  animation: burn-flip 700ms var(--ease-out) 950ms backwards;
 }
 
 @keyframes deal {
@@ -1467,7 +1536,7 @@ button.disc--target:focus-visible {
 }
 
 .gold-pile__card:last-child {
-  animation: pile-drop 460ms var(--ease-spring) both;
+  animation: pile-drop 460ms var(--ease-spring) backwards;
 }
 
 .gold-pile__empty {
@@ -1642,12 +1711,12 @@ button.disc--target:focus-visible {
 /* ---------- Cérémonies de fin de manche et de partie ---------- */
 
 .ceremony__row {
-  animation: row-reveal 520ms var(--ease-out) var(--delay, 0ms) both;
+  animation: row-reveal 520ms var(--ease-out) var(--delay, 0ms) backwards;
 }
 
 /* Le premier est révélé au ralenti, avec un éclat doré. */
 .ceremony__row--first {
-  animation: row-reveal-first 1100ms var(--ease-spring) var(--delay, 0ms) both;
+  animation: row-reveal-first 1100ms var(--ease-spring) var(--delay, 0ms) backwards;
 }
 
 .ceremony__who {
@@ -1665,7 +1734,7 @@ button.disc--target:focus-visible {
 /* Les Grosses pépites volent depuis la réserve jusqu'au nain récompensé. */
 .award {
   display: inline-block;
-  animation: award-fly 760ms var(--ease-out) var(--award-delay, 0ms) both;
+  animation: award-fly 760ms var(--ease-out) var(--award-delay, 0ms) backwards;
 }
 
 .ceremony__crown {
@@ -1674,13 +1743,13 @@ button.disc--target:focus-visible {
 }
 
 .final-hero {
-  animation: hero-in 700ms var(--ease-spring) var(--crown-delay, 0ms) both;
+  animation: hero-in 700ms var(--ease-spring) var(--crown-delay, 0ms) backwards;
 }
 
 .final-hero__crown {
   color: var(--gold);
   filter: drop-shadow(0 0 10px var(--gold-glow));
-  animation: crown-drop 900ms var(--ease-spring) var(--crown-delay, 0ms) both;
+  animation: crown-drop 900ms var(--ease-spring) var(--crown-delay, 0ms) backwards;
 }
 
 .ceremony__skip {
@@ -2043,7 +2112,7 @@ button.disc--target:focus-visible {
   border-color: #7a4f00;
   color: #2a1a00;
   box-shadow: 0 0 14px var(--gold-glow);
-  animation: spot-pop 500ms var(--ease-spring) calc(var(--reveal-delay, 0ms) + 200ms) both;
+  animation: spot-pop 500ms var(--ease-spring) calc(var(--reveal-delay, 0ms) + 200ms) backwards;
 }
 
 .exit-face__action--chosen .exit-face__medal {

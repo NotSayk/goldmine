@@ -416,7 +416,7 @@ select {
   color: var(--text);
   border: 1px solid var(--danger);
   margin: 0 0 12px;
-  animation: pop-in 260ms var(--ease-spring) both;
+  animation: pop-in 260ms var(--ease-spring) backwards;
 }
 
 .notice--info {
@@ -519,7 +519,7 @@ dialog {
 }
 
 dialog[open] {
-  animation: dialog-in 300ms var(--ease-spring) both;
+  animation: dialog-in 300ms var(--ease-spring) backwards;
 }
 
 dialog::backdrop {
@@ -528,7 +528,7 @@ dialog::backdrop {
 }
 
 dialog[open]::backdrop {
-  animation: fade-in 240ms ease both;
+  animation: fade-in 240ms ease backwards;
 }
 
 .dialog__header {
