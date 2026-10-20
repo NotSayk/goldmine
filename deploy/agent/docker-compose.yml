@@ -1,0 +1,18 @@
+# À lancer depuis ~/apps/agent. Les secrets sont dans .env (jamais commité).
+services:
+  agent:
+    build: .
+    env_file: .env
+    volumes:
+      - agent_home:/home/agent/workspace
+      - ./data:/home/agent/data
+      - ./feed:/home/agent/feed:ro
+    # Isolation : pas de réseau « web » (aucun accès au jeu ni à Caddy en interne), pas de socket Docker,
+    # aucun dossier de l'hôte hors data/ et feed/ (en lecture seule), aucun privilège supplémentaire.
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    pids_limit: 512
+    mem_limit: 1536m
+    cpus: 1.5
+volumes:
+  agent_home:
