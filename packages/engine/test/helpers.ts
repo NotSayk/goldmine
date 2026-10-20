@@ -13,6 +13,22 @@ import {
   type Rng,
 } from '../src';
 
+/**
+ * Composition de test : une action par carte Exit, de quoi isoler chaque règle.
+ * Les tests de règles n'utilisent pas la vraie boîte (`DEFAULT_DECKS`), dont les
+ * cartes portent presque toutes deux actions.
+ */
+export const SINGLE_ACTION_DECKS: DeckComposition = {
+  extraction: { dragon: 8, redDoor: 20, blueDoor: 20, noDoor: 10 },
+  exit: [
+    { actions: ['step'], count: 4 },
+    { actions: ['doubleStep'], count: 3 },
+    { actions: ['allTogether'], count: 3 },
+    { actions: ['swap'], count: 3 },
+    { actions: ['goldBonus'], count: 3 },
+  ],
+};
+
 export function makePlayers(count: number): PlayerInfo[] {
   return Array.from({ length: count }, (_, i) => ({ id: `p${i + 1}`, name: `Joueur ${i + 1}` }));
 }
@@ -37,7 +53,7 @@ export function newGame(options: NewGameOptions = {}): {
       players,
       firstPlayerId: options.firstPlayerId ?? 'p1',
       doubleDraw: options.doubleDraw ?? false,
-      ...(options.decks ? { decks: options.decks } : {}),
+      decks: options.decks ?? SINGLE_ACTION_DECKS,
     },
     rng,
   );

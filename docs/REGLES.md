@@ -20,7 +20,7 @@ Les passages marqués **⚠ Non précisé** ne sont pas tranchés par le livret 
 | Disques Nain | 6 | Pions des joueurs |
 | Grosses pépites | 12 | 2 manches × (3+2+1) = 12, la réserve ne manque jamais |
 
-**⚠ Non précisé :** la répartition exacte des 58 cartes Extraction par type et des 16 cartes Exit par action (et lesquelles portent 2 actions). Le livret ne la donne pas.
+La répartition des 58 cartes Extraction et des 16 cartes Exit (dont celles à 2 actions) n'est pas dans le livret ; elle a été comptée sur une boîte (voir `DECISIONS.md`, section 3).
 
 ## 3. Mise en place (début de chaque manche)
 
@@ -129,9 +129,8 @@ Le serveur doit donc **ne jamais envoyer aux autres clients la valeur des piles 
 | 7 | Égalité entre 2 éliminés en manche 3 | Partage de la victoire (aucune règle de départage) |
 | 8 | Carte Bonus d'or d'un joueur éliminé | Elle est défaussée (inutile car il ne compte pas) |
 | 9 | Pas de place libre sur l'échelle de la Sortie (6 emplacements, 6 joueurs max) | Impossible, 6 nains au maximum |
-| 10 | Répartition des cartes (58 Extraction, 16 Exit) | **À fournir** (voir ci-dessous) |
+| 10 | Répartition des cartes (58 Extraction, 16 Exit) | Décompte réel de la boîte (voir `DECISIONS.md`, section 3) |
 
-Pour le point 10 : si vous avez la boîte, comptez les cartes par type. Sinon je calibrerai une répartition par simulation (en m'assurant que le dragon peut effectivement atteindre la Sortie, soit 7 déplacements).
 
 ## 9. Modèle de jeu proposé (moteur)
 

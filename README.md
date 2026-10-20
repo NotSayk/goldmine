@@ -102,7 +102,7 @@ Pour garder le serveur actif sur un VPS, utilisez le gestionnaire de services de
 ```
 packages/
   engine/   Moteur de règles pur et déterministe (aucune dépendance réseau ni DOM)
-            src/config/decks.ts     composition des paquets (PROVISOIRE)
+            src/config/decks.ts     composition réelle des paquets
             src/rules/houseRules.ts cas non précisés par le livret, un par fonction
             scripts/simulate.ts     simulation de parties entre bots
   shared/   Schémas zod des messages, types du protocole, noms de travail
@@ -113,7 +113,7 @@ packages/
 scripts/browser/   Partie de fumée, captures et mesures dans Chromium (Playwright)
 docs/
   REGLES.md        Règles (source de vérité)
-  DECISIONS.md     Décisions où le livret est muet, composition provisoire, simulations, refonte visuelle
+  DECISIONS.md     Décisions où le livret est muet, composition des paquets, simulations, refonte visuelle
   ARCHITECTURE.md  Flux client → serveur → moteur → vues filtrées, réalisateur
   CREDITS.md       Polices et origine des ressources
   screenshots/     Captures des écrans clés
@@ -134,6 +134,6 @@ Le menu **Réglages** (roue dentée) propose : thème (mine ou contraste élevé
 
 ## Questions ouvertes
 
-1. **Composition réelle des paquets** : la répartition des 58 cartes Extraction et des 16 cartes Exit n'est pas dans le livret. Une composition provisoire est utilisée (voir [`docs/DECISIONS.md`](docs/DECISIONS.md)) ; si vous avez la boîte, comptez les cartes par type et reportez-les dans `packages/engine/src/config/decks.ts`.
+1. **Composition des paquets** : la répartition des 58 cartes Extraction et des 16 cartes Exit est celle d'une vraie boîte (voir [`docs/DECISIONS.md`](docs/DECISIONS.md), section 3).
 2. **Nom définitif** du jeu (et accord de l'éditeur).
 3. **Hébergement** : choix de l'hébergeur Node.js et du nom de domaine.

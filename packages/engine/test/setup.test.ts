@@ -27,6 +27,28 @@ describe('composition des paquets', () => {
     expect(buildExitCards(DEFAULT_DECKS)).toHaveLength(16);
   });
 
+  it('reproduit le décompte réel de la boîte', () => {
+    expect(DEFAULT_DECKS.extraction).toEqual({ dragon: 9, redDoor: 15, blueDoor: 5, noDoor: 29 });
+    const tally = (arity: number): number =>
+      DEFAULT_DECKS.exit.filter((e) => e.actions.length === arity).reduce((n, e) => n + e.count, 0);
+    expect(tally(1)).toBe(7);
+    expect(tally(2)).toBe(9);
+    const count = (...actions: string[]): number =>
+      DEFAULT_DECKS.exit
+        .filter((e) => [...e.actions].sort().join() === [...actions].sort().join())
+        .reduce((n, e) => n + e.count, 0);
+    expect(count('step')).toBe(3);
+    expect(count('allTogether')).toBe(2);
+    expect(count('doubleStep')).toBe(2);
+    expect(count('step', 'goldBonus')).toBe(1);
+    expect(count('allTogether', 'swap')).toBe(1);
+    expect(count('swap', 'doubleStep')).toBe(1);
+    expect(count('step', 'swap')).toBe(2);
+    expect(count('step', 'allTogether')).toBe(1);
+    expect(count('doubleStep', 'allTogether')).toBe(1);
+    expect(count('step', 'doubleStep')).toBe(2);
+  });
+
   it('contient assez de dragons pour atteindre la Sortie', () => {
     expect(DEFAULT_DECKS.extraction.dragon).toBeGreaterThanOrEqual(DRAGON_MOVES_TO_EXIT);
   });

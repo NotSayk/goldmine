@@ -5,27 +5,29 @@ export const EXTRACTION_DECK_SIZE = 58;
 /** Nombre de cartes Exit dans la boîte (livret). */
 export const EXIT_DECK_SIZE = 16;
 
-/**
- * PROVISIONAL : le livret ne donne pas la répartition des cartes par type.
- * Cette composition est une hypothèse de travail, à remplacer par le décompte
- * réel d'une boîte. C'est le seul endroit où elle est définie.
- */
-export const DECKS_ARE_PROVISIONAL = true;
+/** La composition ci-dessous est le décompte réel d'une boîte (voir `docs/DECISIONS.md`). */
+export const DECKS_ARE_PROVISIONAL = false;
 
-/** PROVISIONAL : composition par défaut des paquets (voir `docs/DECISIONS.md`). */
+/** Composition réelle des paquets, comptée sur une boîte. */
 export const DEFAULT_DECKS: DeckComposition = {
   extraction: {
-    dragon: 8,
-    redDoor: 20,
-    blueDoor: 20,
-    noDoor: 10,
+    dragon: 9,
+    redDoor: 15,
+    blueDoor: 5,
+    noDoor: 29,
   },
+  // Les cartes à deux actions laissent le choix au joueur.
   exit: [
-    { actions: ['step'], count: 4 },
-    { actions: ['doubleStep'], count: 3 },
-    { actions: ['allTogether'], count: 3 },
-    { actions: ['swap'], count: 3 },
-    { actions: ['goldBonus'], count: 3 },
+    { actions: ['step'], count: 3 },
+    { actions: ['allTogether'], count: 2 },
+    { actions: ['doubleStep'], count: 2 },
+    { actions: ['step', 'goldBonus'], count: 1 },
+    { actions: ['allTogether', 'swap'], count: 1 },
+    { actions: ['swap', 'doubleStep'], count: 1 },
+    { actions: ['step', 'swap'], count: 2 },
+    { actions: ['step', 'allTogether'], count: 1 },
+    { actions: ['doubleStep', 'allTogether'], count: 1 },
+    { actions: ['step', 'doubleStep'], count: 2 },
   ],
 };
 

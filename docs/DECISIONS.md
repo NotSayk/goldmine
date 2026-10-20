@@ -17,7 +17,7 @@ Chaque cas est isolé dans une fonction nommée et documentée de [`packages/eng
 | 7   | Égalité en manche 3 entre deux éliminés                      | Victoire partagée                                                                                       | `compareEliminatedOnFinalTie`           |
 | 8   | Cartes Bonus d'or d'un nain éliminé                          | Défaussées dans la défausse Exit (elles reviendront après un remélange)                                 | `bonusCardsOfEliminatedGoTo`            |
 | 9   | Place sur l'échelle de la Sortie                             | Jamais saturée (6 nains au plus) ; vérifiée par une assertion                                           | `assertLadderHasRoom`                   |
-| 10  | Répartition des cartes                                       | Composition provisoire, voir section 3                                                                  | `config/decks.ts`                       |
+| 10  | Répartition des cartes                                       | Composition réelle de la boîte, voir section 3                                                          | `config/decks.ts`                       |
 
 ## 2. Autres décisions
 
@@ -69,26 +69,31 @@ Chaque cas est isolé dans une fonction nommée et documentée de [`packages/eng
 - Si l'hôte reste déconnecté au-delà du délai de grâce, le premier humain connecté devient hôte.
 - Seul l'hôte lance les manches suivantes et la partie.
 
-## 3. Composition des paquets : PROVISOIRE
+## 3. Composition des paquets : décompte réel de la boîte
 
-Le livret ne donne pas la répartition des cartes. Composition utilisée, définie uniquement dans [`packages/engine/src/config/decks.ts`](../packages/engine/src/config/decks.ts) et marquée `PROVISIONAL` :
+Le livret ne donne pas la répartition des cartes ; elle a été comptée sur une vraie boîte. Elle est définie uniquement dans [`packages/engine/src/config/decks.ts`](../packages/engine/src/config/decks.ts) et verrouillée par un test (`setup.test.ts`).
 
 | Cartes Extraction (58)                  | Nombre |
 | --------------------------------------- | ------ |
-| Dragon                                  | 8      |
-| Porte rouge (2 pépites, vers le dragon) | 20     |
-| Porte bleue (1 pépite, vers la Sortie)  | 20     |
-| Sans porte (1 pépite, sur place)        | 10     |
+| Dragon                                  | 9      |
+| Porte rouge (2 pépites, vers le dragon) | 15     |
+| Porte bleue (1 pépite, vers la Sortie)  | 5      |
+| Sans porte (1 pépite, sur place)        | 29     |
 
-| Cartes Exit (16, une seule action chacune) | Nombre |
-| ------------------------------------------ | ------ |
-| Petit pas                                  | 4      |
-| Double pas                                 | 3      |
-| Tous ensemble                              | 3      |
-| Échange                                    | 3      |
-| Bonus d'or                                 | 3      |
+| Cartes Exit (16)                | Nombre |
+| ------------------------------- | ------ |
+| Petit pas                       | 3      |
+| Tous ensemble                   | 2      |
+| Double pas                      | 2      |
+| Petit pas **ou** Bonus d'or     | 1      |
+| Tous ensemble **ou** Échange    | 1      |
+| Échange **ou** Double pas       | 1      |
+| Petit pas **ou** Échange        | 2      |
+| Petit pas **ou** Tous ensemble  | 1      |
+| Double pas **ou** Tous ensemble | 1      |
+| Petit pas **ou** Double pas     | 2      |
 
-Le moteur gère aussi les cartes à deux actions (choix, repli forcé si une action est impossible), testées avec une composition dédiée.
+9 cartes Exit sur 16 portent deux actions : le joueur en choisit une, et doit prendre l'autre si la première est impossible (voir les règles de repli du moteur). Les tests de règles isolées utilisent une composition de test à actions simples (`SINGLE_ACTION_DECKS` dans `packages/engine/test/helpers.ts`), pour ne pas dépendre de la boîte.
 
 Dans l'interface, les cartes portent des noms propres à cette version (« Filon profond », « Galerie de sortie », « Petite veine », « Un pas », « Deux pas », « En avant tous ! », « Échange de places », « Trésor caché ») au lieu des intitulés imprimés de l'édition originale.
 
@@ -96,46 +101,35 @@ Dans l'interface, les cartes portent des noms propres à cette version (« Filon
 
 Commande : `npm run simulate` (1 000 parties, soit 3 000 manches, par configuration). Bots « heuristique » : ils creusent tant que le risque reste faible au regard du gain, puis fuient. Bots « aléatoire » : choix uniforme entre les deux actions. Simulation refaite avec la pioche Extraction cachée (les bots raisonnent alors sur une carte moyenne de la boîte) : les chiffres ne bougent pas de plus de 0,3 point.
 
-**Composition provisoire (8 dragons), bots heuristiques**
+**Composition réelle (9 dragons), bots heuristiques**
 
 | Configuration        | Tours / manche | Cartes Extraction / manche | Cartes Exit / manche | Pas du dragon / manche | Fin par le dragon | Fin : mine vide | Manches sans vainqueur |
 | -------------------- | -------------- | -------------------------- | -------------------- | ---------------------- | ----------------- | --------------- | ---------------------- |
-| 2 joueurs            | 21,1           | 13,3                       | 7,8                  | 2,25                   | 0,0 %             | 100 %           | 1,6 %                  |
-| 2 joueurs (variante) | 31,4           | 19,8                       | 11,5                 | 3,38                   | 0,1 %             | 99,9 %          | 0,4 %                  |
-| 3 joueurs            | 27,2           | 17,4                       | 9,8                  | 2,95                   | 0,0 %             | 100 %           | 1,2 %                  |
-| 4 joueurs            | 30,8           | 20,1                       | 10,7                 | 3,46                   | 0,2 %             | 99,8 %          | 1,5 %                  |
-| 5 joueurs            | 33,3           | 22,2                       | 11,1                 | 3,84                   | 0,1 %             | 99,9 %          | 1,3 %                  |
-| 6 joueurs            | 34,8           | 23,5                       | 11,3                 | 4,12                   | 0,1 %             | 99,9 %          | 2,3 %                  |
+| 2 joueurs            | 26,1           | 18,4                       | 7,6                  | 2,82                   | 0,0 %             | 100 %           | 0,4 %                  |
+| 2 joueurs (variante) | 38,0           | 26,8                       | 11,2                 | 4,29                   | 0,4 %             | 99,6 %          | 0,5 %                  |
+| 3 joueurs            | 32,7           | 23,3                       | 9,4                  | 3,68                   | 0,0 %             | 100 %           | 1,1 %                  |
+| 4 joueurs            | 36,0           | 25,7                       | 10,2                 | 4,16                   | 0,0 %             | 100 %           | 3,1 %                  |
+| 5 joueurs            | 37,7           | 27,1                       | 10,5                 | 4,41                   | 0,0 %             | 100 %           | 4,8 %                  |
+| 6 joueurs            | 37,8           | 27,5                       | 10,3                 | 4,53                   | 0,0 %             | 100 %           | 6,4 %                  |
 
 | Configuration        | Nain éliminé par manche | Or d'un nain sorti (moy. / médiane / p90 / max) | Score final (moy. / max) | Victoires par place autour de la table |
 | -------------------- | ----------------------- | ----------------------------------------------- | ------------------------ | -------------------------------------- |
-| 2 joueurs            | 7,6 %                   | 11,9 / 12 / 17 / 27                             | 16,1 / 32                | 49 % · 51 %                            |
-| 2 joueurs (variante) | 11 %                    | 9,3 / 10 / 16 / 25                              | 22,9 / 45                | 50 % · 50 %                            |
-| 3 joueurs            | 12 %                    | 10,4 / 10 / 15 / 24                             | 13,3 / 28                | 31 % · 32 % · 38 %                     |
-| 4 joueurs            | 17 à 20 %               | 9,2 / 9 / 14 / 24                               | 10,5 / 27                | 25 % · 25 % · 27 % · 25 %              |
-| 5 joueurs            | 23 à 25 %               | 8,3 / 8 / 13 / 23                               | 8,7 / 25                 | 19 à 21 % chacun                       |
-| 6 joueurs            | 28 à 31 %               | 7,5 / 7 / 12 / 22                               | 7,3 / 25                 | 16 à 18 % chacun                       |
+| 2 joueurs            | 1,6 %                   | 10,5 / 11 / 14 / 19                             | 16,0 / 24                | 49,5 % · 50,5 %                        |
+| 2 joueurs (variante) | 6 %                     | 7,8 / 8 / 13 / 20                               | 21,0 / 38                | 53 % · 47 %                            |
+| 3 joueurs            | 5 à 6 %                 | 8,9 / 9 / 12 / 19                               | 12,7 / 23                | 36 % · 32 % · 33 %                     |
+| 4 joueurs            | 11 à 12 %               | 7,6 / 8 / 11 / 17                               | 9,8 / 21                 | 22 % · 28 % · 24 % · 27 %              |
+| 5 joueurs            | 18 à 19 %               | 6,7 / 7 / 10 / 15                               | 7,7 / 20                 | 19 à 21 % chacun                       |
+| 6 joueurs            | 26 à 28 %               | 5,9 / 6 / 9 / 16                                | 6,1 / 19                 | 16 à 18 % chacun                       |
 
-Bots aléatoires (8 dragons) : 16 à 30 tours par manche, 4 à 6 % d'éliminations par manche, fin par le dragon dans moins de 0,3 % des manches.
-
-**Comparaison avec plus de dragons** (bots heuristiques, total de 58 cartes conservé en retirant des portes rouges et bleues ; `npm run simulate -- --dragons N`) :
-
-| Dragons        | Tours / manche (2 → 6 joueurs) | Nain éliminé par manche (2 → 6 joueurs) | Fin par le dragon | Manches sans vainqueur (2 → 6 joueurs) |
-| -------------- | ------------------------------ | --------------------------------------- | ----------------- | -------------------------------------- |
-| 8 (provisoire) | 21 → 35                        | 8 % → 30 %                              | ≤ 0,2 %           | 1,6 % → 2,3 %                          |
-| 10             | 20 → 29                        | 12 % → 43 %                             | ≤ 1 %             | 2,8 % → 5,8 %                          |
-| 12             | 19 → 24                        | 17 % → 55 %                             | ≤ 2,2 %           | 5,4 % → 13,6 %                         |
+Bots aléatoires : 14 à 28 tours par manche, 1 à 3 % d'éliminations par manche, fin par le dragon dans moins de 0,3 % des manches.
 
 **Constats**
 
-- Le dragon peut atteindre la Sortie (il faut 7 déplacements, la pioche contient 8 dragons) ; en pratique, la manche se termine presque toujours parce que tous les nains sont sortis ou éliminés, ce qui est cohérent avec le livret (le dragon « arrivé devant la Sortie » est une fin de secours).
-- Les manches ne sont ni triviales ni interminables : 20 à 35 tours, dont 13 à 24 cartes creusées ; aucune partie bloquée sur plus de 70 000 manches simulées.
-- La tension monte avec le nombre de joueurs (plus de cartes creusées entre deux tours, donc plus de dragons) : de 8 % d'éliminations par manche à 2 joueurs jusqu'à 30 % à 6 joueurs.
+- Le dragon peut atteindre la Sortie (il faut 7 déplacements, la pioche contient 9 dragons) ; en pratique, la manche se termine presque toujours parce que tous les nains sont sortis ou éliminés, ce qui est cohérent avec le livret (le dragon « arrivé devant la Sortie » est une fin de secours).
+- Les manches ne sont ni triviales ni interminables : 26 à 38 tours avec des bots prudents, dont 18 à 28 cartes creusées.
+- Avec 29 cartes sans porte à une pépite, l'or s'accumule plus lentement qu'avec la composition provisoire d'avant (10 à 12 pépites par nain sorti à 2 joueurs, 6 à 9 à 4-6 joueurs).
+- La tension monte avec le nombre de joueurs : de 2 % d'éliminations par manche à 2 joueurs jusqu'à 27 % à 6 joueurs.
 - Pas d'avantage marqué selon la place autour de la table.
-
-**Depuis la décision E** (dragon pioché, `npm run simulate`, 2 000 parties par configuration, bots heuristiques) : 24 à 40 tours par manche (2 → 6 joueurs), 2,1 à 4,0 pas du dragon par manche, de 2 % à 20 % de risque pour un nain d'être éliminé dans une manche, fin par le dragon quasi nulle, au plus 1,1 % de manches sans vainqueur. Le dragon est un peu moins menaçant (un dragon pioché ne vaut qu'un pas, et coûte un tour à celui qui le pioche) : une composition à 10 dragons est à essayer si les manches paraissent trop sûres.
-
-**Proposition** : garder 8 dragons tant que la composition réelle n'est pas connue. Si le jeu paraît trop sûr à 2 ou 3 joueurs, 10 dragons rendent le dragon nettement plus menaçant sans rendre les manches à 6 joueurs punitives. **Rien n'est figé** : la composition doit être confirmée par un comptage des cartes d'une vraie boîte.
 
 ## 5. Écarts par rapport au prompt de départ
 
