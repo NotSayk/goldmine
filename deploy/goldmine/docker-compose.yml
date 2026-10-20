@@ -1,4 +1,4 @@
-# À lancer depuis ~/apps/goldmine, où ce dépôt est cloné dans ./src
+# À lancer depuis ~/apps/games/goldmine, où ce dépôt est cloné dans ./src
 services:
   goldmine:
     build:
