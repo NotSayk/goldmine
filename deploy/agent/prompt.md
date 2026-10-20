@@ -1,9 +1,9 @@
-Fais le cycle quotidien de maintenance, dans cet ordre :
+Fais le cycle quotidien de maintenance, en autonomie complète, dans cet ordre :
 
-1. Synchronise : `cd ~/workspace/game && git fetch origin && git checkout main && git pull origin main`.
-2. Lis les journaux exportés du serveur dans ~/feed/ (goldmine.log = dernières 24 h, stats.txt = mémoire/CPU). Repère erreurs, déconnexions anormales, pics de mémoire.
-3. Mises à jour : `npm outdated`, `npm audit`. Note celles qui comptent (sécurité, versions majeures).
-4. Qualité : `npm ci`, puis `npm run check` (lint, typecheck, tests). Note tout échec.
+1. Synchronise : `cd ~/workspace/game && git fetch origin && git checkout main && git reset --hard origin/main && git clean -fd`.
+2. Lis les journaux exportés du serveur dans ~/feed/ (goldmine.log = dernières 24 h, stats.txt = mémoire/CPU, caddy-errors.log = erreurs du proxy). Repère erreurs, déconnexions anormales, pics de mémoire. Si une erreur vient du code, remonte jusqu'à la cause et corrige-la (étape 6).
+3. Mises à jour : `npm outdated`, `npm audit`. Applique les correctifs de sécurité et les mises à jour mineures/correctives ; tente les majeures si elles sont utiles et que tout reste vert.
+4. Qualité : `npm ci`, puis `npm run check` (lint, typecheck, tests) et `npm run coverage`. Tout échec est à corriger en priorité.
 5. Performance : construis (`npm run build`), lance le serveur en local sur un port libre, et mesure : temps de réponse de `/healthz` (30 requêtes), temps d'établissement d'une WebSocket sur `/ws`, et un petit scénario de salons simulés. Mesure aussi la latence réelle de https://goldmine.sayk.fr/healthz (30 requêtes). Compare avec ~/data/metrics.json (valeurs de la veille), puis réécris ce fichier avec les valeurs du jour.
-6. Corrections : si tu trouves un bug réel ou une optimisation mesurable, crée la branche `agent/AAAA-MM-JJ`, corrige avec un test, relance `npm run check`, commit, puis `git push origin agent/AAAA-MM-JJ`. Une seule branche par jour, des changements petits et lisibles.
-7. Rapport : écris ~/data/reports/AAAA-MM-JJ.md avec : résumé en 3 lignes, état du serveur (erreurs, mémoire), latences (aujourd'hui vs hier), mises à jour disponibles, corrections poussées (nom de la branche, ce qui change, preuve), et ce que tu n'as pas pu faire.
+6. Corrections : pour chaque bug réel, faille, régression ou optimisation mesurable trouvée, corrige directement sur `main` (avec un test quand c'est possible). Pour chaque changement : `npm run check && npm run coverage && npm run build` doivent passer, puis `git commit`, `git pull --rebase origin main`, et `git push origin main`. Un commit par sujet, petits et lisibles.
+7. Rapport : écris ~/data/reports/AAAA-MM-JJ.md avec : résumé en 3 lignes, état du serveur (erreurs, mémoire), latences (aujourd'hui vs hier), mises à jour appliquées et restantes, commits poussés sur main (hash court, ce qui change, preuve), et ce que tu n'as pas pu faire ou ce qui demande une décision humaine. Termine en rappelant que les changements ne sont en production qu'après `~/apps/goldmine/update.sh`.
